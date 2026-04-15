@@ -48,7 +48,7 @@ def _write_image(path: Path, colour: tuple[int, int, int], size: int = 32) -> No
     Image.fromarray(image, mode="RGB").save(path)
 
 
-def _write_manifest(tmp_path: Path) -> Path:
+def _write_manifest(tmp_path: Path, anomalous_count: int = 1) -> Path:
     manifest_path = tmp_path / "data" / "processed" / "mvtec_ad" / "bottle" / "manifest.jsonl"
     train_path = (
         tmp_path
@@ -60,11 +60,7 @@ def _write_manifest(tmp_path: Path) -> Path:
         / "good"
         / "000.png"
     )
-    test_path = (
-        tmp_path / "data" / "interim" / "mvtec_ad" / "bottle" / "test" / "broken" / "001.png"
-    )
     _write_image(train_path, (30, 30, 30))
-    _write_image(test_path, (200, 200, 200))
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     rows = [
         {
@@ -75,17 +71,33 @@ def _write_manifest(tmp_path: Path) -> Path:
             "is_anomalous": False,
             "image_path": "data/interim/mvtec_ad/bottle/train/good/000.png",
             "mask_path": None,
-        },
-        {
-            "dataset": "mvtec_ad",
-            "category": "bottle",
-            "split": "test",
-            "defect_type": "broken",
-            "is_anomalous": True,
-            "image_path": "data/interim/mvtec_ad/bottle/test/broken/001.png",
-            "mask_path": None,
-        },
+        }
     ]
+    for index in range(1, anomalous_count + 1):
+        test_path = (
+            tmp_path
+            / "data"
+            / "interim"
+            / "mvtec_ad"
+            / "bottle"
+            / "test"
+            / "broken"
+            / f"{index:03d}.png"
+        )
+        _write_image(test_path, (200, 200, 200))
+        rows.append(
+            {
+                "dataset": "mvtec_ad",
+                "category": "bottle",
+                "split": "test",
+                "defect_type": "broken",
+                "is_anomalous": True,
+                "image_path": (
+                    f"data/interim/mvtec_ad/bottle/test/broken/{index:03d}.png"
+                ),
+                "mask_path": None,
+            }
+        )
     manifest_path.write_text(
         "".join(json.dumps(row) + "\n" for row in rows),
         encoding="utf-8",
@@ -234,3 +246,31 @@ def test_patchcore_bottle_report_writes_html_and_assets(tmp_path: Path) -> None:
     assert (config.output_dir / "demo_card.json").exists()
     assert (config.output_dir / "demo_card.html").exists()
     assert (config.output_dir.parent / "index.html").exists()
+
+
+def test_patchcore_bottle_report_writes_multiple_examples(tmp_path: Path) -> None:
+    manifest_path = _write_manifest(tmp_path, anomalous_count=2)
+    config = PatchCoreBottleReportConfig(
+        manifest_path=manifest_path,
+        output_dir=tmp_path / "outputs",
+        cache_path=tmp_path / "artefacts" / "bank.npz",
+        max_examples=2,
+        patch_size=16,
+        stride=16,
+        top_k=1,
+        use_cache=False,
+    )
+
+    output_path = build_patchcore_bottle_report(
+        config,
+        extractor=ConstantPatchFeatureExtractor(),
+    )
+
+    html = output_path.read_text(encoding="utf-8")
+    assert "Example 1: broken" in html
+    assert "Example 2: broken" in html
+    assert "examples: 2 selected from test index 0" in html
+    assert (config.output_dir / "assets" / "example_1_score_overlay.png").exists()
+    assert (config.output_dir / "assets" / "example_1_counterfactual_box.png").exists()
+    assert (config.output_dir / "assets" / "example_2_score_overlay.png").exists()
+    assert (config.output_dir / "assets" / "example_2_counterfactual_box.png").exists()

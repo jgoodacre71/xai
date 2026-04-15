@@ -53,7 +53,7 @@ After preparing MVTec AD bottle and installing the optional ML stack, generate
 the first static PatchCore report slice with:
 
 ```bash
-./.venv/bin/xai-demo-report patchcore-bottle --max-train 2 --patch-size 128 --stride 128
+./.venv/bin/xai-demo-report patchcore-bottle --max-train 2 --patch-size 128 --stride 128 --max-examples 3
 ```
 
 The report is written to `outputs/patchcore_bottle/index.html`. Generated

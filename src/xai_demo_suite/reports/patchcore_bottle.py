@@ -39,12 +39,25 @@ class PatchCoreBottleReportConfig:
     cache_path: Path = Path("data/artefacts/patchcore/bottle/report_resnet18_bank.npz")
     max_train: int = 2
     test_index: int = 0
+    max_examples: int = 3
     patch_size: int = 128
     stride: int = 128
     top_k: int = 3
     input_size: int = 64
     batch_size: int = 8
     use_cache: bool = True
+
+
+@dataclass(frozen=True, slots=True)
+class PatchCoreBottleExampleReport:
+    """Rendered report data for one selected anomalous bottle example."""
+
+    example_number: int
+    query_record: ImageManifestRecord
+    score: PatchScore
+    all_scores: list[PatchScore]
+    assets: dict[str, Path]
+    counterfactual: CounterfactualArtefact
 
 
 def _relative(path: Path, root: Path) -> str:
@@ -87,17 +100,23 @@ def _build_or_load_bank(
     return memory_bank
 
 
-def _select_query_record(config: PatchCoreBottleReportConfig) -> ImageManifestRecord:
+def _select_query_records(config: PatchCoreBottleReportConfig) -> list[ImageManifestRecord]:
+    if config.max_examples < 1:
+        raise ValueError("max_examples must be at least 1.")
     records = load_image_manifest(config.manifest_path)
     query_records = filter_manifest_records(records, split="test", is_anomalous=True)
     if not query_records:
         raise ValueError("No anomalous test records found for MVTec AD bottle.")
-    try:
-        return query_records[config.test_index]
-    except IndexError as exc:
+    selected = query_records[config.test_index : config.test_index + config.max_examples]
+    if not selected:
         raise ValueError(
             f"test_index {config.test_index} is out of range for {len(query_records)} records."
-        ) from exc
+        )
+    return selected
+
+
+def _prefixed_asset_name(asset_prefix: str, name: str) -> str:
+    return f"{asset_prefix}{name}" if asset_prefix else name
 
 
 def _write_assets(
@@ -106,42 +125,61 @@ def _write_assets(
     all_scores: list[PatchScore],
     counterfactual_path: Path | None,
     output_dir: Path,
+    asset_prefix: str,
 ) -> dict[str, Path]:
     assets: dict[str, Path] = {}
     assets["score_overlay"] = save_score_overlay(
         image_path=score.image_path,
         scores=all_scores,
-        output_path=_asset_path(output_dir, "score_overlay.png"),
+        output_path=_asset_path(
+            output_dir,
+            _prefixed_asset_name(asset_prefix, "score_overlay.png"),
+        ),
     )
     assets["query_box"] = draw_box_on_image(
         image_path=score.image_path,
         box=score.query_box,
-        output_path=_asset_path(output_dir, "query_box.png"),
+        output_path=_asset_path(
+            output_dir,
+            _prefixed_asset_name(asset_prefix, "query_box.png"),
+        ),
     )
     assets["query_crop"] = save_patch_crop(
         image_path=score.image_path,
         box=score.query_box,
-        output_path=_asset_path(output_dir, "query_patch.png"),
+        output_path=_asset_path(
+            output_dir,
+            _prefixed_asset_name(asset_prefix, "query_patch.png"),
+        ),
         scale=3,
     )
     for index, neighbour in enumerate(score.nearest, start=1):
         assets[f"normal_crop_{index}"] = save_patch_crop(
             image_path=neighbour.metadata.source_path,
             box=neighbour.metadata.box,
-            output_path=_asset_path(output_dir, f"normal_patch_{index}.png"),
+            output_path=_asset_path(
+                output_dir,
+                _prefixed_asset_name(asset_prefix, f"normal_patch_{index}.png"),
+            ),
             scale=3,
         )
         assets[f"normal_box_{index}"] = draw_box_on_image(
             image_path=neighbour.metadata.source_path,
             box=neighbour.metadata.box,
-            output_path=_asset_path(output_dir, f"normal_source_{index}.png"),
+            output_path=_asset_path(
+                output_dir,
+                _prefixed_asset_name(asset_prefix, f"normal_source_{index}.png"),
+            ),
             colour=(30, 120, 220),
         )
     if counterfactual_path is not None:
         assets["counterfactual"] = draw_box_on_image(
             image_path=counterfactual_path,
             box=score.query_box,
-            output_path=_asset_path(output_dir, "counterfactual_box.png"),
+            output_path=_asset_path(
+                output_dir,
+                _prefixed_asset_name(asset_prefix, "counterfactual_box.png"),
+            ),
             colour=(40, 160, 80),
         )
     return assets
@@ -153,9 +191,13 @@ def _build_counterfactual_preview(
     memory_bank: PatchCoreMemoryBank,
     extractor: PatchFeatureExtractor,
     config: PatchCoreBottleReportConfig,
+    asset_prefix: str,
 ) -> CounterfactualArtefact:
     nearest = score.nearest[0]
-    output_path = _asset_path(config.output_dir, "counterfactual_replacement.png")
+    output_path = _asset_path(
+        config.output_dir,
+        _prefixed_asset_name(asset_prefix, "counterfactual_replacement.png"),
+    )
     replace_patch_from_source(
         image_path=score.image_path,
         query_box=score.query_box,
@@ -190,15 +232,15 @@ def _build_counterfactual_preview(
     )
 
 
-def _render_html(
+def _render_example_section(
     *,
-    config: PatchCoreBottleReportConfig,
-    score: PatchScore,
-    all_scores: list[PatchScore],
-    assets: dict[str, Path],
-    counterfactual: CounterfactualArtefact,
+    example: PatchCoreBottleExampleReport,
     output_path: Path,
-) -> None:
+) -> str:
+    score = example.score
+    all_scores = example.all_scores
+    assets = example.assets
+    counterfactual = example.counterfactual
     rows: list[str] = []
     for rank, neighbour in enumerate(score.nearest, start=1):
         rows.append(
@@ -244,6 +286,88 @@ def _render_html(
       """
         )
     neighbour_figures = "\n".join(neighbour_blocks)
+    sample_id = html.escape(example.query_record.sample_id)
+    image_path = html.escape(example.query_record.image_path.as_posix())
+    defect_type = html.escape(example.query_record.defect_type)
+
+    return f"""
+  <section class="example">
+    <h2>Example {example.example_number}: {defect_type}</h2>
+    <p>
+      Sample <code>{sample_id}</code> from
+      <code>{image_path}</code>.
+    </p>
+
+    <h3>Top Scored Patch</h3>
+    <div class="grid">
+      <figure>
+        <img src="{score_overlay_src}" alt="Coarse anomaly-map overlay">
+        <figcaption>
+          Coarse patch-score anomaly map. Brighter red means higher patch
+          distance to the nominal memory bank.
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="{query_box_src}" alt="Input image with top scored patch box">
+        <figcaption>Input image with the top scored patch highlighted.</figcaption>
+      </figure>
+      <figure>
+        <img src="{query_crop_src}" alt="Top scored query patch crop">
+        <figcaption>Top scored query patch. Distance: {score.distance:.6f}</figcaption>
+      </figure>
+    </div>
+
+    <h3>Nearest Normal Patch Evidence</h3>
+    <div class="grid">
+      {neighbour_figures}
+    </div>
+
+    <h3>Counterfactual Patch Replacement</h3>
+    <div class="grid">
+      <figure>
+        <img src="{counterfactual_src}" alt="Counterfactual replacement preview">
+        <figcaption>
+          Top query patch replaced with the nearest normal source patch. This is
+          a didactic probe, not causal proof.
+        </figcaption>
+      </figure>
+    </div>
+    <ul>
+      <li>Before score: {counterfactual.before_score:.6f}</li>
+      <li>After score: {counterfactual.after_score:.6f}</li>
+      <li>Delta: {counterfactual.score_delta:.6f}</li>
+    </ul>
+
+    <h3>Distance Summary</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Source image id</th>
+          <th>Distance</th>
+          <th>Source box</th>
+          <th>Source path</th>
+        </tr>
+      </thead>
+      <tbody>{''.join(rows)}</tbody>
+    </table>
+
+    <h3>Top Query Patch Distances</h3>
+    <ol>{top_scores}</ol>
+  </section>
+"""
+
+
+def _render_html(
+    *,
+    config: PatchCoreBottleReportConfig,
+    examples: list[PatchCoreBottleExampleReport],
+    output_path: Path,
+) -> None:
+    example_sections = "\n".join(
+        _render_example_section(example=example, output_path=output_path)
+        for example in examples
+    )
 
     html_text = f"""<!doctype html>
 <html lang="en">
@@ -257,8 +381,9 @@ def _render_html(
       color: #1f2933;
     }}
     main {{ max-width: 1120px; margin: 0 auto; }}
-    h1, h2 {{ margin: 0 0 12px; }}
+    h1, h2, h3 {{ margin: 0 0 12px; }}
     section {{ margin: 28px 0; }}
+    .example {{ border-top: 2px solid #d8dee4; padding-top: 24px; }}
     .grid {{
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -283,7 +408,7 @@ def _render_html(
   <h1>PatchCore Bottle Report</h1>
   <p>
     This report is generated from package code. It shows nearest-normal patch
-    provenance for one MVTec AD bottle anomaly candidate.
+    provenance for {len(examples)} selected MVTec AD bottle anomaly example(s).
   </p>
 
   <section>
@@ -291,77 +416,13 @@ def _render_html(
     <ul>
       <li>manifest: <code>{html.escape(config.manifest_path.as_posix())}</code></li>
       <li>memory bank cache: <code>{html.escape(config.cache_path.as_posix())}</code></li>
+      <li>examples: {len(examples)} selected from test index {config.test_index}</li>
       <li>patch size: {config.patch_size}, stride: {config.stride}, top-k: {config.top_k}</li>
       <li>feature extractor: <code>torchvision_resnet18</code>, random weights</li>
     </ul>
   </section>
 
-  <section>
-    <h2>Top Scored Patch</h2>
-    <div class="grid">
-      <figure>
-        <img src="{score_overlay_src}" alt="Coarse anomaly-map overlay">
-        <figcaption>
-          Coarse patch-score anomaly map. Brighter red means higher patch
-          distance to the nominal memory bank.
-        </figcaption>
-      </figure>
-      <figure>
-        <img src="{query_box_src}" alt="Input image with top scored patch box">
-        <figcaption>Input image with the top scored patch highlighted.</figcaption>
-      </figure>
-      <figure>
-        <img src="{query_crop_src}" alt="Top scored query patch crop">
-        <figcaption>Top scored query patch. Distance: {score.distance:.6f}</figcaption>
-      </figure>
-    </div>
-  </section>
-
-  <section>
-    <h2>Nearest Normal Patch Evidence</h2>
-    <div class="grid">
-      {neighbour_figures}
-    </div>
-  </section>
-
-  <section>
-    <h2>Counterfactual Patch Replacement</h2>
-    <div class="grid">
-      <figure>
-        <img src="{counterfactual_src}" alt="Counterfactual replacement preview">
-        <figcaption>
-          Top query patch replaced with the nearest normal source patch. This is
-          a didactic probe, not causal proof.
-        </figcaption>
-      </figure>
-    </div>
-    <ul>
-      <li>Before score: {counterfactual.before_score:.6f}</li>
-      <li>After score: {counterfactual.after_score:.6f}</li>
-      <li>Delta: {counterfactual.score_delta:.6f}</li>
-    </ul>
-  </section>
-
-  <section>
-    <h2>Distance Summary</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Rank</th>
-          <th>Source image id</th>
-          <th>Distance</th>
-          <th>Source box</th>
-          <th>Source path</th>
-        </tr>
-      </thead>
-      <tbody>{''.join(rows)}</tbody>
-    </table>
-  </section>
-
-  <section>
-    <h2>Top Query Patch Distances</h2>
-    <ol>{top_scores}</ol>
-  </section>
+{example_sections}
 </main>
 </body>
 </html>
@@ -414,47 +475,61 @@ def build_patchcore_bottle_report(
     config: PatchCoreBottleReportConfig,
     extractor: PatchFeatureExtractor | None = None,
 ) -> Path:
-    """Build a static HTML report for one MVTec AD bottle example."""
+    """Build a static HTML report for selected MVTec AD bottle examples."""
 
     ensure_directory(config.output_dir)
     extractor = extractor or _build_default_extractor(config)
     memory_bank = _build_or_load_bank(config, extractor)
-    query_record = _select_query_record(config)
-    scores = score_image_with_extractor(
-        sample_id=query_record.sample_id,
-        image_path=query_record.image_path,
-        memory_bank=memory_bank,
-        extractor=extractor,
-        patch_size=config.patch_size,
-        stride=config.stride,
-        top_k=config.top_k,
-    )
-    if not scores:
-        raise ValueError("No query patch scores were produced.")
+    query_records = _select_query_records(config)
+    use_asset_prefixes = len(query_records) > 1
+    example_reports: list[PatchCoreBottleExampleReport] = []
+    for example_number, query_record in enumerate(query_records, start=1):
+        scores = score_image_with_extractor(
+            sample_id=query_record.sample_id,
+            image_path=query_record.image_path,
+            memory_bank=memory_bank,
+            extractor=extractor,
+            patch_size=config.patch_size,
+            stride=config.stride,
+            top_k=config.top_k,
+        )
+        if not scores:
+            raise ValueError(f"No query patch scores were produced for {query_record.sample_id}.")
 
-    top_score = scores[0]
-    counterfactual = _build_counterfactual_preview(
-        score=top_score,
-        memory_bank=memory_bank,
-        extractor=extractor,
-        config=config,
-    )
-    assets = _write_assets(
-        score=top_score,
-        all_scores=scores,
-        counterfactual_path=counterfactual.output_path,
-        output_dir=config.output_dir,
-    )
+        asset_prefix = f"example_{example_number}_" if use_asset_prefixes else ""
+        top_score = scores[0]
+        counterfactual = _build_counterfactual_preview(
+            score=top_score,
+            memory_bank=memory_bank,
+            extractor=extractor,
+            config=config,
+            asset_prefix=asset_prefix,
+        )
+        assets = _write_assets(
+            score=top_score,
+            all_scores=scores,
+            counterfactual_path=counterfactual.output_path,
+            output_dir=config.output_dir,
+            asset_prefix=asset_prefix,
+        )
+        example_reports.append(
+            PatchCoreBottleExampleReport(
+                example_number=example_number,
+                query_record=query_record,
+                score=top_score,
+                all_scores=scores,
+                assets=assets,
+                counterfactual=counterfactual,
+            )
+        )
+
     output_path = config.output_dir / "index.html"
     _render_html(
         config=config,
-        score=top_score,
-        all_scores=scores,
-        assets=assets,
-        counterfactual=counterfactual,
+        examples=example_reports,
         output_path=output_path,
     )
-    card = _build_demo_card(output_path=output_path, assets=assets)
+    card = _build_demo_card(output_path=output_path, assets=example_reports[0].assets)
     save_demo_card(card, config.output_dir)
     save_demo_index((card,), config.output_dir.parent / "index.html")
     return output_path

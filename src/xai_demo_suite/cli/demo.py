@@ -30,6 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
     bottle.add_argument("--cache-path", type=Path, default=defaults.cache_path)
     bottle.add_argument("--max-train", type=int, default=defaults.max_train)
     bottle.add_argument("--test-index", type=int, default=defaults.test_index)
+    bottle.add_argument("--max-examples", type=int, default=defaults.max_examples)
     bottle.add_argument("--patch-size", type=int, default=defaults.patch_size)
     bottle.add_argument("--stride", type=int, default=defaults.stride)
     bottle.add_argument("--top-k", type=int, default=defaults.top_k)
@@ -47,6 +48,7 @@ def _handle_patchcore_bottle(args: argparse.Namespace) -> int:
         cache_path=args.cache_path,
         max_train=args.max_train,
         test_index=args.test_index,
+        max_examples=args.max_examples,
         patch_size=args.patch_size,
         stride=args.stride,
         top_k=args.top_k,
