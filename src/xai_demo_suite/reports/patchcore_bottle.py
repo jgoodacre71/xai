@@ -158,19 +158,26 @@ def _render_html(
 
     query_box_src = rel(assets["query_box"])
     query_crop_src = rel(assets["query_crop"])
-    neighbour_figures = "\n".join(
-        f"""
+    neighbour_blocks: list[str] = []
+    for index in range(1, len(score.nearest) + 1):
+        crop_src = rel(assets[f"normal_crop_{index}"])
+        box_src = rel(assets[f"normal_box_{index}"])
+        distance = score.nearest[index - 1].distance
+        neighbour_blocks.append(
+            f"""
       <figure>
-        <img src="{rel(assets[f"normal_crop_{index}"])}" alt="Nearest normal patch {index}">
-        <figcaption>Nearest normal patch {index}; distance {score.nearest[index - 1].distance:.6f}</figcaption>
+        <img src="{crop_src}" alt="Nearest normal patch {index}">
+        <figcaption>
+          Nearest normal patch {index}; distance {distance:.6f}
+        </figcaption>
       </figure>
       <figure>
-        <img src="{rel(assets[f"normal_box_{index}"])}" alt="Source image for nearest normal patch {index}">
+        <img src="{box_src}" alt="Source image for nearest normal patch {index}">
         <figcaption>Full source image with patch box {index}.</figcaption>
       </figure>
       """
-        for index in range(1, len(score.nearest) + 1)
-    )
+        )
+    neighbour_figures = "\n".join(neighbour_blocks)
 
     html_text = f"""<!doctype html>
 <html lang="en">
@@ -178,23 +185,40 @@ def _render_html(
   <meta charset="utf-8">
   <title>PatchCore Bottle Report</title>
   <style>
-    body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 32px; color: #1f2933; }}
+    body {{
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 32px;
+      color: #1f2933;
+    }}
     main {{ max-width: 1120px; margin: 0 auto; }}
     h1, h2 {{ margin: 0 0 12px; }}
     section {{ margin: 28px 0; }}
-    .grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; align-items: start; }}
+    .grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      align-items: start;
+    }}
     figure {{ margin: 0; border: 1px solid #d8dee4; padding: 10px; background: #fff; }}
     img {{ max-width: 100%; height: auto; display: block; }}
     figcaption {{ font-size: 13px; color: #52606d; margin-top: 8px; }}
     table {{ width: 100%; border-collapse: collapse; font-size: 14px; }}
-    th, td {{ border-bottom: 1px solid #d8dee4; padding: 8px; text-align: left; vertical-align: top; }}
+    th, td {{
+      border-bottom: 1px solid #d8dee4;
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }}
     code {{ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }}
   </style>
 </head>
 <body>
 <main>
   <h1>PatchCore Bottle Report</h1>
-  <p>This report is generated from package code. It shows nearest-normal patch provenance for one MVTec AD bottle anomaly candidate.</p>
+  <p>
+    This report is generated from package code. It shows nearest-normal patch
+    provenance for one MVTec AD bottle anomaly candidate.
+  </p>
 
   <section>
     <h2>Run Context</h2>
@@ -230,7 +254,15 @@ def _render_html(
   <section>
     <h2>Distance Summary</h2>
     <table>
-      <thead><tr><th>Rank</th><th>Source image id</th><th>Distance</th><th>Source box</th><th>Source path</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Source image id</th>
+          <th>Distance</th>
+          <th>Source box</th>
+          <th>Source path</th>
+        </tr>
+      </thead>
       <tbody>{''.join(rows)}</tbody>
     </table>
   </section>
