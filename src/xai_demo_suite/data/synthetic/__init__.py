@@ -9,6 +9,7 @@ from xai_demo_suite.data.synthetic.slot_boards import (
     NuisanceBoardSample,
     SlotBoardSample,
     generate_nuisance_board_dataset,
+    generate_severity_sweep_dataset,
     generate_slot_board_dataset,
 )
 from xai_demo_suite.data.synthetic.waterbirds import (
@@ -27,6 +28,7 @@ __all__ = [
     "generate_habitat_bird_dataset",
     "generate_industrial_shortcut_dataset",
     "generate_nuisance_board_dataset",
+    "generate_severity_sweep_dataset",
     "generate_slot_board_dataset",
     "make_striped_fixture",
     "render_habitat_bird_image",

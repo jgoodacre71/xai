@@ -15,12 +15,14 @@ def test_build_demo_suite_writes_synthetic_reports_and_verifies(tmp_path: Path) 
         "waterbirds-shortcut",
         "shortcut-industrial",
         "patchcore-limits",
+        "patchcore-severity",
+        "patchcore-logic",
         "patchcore-wrong-normal",
         "explanation-drift",
     }
     assert all(result.status == "built" for result in results)
     assert verification.ok
-    assert verification.card_count == 5
+    assert verification.card_count == 7
     assert (output_root / "index.html").exists()
 
 

@@ -125,6 +125,8 @@ def _write_sample(
     label: str,
     missing_slots: tuple[int, ...] = (),
     scratch: bool = False,
+    scratch_width: int = 7,
+    scratch_colour: tuple[int, int, int] = (226, 232, 236),
     swapped_colours: bool = False,
     semantic_note: str,
 ) -> SlotBoardSample:
@@ -153,8 +155,8 @@ def _write_sample(
             _draw_mask_circle(mask_draw, centre)
 
     if scratch:
-        draw.line((48, 112, 272, 122), fill=(226, 232, 236), width=7)
-        mask_draw.line((48, 112, 272, 122), fill=255, width=7)
+        draw.line((48, 112, 272, 122), fill=scratch_colour, width=scratch_width)
+        mask_draw.line((48, 112, 272, 122), fill=255, width=scratch_width)
 
     image_dir = output_dir / split
     mask_dir = output_dir / "masks"
@@ -245,6 +247,68 @@ def generate_slot_board_dataset(
             semantic_note=(
                 "Two components have unexpected identities; PatchCore localises novelty, "
                 "not a rule."
+            ),
+        ),
+    ]
+    return train_samples, eval_samples
+
+
+def generate_severity_sweep_dataset(
+    output_dir: Path,
+) -> tuple[list[SlotBoardSample], list[SlotBoardSample]]:
+    """Generate nominal boards and controlled scratch severity examples."""
+
+    ensure_directory(output_dir)
+    train_samples = [
+        _write_sample(
+            output_dir=output_dir,
+            sample_id="normal_severity_000",
+            split="train",
+            label="normal",
+            semantic_note="All expected slots are occupied.",
+        ),
+        _write_sample(
+            output_dir=output_dir,
+            sample_id="normal_severity_001",
+            split="train",
+            label="normal",
+            semantic_note="Second nominal board for severity provenance.",
+        ),
+    ]
+    eval_samples = [
+        _write_sample(
+            output_dir=output_dir,
+            sample_id="thin_bright_scratch",
+            split="test",
+            label="surface_scratch",
+            scratch=True,
+            scratch_width=3,
+            scratch_colour=(248, 250, 252),
+            semantic_note=(
+                "Small high-contrast scratch: low area proxy, strong local novelty."
+            ),
+        ),
+        _write_sample(
+            output_dir=output_dir,
+            sample_id="medium_bright_scratch",
+            split="test",
+            label="surface_scratch",
+            scratch=True,
+            scratch_width=7,
+            scratch_colour=(226, 232, 236),
+            semantic_note="Medium scratch with moderate area and contrast.",
+        ),
+        _write_sample(
+            output_dir=output_dir,
+            sample_id="wide_low_contrast_scuff",
+            split="test",
+            label="surface_scratch",
+            scratch=True,
+            scratch_width=17,
+            scratch_colour=(78, 90, 92),
+            semantic_note=(
+                "Large low-contrast scuff: high area proxy, not necessarily the "
+                "highest feature-space novelty."
             ),
         ),
     ]

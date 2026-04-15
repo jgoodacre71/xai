@@ -61,8 +61,23 @@ case and a component-identity swap case.
 ## Demo 06 — PatchCore does not know severity
 Novelty score versus severity mismatch.
 
+Current artefacts:
+- static synthetic report: `outputs/patchcore_severity/index.html`
+- demo card: `outputs/patchcore_severity/demo_card.html`
+
+The first implementation uses a controlled scratch sweep to compare synthetic
+severity-area metadata with PatchCore-style patch novelty scores.
+
 ## Demo 07 — PatchCore struggles with logical anomalies
 MVTec LOCO AD and symbolic / relational failure cases.
+
+Current artefacts:
+- static synthetic proxy report: `outputs/patchcore_logic/index.html`
+- demo card: `outputs/patchcore_logic/demo_card.html`
+
+The first implementation contrasts a missing component with a component-identity
+swap on synthetic slot boards. MVTec LOCO AD sourcing remains the real-data
+follow-up.
 
 ## Demo 08 — Explanation drift under shift
 Prediction drift and explanation drift compared under nuisance changes.

@@ -13,6 +13,14 @@ from xai_demo_suite.reports.patchcore_limits import (
     PatchCoreLimitsReportConfig,
     build_patchcore_limits_report,
 )
+from xai_demo_suite.reports.patchcore_logic import (
+    PatchCoreLogicReportConfig,
+    build_patchcore_logic_report,
+)
+from xai_demo_suite.reports.patchcore_severity import (
+    PatchCoreSeverityReportConfig,
+    build_patchcore_severity_report,
+)
 from xai_demo_suite.reports.patchcore_wrong_normal import (
     PatchCoreWrongNormalReportConfig,
     build_patchcore_wrong_normal_report,
@@ -38,6 +46,8 @@ __all__ = [
     "IndustrialShortcutReportConfig",
     "PatchCoreBottleReportConfig",
     "PatchCoreLimitsReportConfig",
+    "PatchCoreLogicReportConfig",
+    "PatchCoreSeverityReportConfig",
     "PatchCoreWrongNormalReportConfig",
     "SuiteBuildResult",
     "SuiteVerificationResult",
@@ -47,6 +57,8 @@ __all__ = [
     "build_industrial_shortcut_report",
     "build_patchcore_bottle_report",
     "build_patchcore_limits_report",
+    "build_patchcore_logic_report",
+    "build_patchcore_severity_report",
     "build_patchcore_wrong_normal_report",
     "build_waterbirds_shortcut_report",
     "save_demo_card",

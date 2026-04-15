@@ -17,6 +17,14 @@ from xai_demo_suite.reports.patchcore_limits import (
     PatchCoreLimitsReportConfig,
     build_patchcore_limits_report,
 )
+from xai_demo_suite.reports.patchcore_logic import (
+    PatchCoreLogicReportConfig,
+    build_patchcore_logic_report,
+)
+from xai_demo_suite.reports.patchcore_severity import (
+    PatchCoreSeverityReportConfig,
+    build_patchcore_severity_report,
+)
 from xai_demo_suite.reports.patchcore_wrong_normal import (
     PatchCoreWrongNormalReportConfig,
     build_patchcore_wrong_normal_report,
@@ -37,7 +45,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     bottle_defaults = PatchCoreBottleReportConfig()
     drift_defaults = ExplanationDriftReportConfig()
+    logic_defaults = PatchCoreLogicReportConfig()
     limits_defaults = PatchCoreLimitsReportConfig()
+    severity_defaults = PatchCoreSeverityReportConfig()
     wrong_normal_defaults = PatchCoreWrongNormalReportConfig()
     shortcut_defaults = IndustrialShortcutReportConfig()
     waterbirds_defaults = WaterbirdsShortcutReportConfig()
@@ -88,6 +98,30 @@ def build_parser() -> argparse.ArgumentParser:
     limits.add_argument("--stride", type=int, default=limits_defaults.stride)
     limits.add_argument("--top-k", type=int, default=limits_defaults.top_k)
     limits.add_argument("--no-cache", action="store_true")
+
+    severity = subparsers.add_parser(
+        "patchcore-severity",
+        help="Generate the synthetic PatchCore severity report.",
+    )
+    severity.add_argument("--output-dir", type=Path, default=severity_defaults.output_dir)
+    severity.add_argument("--cache-path", type=Path, default=severity_defaults.cache_path)
+    severity.add_argument("--synthetic-dir", type=Path, default=severity_defaults.synthetic_dir)
+    severity.add_argument("--patch-size", type=int, default=severity_defaults.patch_size)
+    severity.add_argument("--stride", type=int, default=severity_defaults.stride)
+    severity.add_argument("--top-k", type=int, default=severity_defaults.top_k)
+    severity.add_argument("--no-cache", action="store_true")
+
+    logic = subparsers.add_parser(
+        "patchcore-logic",
+        help="Generate the synthetic PatchCore logical anomaly report.",
+    )
+    logic.add_argument("--output-dir", type=Path, default=logic_defaults.output_dir)
+    logic.add_argument("--cache-path", type=Path, default=logic_defaults.cache_path)
+    logic.add_argument("--synthetic-dir", type=Path, default=logic_defaults.synthetic_dir)
+    logic.add_argument("--patch-size", type=int, default=logic_defaults.patch_size)
+    logic.add_argument("--stride", type=int, default=logic_defaults.stride)
+    logic.add_argument("--top-k", type=int, default=logic_defaults.top_k)
+    logic.add_argument("--no-cache", action="store_true")
 
     wrong_normal = subparsers.add_parser(
         "patchcore-wrong-normal",
@@ -191,6 +225,36 @@ def _handle_patchcore_limits(args: argparse.Namespace) -> int:
     return 0
 
 
+def _handle_patchcore_severity(args: argparse.Namespace) -> int:
+    config = PatchCoreSeverityReportConfig(
+        output_dir=args.output_dir,
+        cache_path=args.cache_path,
+        synthetic_dir=args.synthetic_dir,
+        patch_size=args.patch_size,
+        stride=args.stride,
+        top_k=args.top_k,
+        use_cache=not args.no_cache,
+    )
+    output_path = build_patchcore_severity_report(config)
+    print(f"report: {output_path}")
+    return 0
+
+
+def _handle_patchcore_logic(args: argparse.Namespace) -> int:
+    config = PatchCoreLogicReportConfig(
+        output_dir=args.output_dir,
+        cache_path=args.cache_path,
+        synthetic_dir=args.synthetic_dir,
+        patch_size=args.patch_size,
+        stride=args.stride,
+        top_k=args.top_k,
+        use_cache=not args.no_cache,
+    )
+    output_path = build_patchcore_logic_report(config)
+    print(f"report: {output_path}")
+    return 0
+
+
 def _handle_patchcore_wrong_normal(args: argparse.Namespace) -> int:
     config = PatchCoreWrongNormalReportConfig(
         output_dir=args.output_dir,
@@ -267,6 +331,10 @@ def main(argv: list[str] | None = None) -> int:
         return _handle_patchcore_bottle(args)
     if args.command == "patchcore-limits":
         return _handle_patchcore_limits(args)
+    if args.command == "patchcore-severity":
+        return _handle_patchcore_severity(args)
+    if args.command == "patchcore-logic":
+        return _handle_patchcore_logic(args)
     if args.command == "patchcore-wrong-normal":
         return _handle_patchcore_wrong_normal(args)
     if args.command == "shortcut-industrial":

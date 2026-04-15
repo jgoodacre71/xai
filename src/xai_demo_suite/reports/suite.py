@@ -21,6 +21,14 @@ from xai_demo_suite.reports.patchcore_limits import (
     PatchCoreLimitsReportConfig,
     build_patchcore_limits_report,
 )
+from xai_demo_suite.reports.patchcore_logic import (
+    PatchCoreLogicReportConfig,
+    build_patchcore_logic_report,
+)
+from xai_demo_suite.reports.patchcore_severity import (
+    PatchCoreSeverityReportConfig,
+    build_patchcore_severity_report,
+)
 from xai_demo_suite.reports.patchcore_wrong_normal import (
     PatchCoreWrongNormalReportConfig,
     build_patchcore_wrong_normal_report,
@@ -101,6 +109,26 @@ def build_demo_suite(
                 PatchCoreLimitsReportConfig(
                     output_dir=output_root / "patchcore_limits",
                     synthetic_dir=output_root / "patchcore_limits" / "synthetic",
+                    use_cache=use_cache,
+                )
+            ),
+        ),
+        (
+            "patchcore-severity",
+            lambda: build_patchcore_severity_report(
+                PatchCoreSeverityReportConfig(
+                    output_dir=output_root / "patchcore_severity",
+                    synthetic_dir=output_root / "patchcore_severity" / "synthetic",
+                    use_cache=use_cache,
+                )
+            ),
+        ),
+        (
+            "patchcore-logic",
+            lambda: build_patchcore_logic_report(
+                PatchCoreLogicReportConfig(
+                    output_dir=output_root / "patchcore_logic",
+                    synthetic_dir=output_root / "patchcore_logic" / "synthetic",
                     use_cache=use_cache,
                 )
             ),
