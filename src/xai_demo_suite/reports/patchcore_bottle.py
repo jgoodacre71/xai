@@ -11,6 +11,11 @@ from xai_demo_suite.data.manifests import (
     filter_manifest_records,
     load_image_manifest,
 )
+from xai_demo_suite.explain.contracts import CounterfactualArtefact
+from xai_demo_suite.explain.counterfactuals import (
+    make_patch_replacement_artefact,
+    replace_patch_from_source,
+)
 from xai_demo_suite.models.patchcore import (
     PatchFeatureExtractor,
     TorchvisionBackbonePatchFeatureExtractor,
@@ -98,6 +103,7 @@ def _write_assets(
     *,
     score: PatchScore,
     all_scores: list[PatchScore],
+    counterfactual_path: Path | None,
     output_dir: Path,
 ) -> dict[str, Path]:
     assets: dict[str, Path] = {}
@@ -130,7 +136,57 @@ def _write_assets(
             output_path=_asset_path(output_dir, f"normal_source_{index}.png"),
             colour=(30, 120, 220),
         )
+    if counterfactual_path is not None:
+        assets["counterfactual"] = draw_box_on_image(
+            image_path=counterfactual_path,
+            box=score.query_box,
+            output_path=_asset_path(output_dir, "counterfactual_box.png"),
+            colour=(40, 160, 80),
+        )
     return assets
+
+
+def _build_counterfactual_preview(
+    *,
+    score: PatchScore,
+    memory_bank: PatchCoreMemoryBank,
+    extractor: PatchFeatureExtractor,
+    config: PatchCoreBottleReportConfig,
+) -> CounterfactualArtefact:
+    nearest = score.nearest[0]
+    output_path = _asset_path(config.output_dir, "counterfactual_replacement.png")
+    replace_patch_from_source(
+        image_path=score.image_path,
+        query_box=score.query_box,
+        source_image_path=nearest.metadata.source_path,
+        source_box=nearest.metadata.box,
+        output_path=output_path,
+    )
+    rescored = score_image_with_extractor(
+        sample_id=f"{score.sample_id}/counterfactual",
+        image_path=output_path,
+        memory_bank=memory_bank,
+        extractor=extractor,
+        patch_size=config.patch_size,
+        stride=config.stride,
+        top_k=config.top_k,
+    )
+    matching_scores = [
+        item
+        for item in rescored
+        if item.query_box.x == score.query_box.x and item.query_box.y == score.query_box.y
+    ]
+    after_score = matching_scores[0].distance if matching_scores else rescored[0].distance
+    return make_patch_replacement_artefact(
+        sample_id=score.sample_id,
+        before_score=score.distance,
+        after_score=after_score,
+        output_path=output_path,
+        description=(
+            "Replace the top scored query patch with its nearest normal patch "
+            "from the current memory bank."
+        ),
+    )
 
 
 def _render_html(
@@ -139,6 +195,7 @@ def _render_html(
     score: PatchScore,
     all_scores: list[PatchScore],
     assets: dict[str, Path],
+    counterfactual: CounterfactualArtefact,
     output_path: Path,
 ) -> None:
     rows: list[str] = []
@@ -165,6 +222,7 @@ def _render_html(
     query_box_src = rel(assets["query_box"])
     query_crop_src = rel(assets["query_crop"])
     score_overlay_src = rel(assets["score_overlay"])
+    counterfactual_src = rel(assets["counterfactual"])
     neighbour_blocks: list[str] = []
     for index in range(1, len(score.nearest) + 1):
         crop_src = rel(assets[f"normal_crop_{index}"])
@@ -266,6 +324,24 @@ def _render_html(
   </section>
 
   <section>
+    <h2>Counterfactual Patch Replacement</h2>
+    <div class="grid">
+      <figure>
+        <img src="{counterfactual_src}" alt="Counterfactual replacement preview">
+        <figcaption>
+          Top query patch replaced with the nearest normal source patch. This is
+          a didactic probe, not causal proof.
+        </figcaption>
+      </figure>
+    </div>
+    <ul>
+      <li>Before score: {counterfactual.before_score:.6f}</li>
+      <li>After score: {counterfactual.after_score:.6f}</li>
+      <li>Delta: {counterfactual.score_delta:.6f}</li>
+    </ul>
+  </section>
+
+  <section>
     <h2>Distance Summary</h2>
     <table>
       <thead>
@@ -316,9 +392,16 @@ def build_patchcore_bottle_report(
         raise ValueError("No query patch scores were produced.")
 
     top_score = scores[0]
+    counterfactual = _build_counterfactual_preview(
+        score=top_score,
+        memory_bank=memory_bank,
+        extractor=extractor,
+        config=config,
+    )
     assets = _write_assets(
         score=top_score,
         all_scores=scores,
+        counterfactual_path=counterfactual.output_path,
         output_dir=config.output_dir,
     )
     output_path = config.output_dir / "index.html"
@@ -327,6 +410,7 @@ def build_patchcore_bottle_report(
         score=top_score,
         all_scores=scores,
         assets=assets,
+        counterfactual=counterfactual,
         output_path=output_path,
     )
     return output_path

@@ -7,6 +7,10 @@ import numpy as np
 from PIL import Image
 
 from xai_demo_suite.explain.contracts import BoundingBox
+from xai_demo_suite.explain.counterfactuals import (
+    make_patch_replacement_artefact,
+    replace_patch_from_source,
+)
 from xai_demo_suite.models.patchcore.types import (
     FloatArray,
     PatchMetadata,
@@ -167,6 +171,39 @@ def test_save_score_overlay_writes_coarse_map(tmp_path: Path) -> None:
         assert overlay.getpixel((24, 24)) != (10, 10, 10)
 
 
+def test_replace_patch_from_source_uses_recorded_coordinates(tmp_path: Path) -> None:
+    query_path = tmp_path / "query.png"
+    source_path = tmp_path / "source.png"
+    output_path = tmp_path / "counterfactual.png"
+    _write_image(query_path, (0, 0, 0), size=32)
+    _write_image(source_path, (10, 10, 10), size=32)
+
+    replace_patch_from_source(
+        image_path=query_path,
+        query_box=BoundingBox(x=0, y=0, width=8, height=8),
+        source_image_path=source_path,
+        source_box=BoundingBox(x=8, y=8, width=8, height=8),
+        output_path=output_path,
+    )
+
+    with Image.open(output_path) as output:
+        assert output.getpixel((0, 0)) == (255, 0, 0)
+        assert output.getpixel((12, 12)) == (255, 0, 0)
+
+
+def test_make_patch_replacement_artefact_records_score_delta(tmp_path: Path) -> None:
+    artefact = make_patch_replacement_artefact(
+        sample_id="sample",
+        before_score=10.0,
+        after_score=4.0,
+        output_path=tmp_path / "preview.png",
+        description="Replace top patch.",
+    )
+
+    assert artefact.method == "nearest-normal-patch-replacement"
+    assert artefact.score_delta == -6.0
+
+
 def test_patchcore_bottle_report_writes_html_and_assets(tmp_path: Path) -> None:
     manifest_path = _write_manifest(tmp_path)
     config = PatchCoreBottleReportConfig(
@@ -188,6 +225,9 @@ def test_patchcore_bottle_report_writes_html_and_assets(tmp_path: Path) -> None:
     assert "PatchCore Bottle Report" in html
     assert "Nearest Normal Patch Evidence" in html
     assert "Coarse patch-score anomaly map" in html
+    assert "Counterfactual Patch Replacement" in html
     assert (config.output_dir / "assets" / "score_overlay.png").exists()
+    assert (config.output_dir / "assets" / "counterfactual_replacement.png").exists()
+    assert (config.output_dir / "assets" / "counterfactual_box.png").exists()
     assert (config.output_dir / "assets" / "query_patch.png").exists()
     assert (config.output_dir / "assets" / "normal_patch_1.png").exists()

@@ -78,11 +78,12 @@ It writes ignored local files under `outputs/patchcore_bottle/` and shows:
 - the top scored patch crop;
 - top-k nearest normal patch crops;
 - full source images with source patch boxes;
-- a per-patch distance table.
+- a per-patch distance table;
+- a nearest-normal patch replacement counterfactual preview.
 
 This report currently uses a coarse patch-score overlay rather than full
-anomaly-map interpolation. Counterfactual patch replacement is also a follow-up
-task in the PatchCore hero demo path.
+anomaly-map interpolation. The counterfactual patch replacement is a didactic
+probe and should not be described as causal proof.
 
 ## Recommended limitation demos
 

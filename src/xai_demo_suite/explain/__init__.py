@@ -11,6 +11,10 @@ from xai_demo_suite.explain.contracts import (
     RegionScore,
     StabilityArtefact,
 )
+from xai_demo_suite.explain.counterfactuals import (
+    make_patch_replacement_artefact,
+    replace_patch_from_source,
+)
 
 __all__ = [
     "BoundingBox",
@@ -22,4 +26,6 @@ __all__ = [
     "ProvenanceArtefact",
     "RegionScore",
     "StabilityArtefact",
+    "make_patch_replacement_artefact",
+    "replace_patch_from_source",
 ]
