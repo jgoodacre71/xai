@@ -1,0 +1,32 @@
+.DS_Store
+.venv/
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+.ipynb_checkpoints/
+
+# Data and generated artefacts must be reproducible or fetched locally.
+data/raw/*
+data/external/*
+data/interim/*
+data/processed/*
+data/synthetic/*
+data/artefacts/*
+!data/raw/.gitkeep
+!data/external/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+!data/synthetic/.gitkeep
+!data/artefacts/.gitkeep
+
+# Model and report outputs.
+outputs/
+reports/
+checkpoints/

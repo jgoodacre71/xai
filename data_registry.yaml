@@ -1,0 +1,35 @@
+datasets:
+  mvtec_ad:
+    name: "MVTec AD"
+    status: "planned"
+    purpose:
+      - "PatchCore baseline"
+      - "nearest-normal patch provenance"
+      - "nuisance contamination experiments"
+    raw_data_committed: false
+    licence: "Record before enabling downloader."
+    source_url: "Record before enabling downloader."
+    citation: "Record before enabling downloader."
+    expected_layout: "data/raw/mvtec_ad/"
+  mvtec_loco_ad:
+    name: "MVTec LOCO AD"
+    status: "planned"
+    purpose:
+      - "logical anomaly limitations"
+      - "structure versus logic comparisons"
+    raw_data_committed: false
+    licence: "Record before enabling downloader."
+    source_url: "Record before enabling downloader."
+    citation: "Record before enabling downloader."
+    expected_layout: "data/raw/mvtec_loco_ad/"
+  waterbirds:
+    name: "Waterbirds"
+    status: "planned"
+    purpose:
+      - "canonical spurious-correlation classification"
+      - "background reliance and counterfactual swaps"
+    raw_data_committed: false
+    licence: "Record before enabling downloader."
+    source_url: "Record before enabling downloader."
+    citation: "Record before enabling downloader."
+    expected_layout: "data/raw/waterbirds/"

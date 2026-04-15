@@ -1,0 +1,10 @@
+name = "patchcore_worker"
+description = "Implementation-focused agent for PatchCore, anomaly localisation, memory-bank provenance, and nearest-normal patch retrieval."
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Own small, concrete PatchCore changes.
+Preserve source patch provenance.
+Keep scoring, retrieval, and display logic cleanly separated.
+Add targeted tests whenever behaviour changes.
+Avoid broad unrelated refactors.
+"""
