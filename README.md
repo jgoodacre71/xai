@@ -47,6 +47,18 @@ when working on the deep PatchCore path:
 The current ResNet extractor defaults to random weights and does not download
 pretrained weights implicitly.
 
+## First Local Report
+
+After preparing MVTec AD bottle and installing the optional ML stack, generate
+the first static PatchCore report slice with:
+
+```bash
+./.venv/bin/xai-demo-report patchcore-bottle --max-train 2 --patch-size 128 --stride 128
+```
+
+The report is written to `outputs/patchcore_bottle/index.html`. Generated
+reports and cached model artefacts are ignored by git.
+
 ## Main files
 
 - `REPO_SPEC.md` — the long-form repository specification

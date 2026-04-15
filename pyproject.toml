@@ -15,6 +15,7 @@ dependencies = [
 
 [project.scripts]
 xai-demo-data = "xai_demo_suite.cli.data:main"
+xai-demo-report = "xai_demo_suite.cli.demo:main"
 
 [dependency-groups]
 dev = [

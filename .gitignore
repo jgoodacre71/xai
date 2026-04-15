@@ -27,6 +27,6 @@ data/artefacts/*
 !data/artefacts/.gitkeep
 
 # Model and report outputs.
-outputs/
-reports/
-checkpoints/
+/outputs/
+/reports/
+/checkpoints/
