@@ -56,9 +56,10 @@ the first static PatchCore report slice with:
 ./.venv/bin/xai-demo-report patchcore-bottle --max-train 2 --patch-size 128 --stride 128 --max-examples 3
 ```
 
-The report is written to `outputs/patchcore_bottle/index.html`. Generated
-reports, demo cards, local index files, and cached model artefacts are ignored
-by git.
+The report is written to `outputs/patchcore_bottle/index.html`. When prepared
+MVTec masks are available, each selected anomaly also includes a ground-truth
+localisation check for the top scored patch. Generated reports, demo cards,
+local index files, and cached model artefacts are ignored by git.
 
 ## Main files
 

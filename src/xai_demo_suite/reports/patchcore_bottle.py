@@ -11,6 +11,7 @@ from xai_demo_suite.data.manifests import (
     filter_manifest_records,
     load_image_manifest,
 )
+from xai_demo_suite.evaluate.localisation import PatchMaskOverlap, measure_patch_mask_overlap
 from xai_demo_suite.explain.contracts import CounterfactualArtefact
 from xai_demo_suite.explain.counterfactuals import (
     make_patch_replacement_artefact,
@@ -27,7 +28,12 @@ from xai_demo_suite.models.patchcore import (
 from xai_demo_suite.models.patchcore.types import PatchCoreMemoryBank, PatchScore
 from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index
 from xai_demo_suite.utils.io import ensure_directory
-from xai_demo_suite.vis.image_panels import draw_box_on_image, save_patch_crop, save_score_overlay
+from xai_demo_suite.vis.image_panels import (
+    draw_box_on_image,
+    save_mask_overlay,
+    save_patch_crop,
+    save_score_overlay,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,6 +64,7 @@ class PatchCoreBottleExampleReport:
     all_scores: list[PatchScore]
     assets: dict[str, Path]
     counterfactual: CounterfactualArtefact
+    mask_overlap: PatchMaskOverlap | None = None
 
 
 def _relative(path: Path, root: Path) -> str:
@@ -124,6 +131,7 @@ def _write_assets(
     score: PatchScore,
     all_scores: list[PatchScore],
     counterfactual_path: Path | None,
+    mask_path: Path | None,
     output_dir: Path,
     asset_prefix: str,
 ) -> dict[str, Path]:
@@ -181,6 +189,15 @@ def _write_assets(
                 _prefixed_asset_name(asset_prefix, "counterfactual_box.png"),
             ),
             colour=(40, 160, 80),
+        )
+    if mask_path is not None:
+        assets["mask_overlay"] = save_mask_overlay(
+            image_path=score.image_path,
+            mask_path=mask_path,
+            output_path=_asset_path(
+                output_dir,
+                _prefixed_asset_name(asset_prefix, "mask_overlay.png"),
+            ),
         )
     return assets
 
@@ -289,6 +306,7 @@ def _render_example_section(
     sample_id = html.escape(example.query_record.sample_id)
     image_path = html.escape(example.query_record.image_path.as_posix())
     defect_type = html.escape(example.query_record.defect_type)
+    mask_check = _render_mask_check(example=example, output_path=output_path)
 
     return f"""
   <section class="example">
@@ -316,6 +334,8 @@ def _render_example_section(
         <figcaption>Top scored query patch. Distance: {score.distance:.6f}</figcaption>
       </figure>
     </div>
+
+{mask_check}
 
     <h3>Nearest Normal Patch Evidence</h3>
     <div class="grid">
@@ -355,6 +375,47 @@ def _render_example_section(
     <h3>Top Query Patch Distances</h3>
     <ol>{top_scores}</ol>
   </section>
+"""
+
+
+def _format_percentage(value: float) -> str:
+    return f"{100.0 * value:.1f}%"
+
+
+def _render_mask_check(
+    *,
+    example: PatchCoreBottleExampleReport,
+    output_path: Path,
+) -> str:
+    if example.mask_overlap is None:
+        return ""
+
+    def rel(path: Path) -> str:
+        return html.escape(_relative(path, output_path.parent))
+
+    overlap = example.mask_overlap
+    mask_overlay_src = rel(example.assets["mask_overlay"])
+    mask_path = html.escape(overlap.mask_path.as_posix())
+    intersects = "yes" if overlap.intersects_mask else "no"
+    patch_fraction = _format_percentage(overlap.patch_mask_fraction)
+    mask_fraction = _format_percentage(overlap.mask_covered_fraction)
+    patch_overlap_text = f"{overlap.intersection_area} / {overlap.patch_area} ({patch_fraction})"
+    mask_coverage_text = f"{overlap.intersection_area} / {overlap.mask_area} ({mask_fraction})"
+    return f"""
+    <h3>Ground Truth Localisation Check</h3>
+    <div class="grid">
+      <figure>
+        <img src="{mask_overlay_src}" alt="Ground-truth anomaly mask overlay">
+        <figcaption>
+          Ground-truth anomaly mask overlay from <code>{mask_path}</code>.
+        </figcaption>
+      </figure>
+    </div>
+    <ul>
+      <li>Top patch intersects mask: {intersects}</li>
+      <li>Patch pixels overlapping mask: {patch_overlap_text}</li>
+      <li>Mask covered by top patch: {mask_coverage_text}</li>
+    </ul>
 """
 
 
@@ -439,6 +500,7 @@ def _build_demo_card(output_path: Path, assets: dict[str, Path]) -> DemoCard:
         explanation_methods=(
             "Coarse patch-score anomaly map",
             "Top anomalous patch crop",
+            "Ground-truth mask overlap check",
             "Nearest-normal patch provenance",
             "Nearest-normal patch replacement probe",
         ),
@@ -460,6 +522,7 @@ def _build_demo_card(output_path: Path, assets: dict[str, Path]) -> DemoCard:
             "Not a causal proof.",
             "No coreset selection or multi-scale feature-map PatchCore yet.",
             "Coarse overlay is not pixel-level anomaly-map interpolation.",
+            "Top-patch mask overlap is a coarse verification check, not a full benchmark.",
         ),
         report_path=output_path,
         figure_paths=(
@@ -498,6 +561,13 @@ def build_patchcore_bottle_report(
 
         asset_prefix = f"example_{example_number}_" if use_asset_prefixes else ""
         top_score = scores[0]
+        mask_overlap = None
+        if query_record.mask_path is not None and query_record.mask_path.exists():
+            mask_overlap = measure_patch_mask_overlap(
+                mask_path=query_record.mask_path,
+                patch_box=top_score.query_box,
+                image_path=query_record.image_path,
+            )
         counterfactual = _build_counterfactual_preview(
             score=top_score,
             memory_bank=memory_bank,
@@ -509,6 +579,7 @@ def build_patchcore_bottle_report(
             score=top_score,
             all_scores=scores,
             counterfactual_path=counterfactual.output_path,
+            mask_path=query_record.mask_path if mask_overlap is not None else None,
             output_dir=config.output_dir,
             asset_prefix=asset_prefix,
         )
@@ -520,6 +591,7 @@ def build_patchcore_bottle_report(
                 all_scores=scores,
                 assets=assets,
                 counterfactual=counterfactual,
+                mask_overlap=mask_overlap,
             )
         )
 

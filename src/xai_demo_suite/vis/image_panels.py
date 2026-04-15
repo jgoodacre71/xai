@@ -65,6 +65,35 @@ def draw_box_on_image(
     return output_path
 
 
+def save_mask_overlay(
+    *,
+    image_path: Path,
+    mask_path: Path,
+    output_path: Path,
+    colour: tuple[int, int, int] = (255, 210, 40),
+    alpha: float = 0.45,
+) -> Path:
+    """Save an image copy with a binary ground-truth mask overlay."""
+
+    if not 0.0 <= alpha <= 1.0:
+        raise ValueError("alpha must be in the range [0, 1].")
+
+    ensure_directory(output_path.parent)
+    with Image.open(image_path) as image, Image.open(mask_path) as mask_image:
+        base = image.convert("RGB")
+        mask = mask_image.convert("L")
+        if mask.size != base.size:
+            mask = mask.resize(base.size, Image.Resampling.NEAREST)
+
+        mask_values = np.asarray(mask, dtype=np.uint8) > 0
+        overlay_values = np.zeros((base.height, base.width, 4), dtype=np.uint8)
+        overlay_values[mask_values] = (*colour, int(255 * alpha))
+        overlay = Image.fromarray(overlay_values, mode="RGBA")
+        blended = Image.alpha_composite(base.convert("RGBA"), overlay).convert("RGB")
+        blended.save(output_path)
+    return output_path
+
+
 def normalise_patch_scores(scores: list[PatchScore]) -> list[float]:
     """Normalise patch distances into the range [0, 1]."""
 

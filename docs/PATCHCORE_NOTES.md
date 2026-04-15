@@ -77,6 +77,8 @@ It writes ignored local files under `outputs/patchcore_bottle/` and shows:
 - a coarse patch-score anomaly-map overlay for each selected example;
 - the selected input image with the top scored patch;
 - the top scored patch crop;
+- a ground-truth mask overlay and top-patch localisation check when a mask is
+  available;
 - top-k nearest normal patch crops;
 - full source images with source patch boxes;
 - a per-patch distance table;
@@ -89,7 +91,9 @@ It also writes release-style summary artefacts:
 
 This report currently uses a coarse patch-score overlay rather than full
 anomaly-map interpolation. The counterfactual patch replacement is a didactic
-probe and should not be described as causal proof.
+probe and should not be described as causal proof. The mask overlap numbers are
+a coarse top-patch verification check, not benchmark-grade pixel-level
+evaluation.
 
 ## Recommended limitation demos
 

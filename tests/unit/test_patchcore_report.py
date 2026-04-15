@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
+from xai_demo_suite.evaluate.localisation import load_binary_mask, measure_patch_mask_overlap
 from xai_demo_suite.explain.contracts import BoundingBox
 from xai_demo_suite.explain.counterfactuals import (
     make_patch_replacement_artefact,
@@ -24,6 +25,7 @@ from xai_demo_suite.reports.patchcore_bottle import (
 from xai_demo_suite.vis.image_panels import (
     draw_box_on_image,
     normalise_patch_scores,
+    save_mask_overlay,
     save_patch_crop,
     save_score_overlay,
 )
@@ -48,7 +50,18 @@ def _write_image(path: Path, colour: tuple[int, int, int], size: int = 32) -> No
     Image.fromarray(image, mode="RGB").save(path)
 
 
-def _write_manifest(tmp_path: Path, anomalous_count: int = 1) -> Path:
+def _write_mask(path: Path, size: int = 32) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    mask = np.zeros((size, size), dtype=np.uint8)
+    mask[8:16, 8:16] = 255
+    Image.fromarray(mask, mode="L").save(path)
+
+
+def _write_manifest(
+    tmp_path: Path,
+    anomalous_count: int = 1,
+    include_masks: bool = False,
+) -> Path:
     manifest_path = tmp_path / "data" / "processed" / "mvtec_ad" / "bottle" / "manifest.jsonl"
     train_path = (
         tmp_path
@@ -85,6 +98,18 @@ def _write_manifest(tmp_path: Path, anomalous_count: int = 1) -> Path:
             / f"{index:03d}.png"
         )
         _write_image(test_path, (200, 200, 200))
+        mask_path = (
+            tmp_path
+            / "data"
+            / "interim"
+            / "mvtec_ad"
+            / "bottle"
+            / "ground_truth"
+            / "broken"
+            / f"{index:03d}_mask.png"
+        )
+        if include_masks:
+            _write_mask(mask_path)
         rows.append(
             {
                 "dataset": "mvtec_ad",
@@ -95,7 +120,11 @@ def _write_manifest(tmp_path: Path, anomalous_count: int = 1) -> Path:
                 "image_path": (
                     f"data/interim/mvtec_ad/bottle/test/broken/{index:03d}.png"
                 ),
-                "mask_path": None,
+                "mask_path": (
+                    f"data/interim/mvtec_ad/bottle/ground_truth/broken/{index:03d}_mask.png"
+                    if include_masks
+                    else None
+                ),
             }
         )
     manifest_path.write_text(
@@ -133,6 +162,42 @@ def test_draw_box_on_image_writes_panel(tmp_path: Path) -> None:
 
     with Image.open(panel_path) as panel:
         assert panel.getpixel((4, 4)) == (1, 2, 3)
+
+
+def test_load_binary_mask_and_patch_overlap(tmp_path: Path) -> None:
+    mask_path = tmp_path / "mask.png"
+    _write_mask(mask_path, size=32)
+
+    mask = load_binary_mask(mask_path)
+    overlap = measure_patch_mask_overlap(
+        mask_path=mask_path,
+        patch_box=BoundingBox(x=0, y=0, width=16, height=16),
+    )
+
+    assert int(np.count_nonzero(mask)) == 64
+    assert overlap.intersects_mask is True
+    assert overlap.intersection_area == 64
+    assert overlap.patch_area == 256
+    assert overlap.mask_area == 64
+    assert overlap.patch_mask_fraction == 0.25
+    assert overlap.mask_covered_fraction == 1.0
+
+
+def test_save_mask_overlay_writes_ground_truth_panel(tmp_path: Path) -> None:
+    image_path = tmp_path / "image.png"
+    mask_path = tmp_path / "mask.png"
+    _write_image(image_path, (10, 10, 10), size=32)
+    _write_mask(mask_path, size=32)
+
+    overlay_path = save_mask_overlay(
+        image_path=image_path,
+        mask_path=mask_path,
+        output_path=tmp_path / "mask_overlay.png",
+    )
+
+    with Image.open(overlay_path) as overlay:
+        assert overlay.size == (32, 32)
+        assert overlay.getpixel((10, 10)) != (10, 10, 10)
 
 
 def _patch_score(distance: float, box: BoundingBox, image_path: Path) -> PatchScore:
@@ -274,3 +339,29 @@ def test_patchcore_bottle_report_writes_multiple_examples(tmp_path: Path) -> Non
     assert (config.output_dir / "assets" / "example_1_counterfactual_box.png").exists()
     assert (config.output_dir / "assets" / "example_2_score_overlay.png").exists()
     assert (config.output_dir / "assets" / "example_2_counterfactual_box.png").exists()
+
+
+def test_patchcore_bottle_report_writes_mask_check_when_available(tmp_path: Path) -> None:
+    manifest_path = _write_manifest(tmp_path, include_masks=True)
+    config = PatchCoreBottleReportConfig(
+        manifest_path=manifest_path,
+        output_dir=tmp_path / "outputs",
+        cache_path=tmp_path / "artefacts" / "bank.npz",
+        max_examples=1,
+        patch_size=16,
+        stride=16,
+        top_k=1,
+        use_cache=False,
+    )
+
+    output_path = build_patchcore_bottle_report(
+        config,
+        extractor=ConstantPatchFeatureExtractor(),
+    )
+
+    html = output_path.read_text(encoding="utf-8")
+    assert "Ground Truth Localisation Check" in html
+    assert "Top patch intersects mask: yes" in html
+    assert "Patch pixels overlapping mask: 64 / 256 (25.0%)" in html
+    assert "Mask covered by top patch: 64 / 64 (100.0%)" in html
+    assert (config.output_dir / "assets" / "mask_overlay.png").exists()
