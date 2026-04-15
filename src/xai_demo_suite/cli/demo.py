@@ -25,6 +25,7 @@ from xai_demo_suite.reports.shortcut_industrial import (
     IndustrialShortcutReportConfig,
     build_industrial_shortcut_report,
 )
+from xai_demo_suite.reports.suite import build_demo_suite, verify_demo_suite_outputs
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -115,6 +116,20 @@ def build_parser() -> argparse.ArgumentParser:
     drift.add_argument("--output-dir", type=Path, default=drift_defaults.output_dir)
     drift.add_argument("--synthetic-dir", type=Path, default=drift_defaults.synthetic_dir)
 
+    suite = subparsers.add_parser(
+        "suite",
+        help="Generate the current demo suite.",
+    )
+    suite.add_argument("--output-root", type=Path, default=Path("outputs"))
+    suite.add_argument("--include-mvtec", action="store_true")
+    suite.add_argument("--no-cache", action="store_true")
+
+    verify = subparsers.add_parser(
+        "verify",
+        help="Verify generated reports, demo cards, figures, and local index.",
+    )
+    verify.add_argument("--output-root", type=Path, default=Path("outputs"))
+
     return parser
 
 
@@ -190,6 +205,35 @@ def _handle_explanation_drift(args: argparse.Namespace) -> int:
     return 0
 
 
+def _handle_suite(args: argparse.Namespace) -> int:
+    results = build_demo_suite(
+        output_root=args.output_root,
+        include_mvtec=args.include_mvtec,
+        use_cache=not args.no_cache,
+    )
+    failed = False
+    for result in results:
+        if result.output_path is None:
+            failed = True
+            print(f"{result.status}: {result.name}: {result.note}")
+        else:
+            print(f"{result.status}: {result.name}: {result.output_path}")
+    return 1 if failed else 0
+
+
+def _handle_verify(args: argparse.Namespace) -> int:
+    result = verify_demo_suite_outputs(args.output_root)
+    print(f"cards: {result.card_count}")
+    print(f"checked paths: {len(result.checked_paths)}")
+    if result.ok:
+        print("verification: ok")
+        return 0
+    print("verification: failed")
+    for problem in result.problems:
+        print(f"- {problem}")
+    return 1
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the demo/report CLI."""
 
@@ -205,6 +249,10 @@ def main(argv: list[str] | None = None) -> int:
         return _handle_shortcut_industrial(args)
     if args.command == "explanation-drift":
         return _handle_explanation_drift(args)
+    if args.command == "suite":
+        return _handle_suite(args)
+    if args.command == "verify":
+        return _handle_verify(args)
     parser.error(f"Unsupported command: {args.command}")
     return 2
 

@@ -23,6 +23,24 @@ python3.12 -m venv .venv
 ./.venv/bin/pytest -q
 ```
 
+## Build and Verify the Demo Suite
+
+The synthetic demos do not require external data:
+
+```bash
+./.venv/bin/xai-demo-report suite
+./.venv/bin/xai-demo-report verify
+```
+
+On this machine, after preparing MVTec AD bottle, include the hero MVTec report:
+
+```bash
+./.venv/bin/xai-demo-report suite --include-mvtec
+./.venv/bin/xai-demo-report verify
+```
+
+The local index is written to `outputs/index.html`.
+
 ## Data
 
 Raw datasets are not committed. MVTec AD is sourced from the official MVTec

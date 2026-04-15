@@ -1,5 +1,9 @@
 # Demo catalogue
 
+Use `./.venv/bin/xai-demo-report suite` to regenerate the synthetic reports and
+`./.venv/bin/xai-demo-report verify` to check generated report integrity. See
+`docs/DEMO_STATUS.md` for the current runnable status.
+
 ## Demo 01 — Waterbirds shortcut
 A canonical background-spurious classification story.
 
