@@ -50,8 +50,8 @@ to random weights and does not download pretrained weights implicitly.
 
 ## First Local Report
 
-After preparing MVTec AD bottle and installing the optional ML stack, generate
-the first static PatchCore report slice with:
+After preparing MVTec AD bottle, generate the first static PatchCore report
+slice with:
 
 ```bash
 ./.venv/bin/xai-demo-report patchcore-bottle --max-examples 3
@@ -68,6 +68,10 @@ You can switch extractors explicitly:
 ./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor mean_rgb
 ./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor resnet18_random
 ```
+
+The narrative notebook for the same demo is checked in at
+`notebooks/03_patchcore_mvtec_bottle.ipynb`. It is intentionally output-free and
+delegates the implementation to package code.
 
 ## Main files
 

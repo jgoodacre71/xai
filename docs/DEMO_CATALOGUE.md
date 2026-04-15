@@ -9,6 +9,14 @@ A classifier learns border, watermark, or fixture leakage.
 ## Demo 03 — PatchCore on MVTec AD
 The hero demo: anomaly map plus nearest normal patch provenance.
 
+Current artefacts:
+- narrative notebook: `notebooks/03_patchcore_mvtec_bottle.ipynb`
+- static report: `outputs/patchcore_bottle/index.html`
+- demo card: `outputs/patchcore_bottle/demo_card.html`
+- local report index: `outputs/index.html`
+
+The generated `outputs/` files are local artefacts and are ignored by git.
+
 ## Demo 04 — PatchCore learns the wrong normal
 Nominal-set nuisance contamination and false positives.
 
