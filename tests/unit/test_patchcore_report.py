@@ -231,3 +231,6 @@ def test_patchcore_bottle_report_writes_html_and_assets(tmp_path: Path) -> None:
     assert (config.output_dir / "assets" / "counterfactual_box.png").exists()
     assert (config.output_dir / "assets" / "query_patch.png").exists()
     assert (config.output_dir / "assets" / "normal_patch_1.png").exists()
+    assert (config.output_dir / "demo_card.json").exists()
+    assert (config.output_dir / "demo_card.html").exists()
+    assert (config.output_dir.parent / "index.html").exists()

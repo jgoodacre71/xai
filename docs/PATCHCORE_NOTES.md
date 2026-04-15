@@ -81,6 +81,11 @@ It writes ignored local files under `outputs/patchcore_bottle/` and shows:
 - a per-patch distance table;
 - a nearest-normal patch replacement counterfactual preview.
 
+It also writes release-style summary artefacts:
+- `outputs/patchcore_bottle/demo_card.json`
+- `outputs/patchcore_bottle/demo_card.html`
+- `outputs/index.html`
+
 This report currently uses a coarse patch-score overlay rather than full
 anomaly-map interpolation. The counterfactual patch replacement is a didactic
 probe and should not be described as causal proof.

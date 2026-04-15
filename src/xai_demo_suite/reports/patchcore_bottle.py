@@ -25,6 +25,7 @@ from xai_demo_suite.models.patchcore import (
     score_image_with_extractor,
 )
 from xai_demo_suite.models.patchcore.types import PatchCoreMemoryBank, PatchScore
+from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index
 from xai_demo_suite.utils.io import ensure_directory
 from xai_demo_suite.vis.image_panels import draw_box_on_image, save_patch_crop, save_score_overlay
 
@@ -369,6 +370,46 @@ def _render_html(
     output_path.write_text(html_text, encoding="utf-8")
 
 
+def _build_demo_card(output_path: Path, assets: dict[str, Path]) -> DemoCard:
+    return DemoCard(
+        title="Demo 03 - PatchCore on MVTec AD bottle",
+        task="Unsupervised industrial anomaly detection on the MVTec AD bottle category.",
+        model="PatchCore-style nearest-neighbour memory bank with ResNet-18 patch-crop features.",
+        explanation_methods=(
+            "Coarse patch-score anomaly map",
+            "Top anomalous patch crop",
+            "Nearest-normal patch provenance",
+            "Nearest-normal patch replacement probe",
+        ),
+        key_lesson=(
+            "A PatchCore-style detector can make an anomaly score inspectable by "
+            "showing which nominal patches were nearest to the suspicious region."
+        ),
+        failure_mode=(
+            "Current features use random-weight ResNet-18 patch crops and a coarse "
+            "patch grid, so this is a pipeline/provenance slice rather than final "
+            "anomaly-detection quality."
+        ),
+        intervention=(
+            "Replace the top scored query patch with its nearest normal patch and "
+            "recompute the local score as a didactic counterfactual probe."
+        ),
+        remaining_caveats=(
+            "Not a calibrated severity model.",
+            "Not a causal proof.",
+            "No coreset selection or multi-scale feature-map PatchCore yet.",
+            "Coarse overlay is not pixel-level anomaly-map interpolation.",
+        ),
+        report_path=output_path,
+        figure_paths=(
+            assets["score_overlay"],
+            assets["query_crop"],
+            assets["normal_crop_1"],
+            assets["counterfactual"],
+        ),
+    )
+
+
 def build_patchcore_bottle_report(
     config: PatchCoreBottleReportConfig,
     extractor: PatchFeatureExtractor | None = None,
@@ -413,4 +454,7 @@ def build_patchcore_bottle_report(
         counterfactual=counterfactual,
         output_path=output_path,
     )
+    card = _build_demo_card(output_path=output_path, assets=assets)
+    save_demo_card(card, config.output_dir)
+    save_demo_index((card,), config.output_dir.parent / "index.html")
     return output_path

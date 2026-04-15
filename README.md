@@ -57,7 +57,8 @@ the first static PatchCore report slice with:
 ```
 
 The report is written to `outputs/patchcore_bottle/index.html`. Generated
-reports and cached model artefacts are ignored by git.
+reports, demo cards, local index files, and cached model artefacts are ignored
+by git.
 
 ## Main files
 
