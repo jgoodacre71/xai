@@ -128,3 +128,8 @@ It writes ignored local files under `outputs/patchcore_limits/` and shows:
   PatchCore output;
 - a component-identity swap where PatchCore can localise novelty but does not
   emit a symbolic rule violation.
+
+The shortcut-learning reports live outside PatchCore notes, but the same
+principle applies: any explanation claim should include a counter-test. The
+synthetic industrial shortcut report does this with stamp removal and stamp
+swap counterfactuals.

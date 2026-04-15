@@ -13,6 +13,10 @@ from xai_demo_suite.reports.patchcore_limits import (
     PatchCoreLimitsReportConfig,
     build_patchcore_limits_report,
 )
+from xai_demo_suite.reports.shortcut_industrial import (
+    IndustrialShortcutReportConfig,
+    build_industrial_shortcut_report,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -20,6 +24,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     bottle_defaults = PatchCoreBottleReportConfig()
     limits_defaults = PatchCoreLimitsReportConfig()
+    shortcut_defaults = IndustrialShortcutReportConfig()
     parser = argparse.ArgumentParser(
         prog="xai-demo-report",
         description="Generate local demo reports from package code.",
@@ -61,6 +66,13 @@ def build_parser() -> argparse.ArgumentParser:
     limits.add_argument("--top-k", type=int, default=limits_defaults.top_k)
     limits.add_argument("--no-cache", action="store_true")
 
+    shortcut = subparsers.add_parser(
+        "shortcut-industrial",
+        help="Generate the synthetic industrial shortcut report.",
+    )
+    shortcut.add_argument("--output-dir", type=Path, default=shortcut_defaults.output_dir)
+    shortcut.add_argument("--synthetic-dir", type=Path, default=shortcut_defaults.synthetic_dir)
+
     return parser
 
 
@@ -100,6 +112,16 @@ def _handle_patchcore_limits(args: argparse.Namespace) -> int:
     return 0
 
 
+def _handle_shortcut_industrial(args: argparse.Namespace) -> int:
+    config = IndustrialShortcutReportConfig(
+        output_dir=args.output_dir,
+        synthetic_dir=args.synthetic_dir,
+    )
+    output_path = build_industrial_shortcut_report(config)
+    print(f"report: {output_path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the demo/report CLI."""
 
@@ -109,6 +131,8 @@ def main(argv: list[str] | None = None) -> int:
         return _handle_patchcore_bottle(args)
     if args.command == "patchcore-limits":
         return _handle_patchcore_limits(args)
+    if args.command == "shortcut-industrial":
+        return _handle_shortcut_industrial(args)
     parser.error(f"Unsupported command: {args.command}")
     return 2
 

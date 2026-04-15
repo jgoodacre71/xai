@@ -6,6 +6,13 @@ A canonical background-spurious classification story.
 ## Demo 02 — Industrial shortcut trap
 A classifier learns border, watermark, or fixture leakage.
 
+Current artefacts:
+- static report: `outputs/shortcut_industrial/index.html`
+- demo card: `outputs/shortcut_industrial/demo_card.html`
+
+The first implementation uses deterministic synthetic part images with a corner
+stamp shortcut and a central-shape intervention.
+
 ## Demo 03 — PatchCore on MVTec AD
 The hero demo: anomaly map plus nearest normal patch provenance.
 

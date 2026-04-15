@@ -85,6 +85,18 @@ The report is written to `outputs/patchcore_limits/index.html`. It shows slot
 board examples where PatchCore-style novelty is useful, but count, severity, and
 semantic logic require extra modelling layers.
 
+## Industrial Shortcut Report
+
+Generate the synthetic shortcut demo with:
+
+```bash
+./.venv/bin/xai-demo-report shortcut-industrial
+```
+
+The report is written to `outputs/shortcut_industrial/index.html`. It shows a
+corner-stamp shortcut, counterfactual stamp swaps/removal, and a central-shape
+intervention.
+
 ## Main files
 
 - `REPO_SPEC.md` — the long-form repository specification
