@@ -5,13 +5,20 @@ from xai_demo_suite.data.synthetic.industrial_shortcuts import (
     IndustrialShortcutSample,
     generate_industrial_shortcut_dataset,
 )
-from xai_demo_suite.data.synthetic.slot_boards import SlotBoardSample, generate_slot_board_dataset
+from xai_demo_suite.data.synthetic.slot_boards import (
+    NuisanceBoardSample,
+    SlotBoardSample,
+    generate_nuisance_board_dataset,
+    generate_slot_board_dataset,
+)
 
 __all__ = [
     "IndustrialShortcutSample",
+    "NuisanceBoardSample",
     "SlotBoardSample",
     "SyntheticImageSample",
     "generate_industrial_shortcut_dataset",
+    "generate_nuisance_board_dataset",
     "generate_slot_board_dataset",
     "make_striped_fixture",
 ]

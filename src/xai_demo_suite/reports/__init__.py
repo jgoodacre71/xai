@@ -9,6 +9,10 @@ from xai_demo_suite.reports.patchcore_limits import (
     PatchCoreLimitsReportConfig,
     build_patchcore_limits_report,
 )
+from xai_demo_suite.reports.patchcore_wrong_normal import (
+    PatchCoreWrongNormalReportConfig,
+    build_patchcore_wrong_normal_report,
+)
 from xai_demo_suite.reports.shortcut_industrial import (
     IndustrialShortcutReportConfig,
     build_industrial_shortcut_report,
@@ -19,9 +23,11 @@ __all__ = [
     "IndustrialShortcutReportConfig",
     "PatchCoreBottleReportConfig",
     "PatchCoreLimitsReportConfig",
+    "PatchCoreWrongNormalReportConfig",
     "build_industrial_shortcut_report",
     "build_patchcore_bottle_report",
     "build_patchcore_limits_report",
+    "build_patchcore_wrong_normal_report",
     "save_demo_card",
     "save_demo_index",
 ]

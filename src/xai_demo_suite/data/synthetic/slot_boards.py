@@ -34,6 +34,20 @@ class SlotBoardSample:
         return max(0, self.expected_count - self.observed_count)
 
 
+@dataclass(frozen=True, slots=True)
+class NuisanceBoardSample:
+    """Metadata for one board in the wrong-normal synthetic demo."""
+
+    sample_id: str
+    image_path: Path
+    mask_path: Path
+    split: str
+    label: str
+    has_tab: bool
+    tab_region: BoundingBox
+    semantic_note: str
+
+
 def _slot_centres() -> tuple[tuple[int, int], ...]:
     return (
         (78, 72),
@@ -95,6 +109,12 @@ def _mask_bbox(mask: Image.Image) -> BoundingBox:
 
 def _mask_area(mask: Image.Image) -> int:
     return int(np.count_nonzero(np.asarray(mask, dtype=np.uint8)))
+
+
+def _draw_corner_tab(draw: ImageDraw.ImageDraw, mask_draw: ImageDraw.ImageDraw) -> None:
+    polygon = [(276, 24), (300, 24), (300, 58)]
+    draw.polygon(polygon, fill=(230, 204, 80))
+    mask_draw.polygon(polygon, fill=255)
 
 
 def _write_sample(
@@ -229,3 +249,109 @@ def generate_slot_board_dataset(
         ),
     ]
     return train_samples, eval_samples
+
+
+def _write_nuisance_sample(
+    *,
+    output_dir: Path,
+    sample_id: str,
+    split: str,
+    label: str,
+    has_tab: bool,
+    semantic_note: str,
+) -> NuisanceBoardSample:
+    image = _base_board()
+    mask = Image.new("L", image.size, 0)
+    draw = ImageDraw.Draw(image)
+    mask_draw = ImageDraw.Draw(mask)
+    for centre in _slot_centres():
+        _draw_component(draw, centre, (168, 190, 184))
+    if has_tab:
+        _draw_corner_tab(draw, mask_draw)
+
+    image_dir = output_dir / split
+    mask_dir = output_dir / "masks"
+    ensure_directory(image_dir)
+    ensure_directory(mask_dir)
+    image_path = image_dir / f"{sample_id}.png"
+    mask_path = mask_dir / f"{sample_id}_tab_mask.png"
+    image.save(image_path)
+    mask.save(mask_path)
+    return NuisanceBoardSample(
+        sample_id=sample_id,
+        image_path=image_path,
+        mask_path=mask_path,
+        split=split,
+        label=label,
+        has_tab=has_tab,
+        tab_region=BoundingBox(x=276, y=24, width=24, height=34),
+        semantic_note=semantic_note,
+    )
+
+
+def generate_nuisance_board_dataset(
+    output_dir: Path,
+) -> tuple[list[NuisanceBoardSample], list[NuisanceBoardSample], list[NuisanceBoardSample]]:
+    """Generate clean, contaminated, and query boards for the wrong-normal report."""
+
+    clean_train = [
+        _write_nuisance_sample(
+            output_dir=output_dir,
+            sample_id="clean_normal_000",
+            split="train_clean",
+            label="normal",
+            has_tab=False,
+            semantic_note="Clean nominal board without the acquisition tab.",
+        ),
+        _write_nuisance_sample(
+            output_dir=output_dir,
+            sample_id="clean_normal_001",
+            split="train_clean",
+            label="normal",
+            has_tab=False,
+            semantic_note="Second clean nominal board for provenance.",
+        ),
+    ]
+    contaminated_train = [
+        _write_nuisance_sample(
+            output_dir=output_dir,
+            sample_id="tabbed_normal_000",
+            split="train_contaminated",
+            label="normal",
+            has_tab=True,
+            semantic_note="Nominal board contaminated by a corner acquisition tab.",
+        ),
+        _write_nuisance_sample(
+            output_dir=output_dir,
+            sample_id="tabbed_normal_001",
+            split="train_contaminated",
+            label="normal",
+            has_tab=True,
+            semantic_note="Second contaminated nominal board for provenance.",
+        ),
+    ]
+    query_samples = [
+        _write_nuisance_sample(
+            output_dir=output_dir,
+            sample_id="query_clean_normal",
+            split="test",
+            label="normal",
+            has_tab=False,
+            semantic_note=(
+                "A clean normal board. The contaminated bank can treat the missing "
+                "corner tab as anomalous."
+            ),
+        ),
+        _write_nuisance_sample(
+            output_dir=output_dir,
+            sample_id="query_tabbed_normal",
+            split="test",
+            label="normal",
+            has_tab=True,
+            semantic_note=(
+                "A tabbed normal board. The clean bank flags the tab as acquisition "
+                "nuisance."
+            ),
+        ),
+    ]
+    return clean_train, contaminated_train, query_samples

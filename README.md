@@ -85,6 +85,18 @@ The report is written to `outputs/patchcore_limits/index.html`. It shows slot
 board examples where PatchCore-style novelty is useful, but count, severity, and
 semantic logic require extra modelling layers.
 
+## PatchCore Wrong-Normal Report
+
+Generate the synthetic normal-set contamination demo with:
+
+```bash
+./.venv/bin/xai-demo-report patchcore-wrong-normal
+```
+
+The report is written to `outputs/patchcore_wrong_normal/index.html`. It
+compares a clean memory bank with a memory bank contaminated by a corner
+acquisition tab.
+
 ## Industrial Shortcut Report
 
 Generate the synthetic shortcut demo with:

@@ -27,6 +27,14 @@ The generated `outputs/` files are local artefacts and are ignored by git.
 ## Demo 04 — PatchCore learns the wrong normal
 Nominal-set nuisance contamination and false positives.
 
+Current artefacts:
+- static report: `outputs/patchcore_wrong_normal/index.html`
+- demo card: `outputs/patchcore_wrong_normal/demo_card.html`
+
+The first implementation uses deterministic slot boards with a corner-tab
+nuisance in the nominal set and compares clean versus contaminated memory-bank
+provenance.
+
 ## Demo 05 — PatchCore cannot count
 Repeated-object anomaly layouts expose non-count semantics.
 

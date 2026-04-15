@@ -13,6 +13,10 @@ from xai_demo_suite.reports.patchcore_limits import (
     PatchCoreLimitsReportConfig,
     build_patchcore_limits_report,
 )
+from xai_demo_suite.reports.patchcore_wrong_normal import (
+    PatchCoreWrongNormalReportConfig,
+    build_patchcore_wrong_normal_report,
+)
 from xai_demo_suite.reports.shortcut_industrial import (
     IndustrialShortcutReportConfig,
     build_industrial_shortcut_report,
@@ -24,6 +28,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     bottle_defaults = PatchCoreBottleReportConfig()
     limits_defaults = PatchCoreLimitsReportConfig()
+    wrong_normal_defaults = PatchCoreWrongNormalReportConfig()
     shortcut_defaults = IndustrialShortcutReportConfig()
     parser = argparse.ArgumentParser(
         prog="xai-demo-report",
@@ -65,6 +70,31 @@ def build_parser() -> argparse.ArgumentParser:
     limits.add_argument("--stride", type=int, default=limits_defaults.stride)
     limits.add_argument("--top-k", type=int, default=limits_defaults.top_k)
     limits.add_argument("--no-cache", action="store_true")
+
+    wrong_normal = subparsers.add_parser(
+        "patchcore-wrong-normal",
+        help="Generate the synthetic PatchCore wrong-normal report.",
+    )
+    wrong_normal.add_argument("--output-dir", type=Path, default=wrong_normal_defaults.output_dir)
+    wrong_normal.add_argument(
+        "--synthetic-dir",
+        type=Path,
+        default=wrong_normal_defaults.synthetic_dir,
+    )
+    wrong_normal.add_argument(
+        "--clean-cache-path",
+        type=Path,
+        default=wrong_normal_defaults.clean_cache_path,
+    )
+    wrong_normal.add_argument(
+        "--contaminated-cache-path",
+        type=Path,
+        default=wrong_normal_defaults.contaminated_cache_path,
+    )
+    wrong_normal.add_argument("--patch-size", type=int, default=wrong_normal_defaults.patch_size)
+    wrong_normal.add_argument("--stride", type=int, default=wrong_normal_defaults.stride)
+    wrong_normal.add_argument("--top-k", type=int, default=wrong_normal_defaults.top_k)
+    wrong_normal.add_argument("--no-cache", action="store_true")
 
     shortcut = subparsers.add_parser(
         "shortcut-industrial",
@@ -112,6 +142,22 @@ def _handle_patchcore_limits(args: argparse.Namespace) -> int:
     return 0
 
 
+def _handle_patchcore_wrong_normal(args: argparse.Namespace) -> int:
+    config = PatchCoreWrongNormalReportConfig(
+        output_dir=args.output_dir,
+        synthetic_dir=args.synthetic_dir,
+        clean_cache_path=args.clean_cache_path,
+        contaminated_cache_path=args.contaminated_cache_path,
+        patch_size=args.patch_size,
+        stride=args.stride,
+        top_k=args.top_k,
+        use_cache=not args.no_cache,
+    )
+    output_path = build_patchcore_wrong_normal_report(config)
+    print(f"report: {output_path}")
+    return 0
+
+
 def _handle_shortcut_industrial(args: argparse.Namespace) -> int:
     config = IndustrialShortcutReportConfig(
         output_dir=args.output_dir,
@@ -131,6 +177,8 @@ def main(argv: list[str] | None = None) -> int:
         return _handle_patchcore_bottle(args)
     if args.command == "patchcore-limits":
         return _handle_patchcore_limits(args)
+    if args.command == "patchcore-wrong-normal":
+        return _handle_patchcore_wrong_normal(args)
     if args.command == "shortcut-industrial":
         return _handle_shortcut_industrial(args)
     parser.error(f"Unsupported command: {args.command}")

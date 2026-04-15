@@ -4,6 +4,7 @@ from PIL import Image
 
 from xai_demo_suite.data.synthetic import (
     generate_industrial_shortcut_dataset,
+    generate_nuisance_board_dataset,
     generate_slot_board_dataset,
     make_striped_fixture,
 )
@@ -59,3 +60,22 @@ def test_generate_industrial_shortcut_dataset_writes_swapped_cases(tmp_path: Pat
     with Image.open(by_id["test_normal_swapped_stamp"].image_path) as image:
         assert image.size == (128, 128)
         assert image.getpixel((10, 10)) == (216, 70, 64)
+
+
+def test_generate_nuisance_board_dataset_writes_clean_and_contaminated_sets(
+    tmp_path: Path,
+) -> None:
+    clean_train, contaminated_train, query_samples = generate_nuisance_board_dataset(tmp_path)
+
+    assert [sample.has_tab for sample in clean_train] == [False, False]
+    assert [sample.has_tab for sample in contaminated_train] == [True, True]
+    assert [sample.sample_id for sample in query_samples] == [
+        "query_clean_normal",
+        "query_tabbed_normal",
+    ]
+    assert query_samples[0].tab_region.width == 24
+
+    with Image.open(contaminated_train[0].mask_path) as mask:
+        assert mask.getbbox() is not None
+    with Image.open(clean_train[0].mask_path) as mask:
+        assert mask.getbbox() is None
