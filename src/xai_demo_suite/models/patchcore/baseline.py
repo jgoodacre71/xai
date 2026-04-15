@@ -1,9 +1,10 @@
 """Small PatchCore-style baseline focused on provenance.
 
-This module is intentionally light: it uses mean RGB patch features rather than
-deep backbone features. The purpose is to establish the memory-bank metadata,
-nearest-normal retrieval, and explanation artefact plumbing before introducing a
-full PatchCore implementation.
+This module is intentionally light. It defaults to mean RGB patch features, but
+the scoring path accepts any patch feature extractor that follows the local
+protocol. The purpose is to establish the memory-bank metadata, nearest-normal
+retrieval, and explanation artefact plumbing before introducing a full PatchCore
+implementation.
 """
 
 from __future__ import annotations
@@ -16,6 +17,10 @@ from PIL import Image
 
 from xai_demo_suite.data.manifests import ImageManifestRecord
 from xai_demo_suite.explain.contracts import BoundingBox, ProvenanceArtefact
+from xai_demo_suite.models.patchcore.features import (
+    MeanRGBPatchFeatureExtractor,
+    PatchFeatureExtractor,
+)
 from xai_demo_suite.models.patchcore.types import (
     FloatArray,
     PatchCoreMemoryBank,
@@ -25,10 +30,10 @@ from xai_demo_suite.models.patchcore.types import (
 )
 
 
-def _load_rgb_array(image_path: Path) -> FloatArray:
+def _image_dimensions(image_path: Path) -> tuple[int, int]:
     with Image.open(image_path) as image:
-        rgb_image = image.convert("RGB")
-        return np.asarray(rgb_image, dtype=np.float64) / 255.0
+        width, height = image.size
+    return height, width
 
 
 def _iter_patch_boxes(height: int, width: int, patch_size: int, stride: int) -> list[BoundingBox]:
@@ -44,24 +49,14 @@ def _iter_patch_boxes(height: int, width: int, patch_size: int, stride: int) -> 
     return boxes
 
 
-def _extract_mean_colour_features(
-    image: FloatArray,
-    boxes: Sequence[BoundingBox],
-) -> FloatArray:
-    features = np.empty((len(boxes), 3), dtype=np.float64)
-    for index, box in enumerate(boxes):
-        patch = image[box.y : box.y + box.height, box.x : box.x + box.width, :]
-        features[index] = patch.mean(axis=(0, 1))
-    return features
-
-
-def build_mean_colour_memory_bank(
+def build_patchcore_memory_bank(
     records: Sequence[ImageManifestRecord],
     *,
+    extractor: PatchFeatureExtractor,
     patch_size: int = 32,
     stride: int = 32,
 ) -> PatchCoreMemoryBank:
-    """Build a nominal memory bank from mean-colour patch features."""
+    """Build a nominal memory bank from a patch feature extractor."""
 
     all_features: list[FloatArray] = []
     metadata: list[PatchMetadata] = []
@@ -71,10 +66,11 @@ def build_mean_colour_memory_bank(
         if record.is_anomalous:
             raise ValueError("PatchCore memory banks must be built from nominal records only.")
 
-        image = _load_rgb_array(record.image_path)
-        height, width = image.shape[:2]
+        height, width = _image_dimensions(record.image_path)
         boxes = _iter_patch_boxes(height=height, width=width, patch_size=patch_size, stride=stride)
-        features = _extract_mean_colour_features(image=image, boxes=boxes)
+        features = extractor.extract(record.image_path, boxes)
+        if features.shape[0] != len(boxes):
+            raise ValueError("Extractor must return one feature row per patch box.")
         all_features.append(features)
 
         for patch_index, box in enumerate(boxes):
@@ -96,7 +92,23 @@ def build_mean_colour_memory_bank(
     return PatchCoreMemoryBank(
         features=np.vstack(all_features),
         metadata=tuple(metadata),
-        feature_name="mean_rgb",
+        feature_name=extractor.feature_name,
+    )
+
+
+def build_mean_colour_memory_bank(
+    records: Sequence[ImageManifestRecord],
+    *,
+    patch_size: int = 32,
+    stride: int = 32,
+) -> PatchCoreMemoryBank:
+    """Build a nominal memory bank from mean-colour patch features."""
+
+    return build_patchcore_memory_bank(
+        records,
+        extractor=MeanRGBPatchFeatureExtractor(),
+        patch_size=patch_size,
+        stride=stride,
     )
 
 
@@ -119,21 +131,29 @@ def _nearest_neighbours(
     )
 
 
-def score_image_against_memory_bank(
+def score_image_with_extractor(
     *,
     sample_id: str,
     image_path: Path,
     memory_bank: PatchCoreMemoryBank,
+    extractor: PatchFeatureExtractor,
     patch_size: int = 32,
     stride: int = 32,
     top_k: int = 3,
 ) -> list[PatchScore]:
     """Score image patches by distance to the nominal memory bank."""
 
-    image = _load_rgb_array(image_path)
-    height, width = image.shape[:2]
+    if memory_bank.feature_name != extractor.feature_name:
+        raise ValueError(
+            "Memory-bank feature name does not match extractor feature name: "
+            f"{memory_bank.feature_name!r} != {extractor.feature_name!r}"
+        )
+
+    height, width = _image_dimensions(image_path)
     boxes = _iter_patch_boxes(height=height, width=width, patch_size=patch_size, stride=stride)
-    features = _extract_mean_colour_features(image=image, boxes=boxes)
+    features = extractor.extract(image_path, boxes)
+    if features.shape[0] != len(boxes):
+        raise ValueError("Extractor must return one feature row per patch box.")
 
     scores: list[PatchScore] = []
     for box, feature in zip(boxes, features, strict=True):
@@ -152,6 +172,28 @@ def score_image_against_memory_bank(
             )
         )
     return sorted(scores, key=lambda score: score.distance, reverse=True)
+
+
+def score_image_against_memory_bank(
+    *,
+    sample_id: str,
+    image_path: Path,
+    memory_bank: PatchCoreMemoryBank,
+    patch_size: int = 32,
+    stride: int = 32,
+    top_k: int = 3,
+) -> list[PatchScore]:
+    """Score image patches using the default mean-colour baseline extractor."""
+
+    return score_image_with_extractor(
+        sample_id=sample_id,
+        image_path=image_path,
+        memory_bank=memory_bank,
+        extractor=MeanRGBPatchFeatureExtractor(),
+        patch_size=patch_size,
+        stride=stride,
+        top_k=top_k,
+    )
 
 
 def score_to_provenance_artefact(

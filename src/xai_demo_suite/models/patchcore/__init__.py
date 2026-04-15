@@ -2,8 +2,15 @@
 
 from xai_demo_suite.models.patchcore.baseline import (
     build_mean_colour_memory_bank,
+    build_patchcore_memory_bank,
     score_image_against_memory_bank,
+    score_image_with_extractor,
     score_to_provenance_artefact,
+)
+from xai_demo_suite.models.patchcore.features import (
+    MeanRGBPatchFeatureExtractor,
+    PatchFeatureExtractor,
+    TorchvisionBackbonePatchFeatureExtractor,
 )
 from xai_demo_suite.models.patchcore.types import (
     PatchCoreMemoryBank,
@@ -13,11 +20,16 @@ from xai_demo_suite.models.patchcore.types import (
 )
 
 __all__ = [
+    "MeanRGBPatchFeatureExtractor",
     "PatchCoreMemoryBank",
+    "PatchFeatureExtractor",
     "PatchMetadata",
     "PatchNearestNeighbour",
     "PatchScore",
+    "TorchvisionBackbonePatchFeatureExtractor",
     "build_mean_colour_memory_bank",
+    "build_patchcore_memory_bank",
     "score_image_against_memory_bank",
+    "score_image_with_extractor",
     "score_to_provenance_artefact",
 ]

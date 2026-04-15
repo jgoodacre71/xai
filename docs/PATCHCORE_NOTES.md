@@ -36,6 +36,19 @@ contract testable:
 Deep features, coreset selection, anomaly-map rendering, and counterfactual
 patch replacement should build on this provenance shape rather than bypass it.
 
+## Feature extraction boundary
+
+PatchCore-style scoring now accepts a `PatchFeatureExtractor` protocol. The
+mean RGB extractor is the default deterministic baseline, while the optional
+Torch/Torchvision extractor is a dependency boundary for future deep-feature
+work.
+
+Current rules:
+- feature extractors must return one feature row per requested patch box;
+- memory banks store the extractor `feature_name`;
+- scoring rejects extractor/memory-bank mismatches;
+- patch metadata is independent of extractor choice.
+
 ## Recommended visual contract
 
 For each highlighted test image:

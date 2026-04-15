@@ -1,16 +1,34 @@
 from __future__ import annotations
 
+import importlib.util
 from pathlib import Path
 
 import numpy as np
+import pytest
 from PIL import Image
 
 from xai_demo_suite.data.manifests import ImageManifestRecord
+from xai_demo_suite.explain.contracts import BoundingBox
 from xai_demo_suite.models.patchcore import (
+    TorchvisionBackbonePatchFeatureExtractor,
     build_mean_colour_memory_bank,
+    build_patchcore_memory_bank,
     score_image_against_memory_bank,
+    score_image_with_extractor,
     score_to_provenance_artefact,
 )
+from xai_demo_suite.models.patchcore.types import FloatArray
+
+
+class ConstantPatchFeatureExtractor:
+    feature_name = "constant_test"
+
+    def extract(self, image_path: Path, boxes: list[BoundingBox]) -> FloatArray:
+        del image_path
+        features = np.empty((len(boxes), 2), dtype=np.float64)
+        for index, box in enumerate(boxes):
+            features[index] = (box.x, box.y)
+        return features
 
 
 def _write_colour_image(path: Path, colour: tuple[int, int, int], size: int = 32) -> None:
@@ -100,3 +118,58 @@ def test_score_to_provenance_artefact_keeps_source_boxes(tmp_path: Path) -> None
     assert artefact.reference_image_paths == [nominal]
     assert artefact.reference_boxes is not None
     assert artefact.reference_boxes[0].area == 1024
+
+
+def test_custom_extractor_uses_same_provenance_path(tmp_path: Path) -> None:
+    nominal = tmp_path / "nominal.png"
+    query = tmp_path / "query.png"
+    _write_colour_image(nominal, (64, 64, 64), size=32)
+    _write_colour_image(query, (128, 128, 128), size=32)
+    extractor = ConstantPatchFeatureExtractor()
+
+    memory_bank = build_patchcore_memory_bank(
+        [_record(nominal)],
+        extractor=extractor,
+        patch_size=16,
+        stride=16,
+    )
+    scores = score_image_with_extractor(
+        sample_id="query",
+        image_path=query,
+        memory_bank=memory_bank,
+        extractor=extractor,
+        patch_size=16,
+        stride=16,
+        top_k=1,
+    )
+
+    assert memory_bank.feature_name == "constant_test"
+    assert memory_bank.features.shape == (4, 2)
+    assert scores[0].nearest[0].metadata.source_path == nominal
+    assert scores[0].nearest[0].metadata.box == scores[0].query_box
+
+
+def test_extractor_mismatch_is_rejected(tmp_path: Path) -> None:
+    nominal = tmp_path / "nominal.png"
+    query = tmp_path / "query.png"
+    _write_colour_image(nominal, (64, 64, 64), size=32)
+    _write_colour_image(query, (128, 128, 128), size=32)
+    memory_bank = build_mean_colour_memory_bank([_record(nominal)], patch_size=32, stride=32)
+
+    with pytest.raises(ValueError, match="feature name does not match"):
+        score_image_with_extractor(
+            sample_id="query",
+            image_path=query,
+            memory_bank=memory_bank,
+            extractor=ConstantPatchFeatureExtractor(),
+            patch_size=32,
+            stride=32,
+        )
+
+
+def test_optional_torchvision_extractor_has_actionable_error_without_dependencies() -> None:
+    if importlib.util.find_spec("torch") and importlib.util.find_spec("torchvision"):
+        pytest.skip("Torch dependencies are installed in this environment.")
+
+    with pytest.raises(RuntimeError, match="requires optional dependencies"):
+        TorchvisionBackbonePatchFeatureExtractor()
