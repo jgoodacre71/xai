@@ -48,6 +48,37 @@ Use for:
 - logical anomaly limitations
 - structure versus logic comparisons
 
+Source:
+- official dataset page:
+  <https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad>
+- official downloads page:
+  <https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad/downloads>
+
+Licence:
+- Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+  (CC BY-NC-SA 4.0)
+- non-commercial use only
+
+Local workflow:
+
+```bash
+./.venv/bin/python -m xai_demo_suite.cli.data list
+./.venv/bin/python -m xai_demo_suite.cli.data fetch mvtec_loco_ad --category juice_bottle --dry-run
+./.venv/bin/python -m xai_demo_suite.cli.data fetch mvtec_loco_ad --category juice_bottle
+./.venv/bin/python -m xai_demo_suite.cli.data prepare mvtec_loco_ad --category juice_bottle
+```
+
+Storage policy:
+- archives are downloaded to `data/raw/mvtec_loco_ad/archives/`;
+- extracted copies are written to `data/interim/mvtec_loco_ad/`;
+- manifests are written to
+  `data/processed/mvtec_loco_ad/<category>/manifest.jsonl`;
+- raw archives, extracted data, and processed manifests are local artefacts and
+  are excluded from git.
+
+The full dataset is about 5.71 GB. Prefer one category first while developing
+the logical-anomaly comparison.
+
 ### Waterbirds
 Use for:
 - classic shortcut demonstration

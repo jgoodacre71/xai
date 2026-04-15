@@ -37,15 +37,29 @@ datasets:
       - "zipper"
   mvtec_loco_ad:
     name: "MVTec LOCO AD"
-    status: "planned"
+    status: "supported"
     purpose:
       - "logical anomaly limitations"
       - "structure versus logic comparisons"
     raw_data_committed: false
-    licence: "Record before enabling downloader."
-    source_url: "Record before enabling downloader."
-    citation: "Record before enabling downloader."
-    expected_layout: "data/raw/mvtec_loco_ad/"
+    licence: "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)"
+    licence_url: "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+    restrictions:
+      - "Non-commercial use only."
+      - "Raw archives and extracted data must not be committed."
+    source_url: "https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad"
+    download_url: "https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad/downloads"
+    citation: "Bergmann et al., The MVTec LOCO AD Dataset for Logical Constraint Anomaly Detection."
+    expected_layout:
+      raw_archives: "data/raw/mvtec_loco_ad/archives/<category>.tar.xz"
+      interim_extracted: "data/interim/mvtec_loco_ad/<category>/"
+      processed_manifest: "data/processed/mvtec_loco_ad/<category>/manifest.jsonl"
+    categories:
+      - "breakfast_box"
+      - "juice_bottle"
+      - "pushpins"
+      - "screw_bag"
+      - "splicing_connectors"
   waterbirds:
     name: "Waterbirds"
     status: "planned"

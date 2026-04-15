@@ -42,7 +42,8 @@ Verify generated reports, cards, selected figures, and the local index:
   the current report is a synthetic proxy.
 - Demo 07 still needs a real MVTec LOCO AD comparison; the current report is a
   synthetic logical-anomaly proxy.
-- MVTec LOCO AD is not sourced yet.
+- MVTec LOCO AD has a fetch/prepare workflow, but Demo 07 does not yet use real
+  LOCO examples.
 - The PatchCore hero report still uses deterministic local patch features rather
   than pretrained multi-scale PatchCore.
 - The repository has no configured Git remote in this checkout.
