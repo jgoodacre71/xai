@@ -19,6 +19,23 @@
 
 Store source image and patch coordinates for exemplar retrieval.
 
+## Current implementation status
+
+The first implementation slice is a provenance-focused PatchCore baseline in
+`src/xai_demo_suite/models/patchcore/`.
+
+It deliberately uses mean RGB patch features rather than deep backbone features.
+This is not the final PatchCore model. Its purpose is to make the memory-bank
+contract testable:
+- every retained nominal patch has a source image id;
+- every retained nominal patch has source coordinates;
+- scoring returns nearest normal patch evidence;
+- nearest-normal evidence can be converted into the shared
+  `ProvenanceArtefact` contract.
+
+Deep features, coreset selection, anomaly-map rendering, and counterfactual
+patch replacement should build on this provenance shape rather than bypass it.
+
 ## Recommended visual contract
 
 For each highlighted test image:

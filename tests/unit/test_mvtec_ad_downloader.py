@@ -132,8 +132,21 @@ def test_extract_refuses_existing_interim_without_overwrite(tmp_path: Path) -> N
         )
 
 
-def test_cli_dry_run_reports_target(capsys: pytest.CaptureFixture[str]) -> None:
-    exit_code = main(["fetch", "mvtec_ad", "--category", "bottle", "--dry-run"])
+def test_cli_dry_run_reports_target(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = main(
+        [
+            "fetch",
+            "mvtec_ad",
+            "--category",
+            "bottle",
+            "--raw-root",
+            str(tmp_path / "raw"),
+            "--dry-run",
+        ]
+    )
 
     output = capsys.readouterr().out
     assert exit_code == 0
