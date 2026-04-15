@@ -112,6 +112,46 @@ def build_mean_colour_memory_bank(
     )
 
 
+def reduce_memory_bank_coreset(
+    memory_bank: PatchCoreMemoryBank,
+    *,
+    max_patches: int,
+    seed: int = 0,
+) -> PatchCoreMemoryBank:
+    """Reduce a memory bank with deterministic greedy k-centre selection."""
+
+    if max_patches <= 0:
+        raise ValueError("max_patches must be positive.")
+    if memory_bank.features.shape[0] <= max_patches:
+        return memory_bank
+
+    features = memory_bank.features.astype(np.float64, copy=False)
+    row_count = features.shape[0]
+    rng = np.random.default_rng(seed)
+    selected_indices = np.empty(max_patches, dtype=np.int64)
+    selected_mask = np.zeros(row_count, dtype=bool)
+
+    first_index = int(rng.integers(0, row_count))
+    selected_indices[0] = first_index
+    selected_mask[first_index] = True
+    min_squared_distances = np.sum((features - features[first_index]) ** 2, axis=1)
+    min_squared_distances[selected_mask] = -np.inf
+
+    for output_index in range(1, max_patches):
+        next_index = int(np.argmax(min_squared_distances))
+        selected_indices[output_index] = next_index
+        selected_mask[next_index] = True
+        squared_distances = np.sum((features - features[next_index]) ** 2, axis=1)
+        min_squared_distances = np.minimum(min_squared_distances, squared_distances)
+        min_squared_distances[selected_mask] = -np.inf
+
+    return PatchCoreMemoryBank(
+        features=memory_bank.features[selected_indices],
+        metadata=tuple(memory_bank.metadata[int(index)] for index in selected_indices),
+        feature_name=memory_bank.feature_name,
+    )
+
+
 def _nearest_neighbours(
     query_feature: FloatArray,
     memory_bank: PatchCoreMemoryBank,

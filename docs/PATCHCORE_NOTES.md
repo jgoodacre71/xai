@@ -39,24 +39,27 @@ patch replacement should build on this provenance shape rather than bypass it.
 ## Feature extraction boundary
 
 PatchCore-style scoring now accepts a `PatchFeatureExtractor` protocol. The
-mean RGB extractor is the default deterministic baseline, while the optional
-Torch/Torchvision extractor is a dependency boundary for future deep-feature
-work.
+mean RGB extractor is the simplest deterministic baseline. The report default is
+the deterministic `colour_texture` extractor, while the serious local model path
+uses dense Torchvision ResNet-18 feature maps sampled from intermediate feature
+maps.
 
 Current rules:
 - feature extractors must return one feature row per requested patch box;
 - memory banks store the extractor `feature_name`;
 - scoring rejects extractor/memory-bank mismatches;
-- patch metadata is independent of extractor choice.
+- patch metadata is independent of extractor choice;
+- coreset reduction preserves the retained source image ids and patch
+  coordinates.
 
 The report default is now the deterministic `colour_texture` extractor, which
 uses colour statistics, grey-level quantiles, and simple gradient histograms. It
 is a better local demo default than random deep features because it needs no
 network access or uncommitted model weights. The concrete Torch/Torchvision
-extractor still supports ResNet-18 patch crops. It defaults to
-`weights_name=None`, so it does not download pretrained weights implicitly.
-Cached memory banks can be stored under `data/artefacts/`, which is ignored by
-git.
+paths support both ResNet-18 patch crops and dense ResNet-18 feature-map
+sampling. They default to random weights unless the explicit
+`feature_map_resnet18_pretrained` report option is requested. Cached memory
+banks can be stored under `data/artefacts/`, which is ignored by git.
 
 ## Recommended visual contract
 
@@ -98,13 +101,27 @@ This report currently uses a coarse patch-score overlay rather than full
 anomaly-map interpolation. The counterfactual patch replacement is a didactic
 probe and should not be described as causal proof. The mask overlap numbers are
 a coarse top-patch verification check, not benchmark-grade pixel-level
-evaluation.
+evaluation. When `--coreset-size` is used, nearest-normal patches shown in the
+report are retrieved from the retained coreset.
 
 The report supports these extractor names:
 - `colour_texture` — default deterministic local-demo extractor;
 - `mean_rgb` — simplest deterministic baseline;
 - `resnet18_random` — Torch/Torchvision path with random weights unless the
-  code is extended to use explicit pretrained weights.
+  code is extended to use explicit pretrained weights;
+- `feature_map_resnet18_random` — dense ResNet-18 layer2/layer3 feature maps
+  with random weights for smoke testing the full feature-map path;
+- `feature_map_resnet18_pretrained` — dense ResNet-18 layer2/layer3 feature maps
+  with explicit ImageNet pretrained Torchvision weights.
+
+Example serious local run:
+
+```bash
+./.venv/bin/xai-demo-report patchcore-bottle \
+  --feature-extractor feature_map_resnet18_pretrained \
+  --coreset-size 512 \
+  --max-examples 3
+```
 
 ## Recommended limitation demos
 

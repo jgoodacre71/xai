@@ -29,7 +29,7 @@ Verify generated reports, cards, selected figures, and the local index:
 | --- | --- | --- |
 | Demo 01 - Waterbirds Shortcut Proxy | Working synthetic report | `outputs/waterbirds_shortcut/index.html` |
 | Demo 02 - Industrial Shortcut Trap | Working synthetic report | `outputs/shortcut_industrial/index.html` |
-| Demo 03 - PatchCore on MVTec AD bottle | Working local MVTec report when data is prepared | `outputs/patchcore_bottle/index.html` |
+| Demo 03 - PatchCore on MVTec AD bottle | Working local MVTec report with deterministic and explicit pretrained feature-map paths | `outputs/patchcore_bottle/index.html` |
 | Demo 04 - PatchCore Learns the Wrong Normal | Working synthetic report | `outputs/patchcore_wrong_normal/index.html` |
 | Demo 05 - PatchCore Limits Lab | Working synthetic report | `outputs/patchcore_limits/index.html` |
 | Demo 06 - PatchCore Severity Mismatch | Working synthetic report | `outputs/patchcore_severity/index.html` |
@@ -42,6 +42,6 @@ Verify generated reports, cards, selected figures, and the local index:
   the current report is a synthetic proxy.
 - Demo 07 currently uses one local MVTec LOCO AD category when prepared; broader
   category coverage and a component-aware comparator remain future work.
-- The PatchCore hero report still uses deterministic local patch features rather
-  than pretrained multi-scale PatchCore.
+- Demo 03 now has an explicit pretrained ResNet-18 feature-map path, but it is
+  still not an official PatchCore benchmark reproduction.
 - The repository has no configured Git remote in this checkout.

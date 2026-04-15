@@ -12,9 +12,11 @@ from xai_demo_suite.explain.contracts import BoundingBox
 from xai_demo_suite.models.patchcore import (
     ColourTexturePatchFeatureExtractor,
     TorchvisionBackbonePatchFeatureExtractor,
+    TorchvisionFeatureMapPatchFeatureExtractor,
     build_mean_colour_memory_bank,
     build_patchcore_memory_bank,
     load_memory_bank,
+    reduce_memory_bank_coreset,
     save_memory_bank,
     score_image_against_memory_bank,
     score_image_with_extractor,
@@ -189,6 +191,39 @@ def test_extractor_mismatch_is_rejected(tmp_path: Path) -> None:
         )
 
 
+def test_coreset_reduction_preserves_source_metadata_and_is_deterministic(tmp_path: Path) -> None:
+    nominal = tmp_path / "nominal.png"
+    _write_colour_image(nominal, (64, 64, 64), size=64)
+    memory_bank = build_patchcore_memory_bank(
+        [_record(nominal)],
+        extractor=ConstantPatchFeatureExtractor(),
+        patch_size=16,
+        stride=16,
+    )
+
+    reduced = reduce_memory_bank_coreset(memory_bank, max_patches=5, seed=7)
+    repeated = reduce_memory_bank_coreset(memory_bank, max_patches=5, seed=7)
+
+    assert reduced.features.shape == (5, 2)
+    assert reduced.feature_name == memory_bank.feature_name
+    assert [item.patch_id for item in reduced.metadata] == [
+        item.patch_id for item in repeated.metadata
+    ]
+    assert all(item.source_path == nominal for item in reduced.metadata)
+    assert {item.patch_id for item in reduced.metadata}.issubset(
+        {item.patch_id for item in memory_bank.metadata}
+    )
+
+
+def test_coreset_reduction_rejects_empty_target(tmp_path: Path) -> None:
+    nominal = tmp_path / "nominal.png"
+    _write_colour_image(nominal, (64, 64, 64), size=32)
+    memory_bank = build_mean_colour_memory_bank([_record(nominal)], patch_size=16, stride=16)
+
+    with pytest.raises(ValueError, match="max_patches must be positive"):
+        reduce_memory_bank_coreset(memory_bank, max_patches=0)
+
+
 def test_optional_torchvision_extractor_has_actionable_error_without_dependencies() -> None:
     if importlib.util.find_spec("torch") and importlib.util.find_spec("torchvision"):
         pytest.skip("Torch dependencies are installed in this environment.")
@@ -231,4 +266,31 @@ def test_torchvision_extractor_returns_one_vector_per_patch(tmp_path: Path) -> N
     )
 
     assert features.shape == (2, 512)
+    assert np.isfinite(features).all()
+
+
+def test_torchvision_feature_map_extractor_returns_one_vector_per_patch(
+    tmp_path: Path,
+) -> None:
+    if not (importlib.util.find_spec("torch") and importlib.util.find_spec("torchvision")):
+        pytest.skip("Torch dependencies are not installed in this environment.")
+
+    image_path = tmp_path / "image.png"
+    _write_colour_image(image_path, (120, 80, 40), size=96)
+    extractor = TorchvisionFeatureMapPatchFeatureExtractor(
+        feature_name="feature_map_resnet18_random_layer2_layer3",
+        input_size=96,
+        layer_names=("layer2", "layer3"),
+        weights_name=None,
+    )
+    features = extractor.extract(
+        image_path,
+        [
+            BoundingBox(x=0, y=0, width=48, height=48),
+            BoundingBox(x=48, y=48, width=48, height=48),
+        ],
+    )
+
+    assert extractor.feature_name == "feature_map_resnet18_random_layer2_layer3"
+    assert features.shape == (2, 384)
     assert np.isfinite(features).all()

@@ -63,8 +63,9 @@ when working on the deep PatchCore path:
 ```
 
 The local PatchCore report defaults to deterministic colour/texture patch
-features, so it does not require Torch. The optional ResNet extractor defaults
-to random weights and does not download pretrained weights implicitly.
+features, so it does not require Torch. The serious deep-feature path is
+available explicitly through a dense ResNet-18 feature-map extractor. It only
+uses pretrained weights when `feature_map_resnet18_pretrained` is requested.
 
 ## First Local Report
 
@@ -85,7 +86,13 @@ You can switch extractors explicitly:
 ```bash
 ./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor mean_rgb
 ./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor resnet18_random
+./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor feature_map_resnet18_random --coreset-size 512
+./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor feature_map_resnet18_pretrained --coreset-size 512
 ```
+
+The pretrained command may download Torchvision ResNet-18 weights into the local
+Torch cache. That cache, generated reports, and memory-bank artefacts are not
+tracked by git.
 
 The narrative notebook for the same demo is checked in at
 `notebooks/03_patchcore_mvtec_bottle.ipynb`. It is intentionally output-free and

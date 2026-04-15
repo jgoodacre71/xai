@@ -73,7 +73,13 @@ def build_parser() -> argparse.ArgumentParser:
     bottle.add_argument("--cache-path", type=Path, default=bottle_defaults.cache_path)
     bottle.add_argument(
         "--feature-extractor",
-        choices=("colour_texture", "mean_rgb", "resnet18_random"),
+        choices=(
+            "colour_texture",
+            "mean_rgb",
+            "resnet18_random",
+            "feature_map_resnet18_random",
+            "feature_map_resnet18_pretrained",
+        ),
         default=bottle_defaults.feature_extractor_name,
         help="Patch feature extractor to use for report generation.",
     )
@@ -85,6 +91,8 @@ def build_parser() -> argparse.ArgumentParser:
     bottle.add_argument("--top-k", type=int, default=bottle_defaults.top_k)
     bottle.add_argument("--input-size", type=int, default=bottle_defaults.input_size)
     bottle.add_argument("--batch-size", type=int, default=bottle_defaults.batch_size)
+    bottle.add_argument("--coreset-size", type=int, default=bottle_defaults.coreset_size)
+    bottle.add_argument("--coreset-seed", type=int, default=bottle_defaults.coreset_seed)
     bottle.add_argument("--no-cache", action="store_true")
 
     limits = subparsers.add_parser(
@@ -193,6 +201,8 @@ def _handle_patchcore_bottle(args: argparse.Namespace) -> int:
         top_k=args.top_k,
         input_size=args.input_size,
         batch_size=args.batch_size,
+        coreset_size=args.coreset_size,
+        coreset_seed=args.coreset_seed,
         use_cache=not args.no_cache,
     )
     output_path = build_patchcore_bottle_report(config)

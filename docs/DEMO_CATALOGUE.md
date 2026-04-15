@@ -26,7 +26,9 @@ The first implementation uses deterministic synthetic part images with a corner
 stamp shortcut and a central-shape intervention.
 
 ## Demo 03 — PatchCore on MVTec AD
-The hero demo: anomaly map plus nearest normal patch provenance.
+The hero demo: anomaly map plus nearest normal patch provenance. The report can
+run deterministic local features for fresh clones or an explicit pretrained
+ResNet-18 dense feature-map path for the stronger local anomaly detector.
 
 Current artefacts:
 - narrative notebook: `notebooks/03_patchcore_mvtec_bottle.ipynb`

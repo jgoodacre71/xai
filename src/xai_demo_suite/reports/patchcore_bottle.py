@@ -22,8 +22,10 @@ from xai_demo_suite.models.patchcore import (
     MeanRGBPatchFeatureExtractor,
     PatchFeatureExtractor,
     TorchvisionBackbonePatchFeatureExtractor,
+    TorchvisionFeatureMapPatchFeatureExtractor,
     build_patchcore_memory_bank,
     load_memory_bank,
+    reduce_memory_bank_coreset,
     save_memory_bank,
     score_image_with_extractor,
 )
@@ -37,6 +39,8 @@ from xai_demo_suite.vis.image_panels import (
     save_score_overlay,
 )
 
+DEFAULT_BOTTLE_CACHE_PATH = Path("data/artefacts/patchcore/bottle/report_colour_texture_bank.npz")
+
 
 @dataclass(frozen=True, slots=True)
 class PatchCoreBottleReportConfig:
@@ -44,7 +48,7 @@ class PatchCoreBottleReportConfig:
 
     manifest_path: Path = Path("data/processed/mvtec_ad/bottle/manifest.jsonl")
     output_dir: Path = Path("outputs/patchcore_bottle")
-    cache_path: Path = Path("data/artefacts/patchcore/bottle/report_colour_texture_bank.npz")
+    cache_path: Path = DEFAULT_BOTTLE_CACHE_PATH
     feature_extractor_name: str = "colour_texture"
     max_train: int = 10
     test_index: int = 0
@@ -52,8 +56,10 @@ class PatchCoreBottleReportConfig:
     patch_size: int = 128
     stride: int = 64
     top_k: int = 3
-    input_size: int = 64
+    input_size: int = 224
     batch_size: int = 8
+    coreset_size: int | None = None
+    coreset_seed: int = 0
     use_cache: bool = True
 
 
@@ -89,9 +95,58 @@ def _build_default_extractor(config: PatchCoreBottleReportConfig) -> PatchFeatur
             batch_size=config.batch_size,
             weights_name=None,
         )
+    if config.feature_extractor_name == "feature_map_resnet18_random":
+        return TorchvisionFeatureMapPatchFeatureExtractor(
+            backbone_name="resnet18",
+            feature_name="feature_map_resnet18_random_layer2_layer3",
+            input_size=config.input_size,
+            layer_names=("layer2", "layer3"),
+            weights_name=None,
+        )
+    if config.feature_extractor_name == "feature_map_resnet18_pretrained":
+        return TorchvisionFeatureMapPatchFeatureExtractor(
+            backbone_name="resnet18",
+            feature_name="feature_map_resnet18_imagenet_layer2_layer3",
+            input_size=config.input_size,
+            layer_names=("layer2", "layer3"),
+            weights_name="DEFAULT",
+        )
     raise ValueError(
         "Unsupported feature_extractor_name. Expected one of: "
-        "colour_texture, mean_rgb, resnet18_random."
+        "colour_texture, mean_rgb, resnet18_random, "
+        "feature_map_resnet18_random, feature_map_resnet18_pretrained."
+    )
+
+
+def _memory_bank_matches_config(
+    *,
+    memory_bank: PatchCoreMemoryBank,
+    extractor: PatchFeatureExtractor,
+    config: PatchCoreBottleReportConfig,
+) -> bool:
+    if memory_bank.feature_name != extractor.feature_name:
+        return False
+    return not (
+        config.coreset_size is not None and len(memory_bank.metadata) > config.coreset_size
+    )
+
+
+def _safe_cache_component(value: str) -> str:
+    return "".join(character if character.isalnum() else "_" for character in value)
+
+
+def _resolve_cache_path(
+    *,
+    config: PatchCoreBottleReportConfig,
+    extractor: PatchFeatureExtractor,
+) -> Path:
+    if config.cache_path != DEFAULT_BOTTLE_CACHE_PATH:
+        return config.cache_path
+    coreset_suffix = (
+        f"_coreset_{config.coreset_size}" if config.coreset_size is not None else ""
+    )
+    return config.cache_path.with_name(
+        f"report_{_safe_cache_component(extractor.feature_name)}{coreset_suffix}_bank.npz"
     )
 
 
@@ -99,6 +154,7 @@ def _build_or_load_bank(
     config: PatchCoreBottleReportConfig,
     extractor: PatchFeatureExtractor,
 ) -> PatchCoreMemoryBank:
+    cache_path = _resolve_cache_path(config=config, extractor=extractor)
     records = load_image_manifest(config.manifest_path)
     train_records = filter_manifest_records(records, split="train", defect_type="good")[
         : config.max_train
@@ -106,9 +162,13 @@ def _build_or_load_bank(
     if not train_records:
         raise ValueError("No nominal training records found for MVTec AD bottle.")
 
-    if config.use_cache and config.cache_path.exists():
-        memory_bank = load_memory_bank(config.cache_path)
-        if memory_bank.feature_name == extractor.feature_name:
+    if config.use_cache and cache_path.exists():
+        memory_bank = load_memory_bank(cache_path)
+        if _memory_bank_matches_config(
+            memory_bank=memory_bank,
+            extractor=extractor,
+            config=config,
+        ):
             return memory_bank
 
     memory_bank = build_patchcore_memory_bank(
@@ -117,7 +177,13 @@ def _build_or_load_bank(
         patch_size=config.patch_size,
         stride=config.stride,
     )
-    save_memory_bank(memory_bank, config.cache_path)
+    if config.coreset_size is not None:
+        memory_bank = reduce_memory_bank_coreset(
+            memory_bank,
+            max_patches=config.coreset_size,
+            seed=config.coreset_seed,
+        )
+    save_memory_bank(memory_bank, cache_path)
     return memory_bank
 
 
@@ -511,11 +577,33 @@ def _render_overview(examples: list[PatchCoreBottleExampleReport]) -> str:
 """
 
 
+def _feature_path_description(feature_name: str) -> str:
+    if "imagenet" in feature_name:
+        return (
+            "ImageNet-pretrained Torchvision ResNet-18 feature maps sampled from "
+            "layer2 and layer3 at each patch centre."
+        )
+    if feature_name.startswith("feature_map_resnet18_random"):
+        return (
+            "Torchvision ResNet-18 feature maps sampled from layer2 and layer3, "
+            "using random weights for dependency/runtime testing."
+        )
+    if feature_name.startswith("torchvision_resnet18"):
+        return "Torchvision ResNet-18 patch-crop features."
+    if feature_name == "colour_texture":
+        return "Deterministic colour, intensity, and edge-statistic patch features."
+    if feature_name == "mean_rgb":
+        return "Deterministic mean-RGB patch features."
+    return feature_name
+
+
 def _render_html(
     *,
     config: PatchCoreBottleReportConfig,
     examples: list[PatchCoreBottleExampleReport],
     feature_name: str,
+    memory_bank_size: int,
+    cache_path: Path,
     output_path: Path,
 ) -> None:
     example_sections = "\n".join(
@@ -523,6 +611,12 @@ def _render_html(
         for example in examples
     )
     overview_section = _render_overview(examples)
+    coreset_text = (
+        f"{config.coreset_size} requested; {memory_bank_size} retained"
+        if config.coreset_size is not None
+        else f"not used; {memory_bank_size} patches retained"
+    )
+    feature_description = html.escape(_feature_path_description(feature_name))
 
     html_text = f"""<!doctype html>
 <html lang="en">
@@ -570,10 +664,13 @@ def _render_html(
     <h2>Run Context</h2>
     <ul>
       <li>manifest: <code>{html.escape(config.manifest_path.as_posix())}</code></li>
-      <li>memory bank cache: <code>{html.escape(config.cache_path.as_posix())}</code></li>
+      <li>memory bank cache: <code>{html.escape(cache_path.as_posix())}</code></li>
       <li>examples: {len(examples)} selected from test index {config.test_index}</li>
       <li>patch size: {config.patch_size}, stride: {config.stride}, top-k: {config.top_k}</li>
       <li>feature extractor: <code>{html.escape(feature_name)}</code></li>
+      <li>feature path: {feature_description}</li>
+      <li>feature input size: {config.input_size}</li>
+      <li>memory-bank coreset: {coreset_text}</li>
     </ul>
   </section>
 
@@ -592,7 +689,31 @@ def _build_demo_card(
     output_path: Path,
     assets: dict[str, Path],
     feature_name: str,
+    coreset_size: int | None,
 ) -> DemoCard:
+    uses_feature_map = feature_name.startswith("feature_map_resnet18")
+    uses_pretrained = "imagenet" in feature_name
+    failure_mode = (
+        "This is a practical local PatchCore implementation rather than an official "
+        "benchmark reproduction; the anomaly map is still rendered on a coarse patch grid."
+        if uses_pretrained
+        else (
+            "This run does not use pretrained feature-map weights, so it is useful for "
+            "testing the provenance/reporting path but should not be treated as the strongest "
+            "industrial anomaly detector."
+            if uses_feature_map
+            else (
+                "Current default features are deterministic colour/texture statistics "
+                "on a coarse patch grid. Use feature_map_resnet18_pretrained for the "
+                "serious deep-feature path."
+            )
+        )
+    )
+    coreset_caveat = (
+        f"Nearest-normal exemplars are retrieved from the {coreset_size}-patch coreset."
+        if coreset_size is not None
+        else "Nearest-normal exemplars are retrieved from the retained local memory bank."
+    )
     return DemoCard(
         title="Demo 03 - PatchCore on MVTec AD bottle",
         task="Unsupervised industrial anomaly detection on the MVTec AD bottle category.",
@@ -611,11 +732,7 @@ def _build_demo_card(
             "A PatchCore-style detector can make an anomaly score inspectable by "
             "showing which nominal patches were nearest to the suspicious region."
         ),
-        failure_mode=(
-            "Current default features are deterministic colour/texture statistics "
-            "on a coarse patch grid, so this is still not full pretrained "
-            "multi-scale PatchCore."
-        ),
+        failure_mode=failure_mode,
         intervention=(
             "Replace the top scored query patch with its nearest normal patch and "
             "recompute the local score as a didactic counterfactual probe."
@@ -623,7 +740,7 @@ def _build_demo_card(
         remaining_caveats=(
             "Not a calibrated severity model.",
             "Not a causal proof.",
-            "No coreset selection or multi-scale feature-map PatchCore yet.",
+            coreset_caveat,
             "Coarse overlay is not pixel-level anomaly-map interpolation.",
             "Top-patch mask overlap is a coarse verification check, not a full benchmark.",
         ),
@@ -703,12 +820,15 @@ def build_patchcore_bottle_report(
         config=config,
         examples=example_reports,
         feature_name=extractor.feature_name,
+        memory_bank_size=len(memory_bank.metadata),
+        cache_path=_resolve_cache_path(config=config, extractor=extractor),
         output_path=output_path,
     )
     card = _build_demo_card(
         output_path=output_path,
         assets=example_reports[0].assets,
         feature_name=extractor.feature_name,
+        coreset_size=config.coreset_size,
     )
     save_demo_card(card, config.output_dir)
     save_demo_index_for_output_root(config.output_dir.parent)
