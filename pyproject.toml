@@ -28,6 +28,10 @@ notebooks = [
   "jupytext>=1.16",
   "nbmake>=1.5",
 ]
+ml = [
+  "torch>=2.7",
+  "torchvision>=0.22",
+]
 
 [build-system]
 requires = ["hatchling"]

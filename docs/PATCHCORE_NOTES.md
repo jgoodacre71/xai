@@ -49,6 +49,11 @@ Current rules:
 - scoring rejects extractor/memory-bank mismatches;
 - patch metadata is independent of extractor choice.
 
+The concrete Torch/Torchvision extractor currently supports ResNet-18 patch
+crops. It defaults to `weights_name=None`, so it does not download pretrained
+weights implicitly. Cached memory banks can be stored under `data/artefacts/`,
+which is ignored by git.
+
 ## Recommended visual contract
 
 For each highlighted test image:

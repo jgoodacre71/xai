@@ -7,6 +7,7 @@ from xai_demo_suite.models.patchcore.baseline import (
     score_image_with_extractor,
     score_to_provenance_artefact,
 )
+from xai_demo_suite.models.patchcore.cache import load_memory_bank, save_memory_bank
 from xai_demo_suite.models.patchcore.features import (
     MeanRGBPatchFeatureExtractor,
     PatchFeatureExtractor,
@@ -29,6 +30,8 @@ __all__ = [
     "TorchvisionBackbonePatchFeatureExtractor",
     "build_mean_colour_memory_bank",
     "build_patchcore_memory_bank",
+    "load_memory_bank",
+    "save_memory_bank",
     "score_image_against_memory_bank",
     "score_image_with_extractor",
     "score_to_provenance_artefact",

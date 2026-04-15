@@ -35,6 +35,18 @@ download page and stored locally under `data/raw/` when explicitly fetched.
 ./.venv/bin/xai-demo-data prepare mvtec_ad --category bottle
 ```
 
+## Optional ML Dependencies
+
+The base package and tests do not require Torch. Install the optional ML stack
+when working on the deep PatchCore path:
+
+```bash
+./.venv/bin/python -m pip install -e ".[ml]"
+```
+
+The current ResNet extractor defaults to random weights and does not download
+pretrained weights implicitly.
+
 ## Main files
 
 - `REPO_SPEC.md` — the long-form repository specification

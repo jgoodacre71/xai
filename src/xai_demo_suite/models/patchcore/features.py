@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 import numpy as np
 from PIL import Image
@@ -51,36 +51,96 @@ class MeanRGBPatchFeatureExtractor:
 
 @dataclass(frozen=True, slots=True)
 class TorchvisionBackbonePatchFeatureExtractor:
-    """Optional Torch/Torchvision extractor for future deep PatchCore work.
+    """Torch/Torchvision ResNet patch-crop feature extractor.
 
     The class imports Torch lazily inside ``__post_init__`` so the base package
-    and tests do not require heavyweight ML dependencies. It currently provides
-    a clear integration point; using pretrained weights and multi-scale feature
-    maps should be added in a later task.
+    and tests do not require heavyweight ML dependencies. It defaults to random
+    weights to avoid implicit downloads. Pass ``weights_name="DEFAULT"`` only
+    when an explicit pretrained-weight download/use policy is acceptable.
     """
 
     backbone_name: str = "resnet18"
     feature_name: str = "torchvision_resnet18"
+    input_size: int = 224
+    batch_size: int = 16
+    weights_name: str | None = None
+    device: str = "cpu"
 
     def __post_init__(self) -> None:
         try:
-            import torch  # type: ignore[import-not-found]  # noqa: F401
-            import torchvision  # type: ignore[import-not-found]  # noqa: F401
+            import torch  # noqa: F401
+            import torchvision  # type: ignore[import-untyped]  # noqa: F401
         except ModuleNotFoundError as exc:
             raise RuntimeError(
                 "TorchvisionBackbonePatchFeatureExtractor requires optional "
                 "dependencies 'torch' and 'torchvision'. Install them before "
                 "using the deep feature path."
             ) from exc
+        if self.input_size <= 0:
+            raise ValueError("input_size must be positive.")
+        if self.batch_size <= 0:
+            raise ValueError("batch_size must be positive.")
 
     def extract(self, image_path: Path, boxes: list[BoundingBox]) -> FloatArray:
-        """Extract deep patch features.
+        """Extract one deep feature vector per requested patch box."""
 
-        This placeholder intentionally fails until the Torch feature task adds a
-        concrete backbone pipeline. The class exists now to make dependency and
-        interface boundaries explicit.
-        """
+        if not boxes:
+            return np.empty((0, 0), dtype=np.float64)
 
-        raise NotImplementedError(
-            f"Deep feature extraction for {self.backbone_name} is not implemented yet."
+        import torch
+        from torchvision import models
+
+        model = self._build_backbone(models=models, torch=torch)
+        model.eval()
+        model.to(self.device)
+
+        with Image.open(image_path) as image:
+            rgb_image = image.convert("RGB")
+            batches = [
+                boxes[index : index + self.batch_size]
+                for index in range(0, len(boxes), self.batch_size)
+            ]
+            output_features: list[FloatArray] = []
+            with torch.no_grad():
+                for batch_boxes in batches:
+                    batch_tensor = torch.stack(
+                        [
+                            self._patch_to_tensor(
+                                image=rgb_image,
+                                box=box,
+                                torch=torch,
+                            )
+                            for box in batch_boxes
+                        ]
+                    ).to(self.device)
+                    batch_features = model(batch_tensor).flatten(start_dim=1)
+                    output_features.append(
+                        batch_features.detach().cpu().numpy().astype(np.float64)
+                    )
+
+        return np.vstack(output_features)
+
+    def _build_backbone(self, *, models: Any, torch: Any) -> Any:
+        if self.backbone_name != "resnet18":
+            raise ValueError("Only resnet18 is currently supported.")
+
+        weights = None
+        if self.weights_name is not None:
+            weights_enum = models.ResNet18_Weights
+            weights = getattr(weights_enum, self.weights_name)
+
+        resnet = models.resnet18(weights=weights)
+        return torch.nn.Sequential(*list(resnet.children())[:-1])
+
+    def _patch_to_tensor(self, *, image: Image.Image, box: BoundingBox, torch: Any) -> Any:
+        crop = image.crop((box.x, box.y, box.x + box.width, box.y + box.height))
+        crop = crop.resize((self.input_size, self.input_size), Image.Resampling.BILINEAR)
+        array = np.asarray(crop, dtype=np.float32)
+        array = np.divide(array, np.float32(255.0))
+        mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+        std = np.array(
+            [0.229, 0.224, 0.225],
+            dtype=np.float32,
         )
+        array = np.divide(np.subtract(array, mean), std)
+        return torch.from_numpy(array.transpose(2, 0, 1))

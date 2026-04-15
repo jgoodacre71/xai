@@ -13,6 +13,8 @@ from xai_demo_suite.models.patchcore import (
     TorchvisionBackbonePatchFeatureExtractor,
     build_mean_colour_memory_bank,
     build_patchcore_memory_bank,
+    load_memory_bank,
+    save_memory_bank,
     score_image_against_memory_bank,
     score_image_with_extractor,
     score_to_provenance_artefact,
@@ -173,3 +175,40 @@ def test_optional_torchvision_extractor_has_actionable_error_without_dependencie
 
     with pytest.raises(RuntimeError, match="requires optional dependencies"):
         TorchvisionBackbonePatchFeatureExtractor()
+
+
+def test_memory_bank_cache_round_trip_preserves_provenance(tmp_path: Path) -> None:
+    nominal = tmp_path / "nominal.png"
+    _write_colour_image(nominal, (64, 64, 64), size=32)
+    memory_bank = build_mean_colour_memory_bank([_record(nominal)], patch_size=16, stride=16)
+
+    cache_path = save_memory_bank(memory_bank, tmp_path / "bank.npz")
+    loaded = load_memory_bank(cache_path)
+
+    assert loaded.feature_name == memory_bank.feature_name
+    assert np.array_equal(loaded.features, memory_bank.features)
+    assert loaded.metadata[0].source_image_id == memory_bank.metadata[0].source_image_id
+    assert loaded.metadata[0].box == memory_bank.metadata[0].box
+
+
+def test_torchvision_extractor_returns_one_vector_per_patch(tmp_path: Path) -> None:
+    if not (importlib.util.find_spec("torch") and importlib.util.find_spec("torchvision")):
+        pytest.skip("Torch dependencies are not installed in this environment.")
+
+    image_path = tmp_path / "image.png"
+    _write_colour_image(image_path, (120, 80, 40), size=64)
+    extractor = TorchvisionBackbonePatchFeatureExtractor(
+        input_size=32,
+        batch_size=2,
+        weights_name=None,
+    )
+    features = extractor.extract(
+        image_path,
+        [
+            BoundingBox(x=0, y=0, width=32, height=32),
+            BoundingBox(x=32, y=32, width=32, height=32),
+        ],
+    )
+
+    assert features.shape == (2, 512)
+    assert np.isfinite(features).all()
