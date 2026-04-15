@@ -16,10 +16,23 @@ should remain thin narrative and orchestration layers.
 ## Getting started
 
 ```bash
-uv sync --group dev
-uv run ruff check .
-uv run mypy src
-uv run pytest -q
+python3.12 -m venv .venv
+./.venv/bin/python -m pip install -e . pytest ruff mypy pytest-cov
+./.venv/bin/ruff check .
+./.venv/bin/mypy src
+./.venv/bin/pytest -q
+```
+
+## Data
+
+Raw datasets are not committed. MVTec AD is sourced from the official MVTec
+download page and stored locally under `data/raw/` when explicitly fetched.
+
+```bash
+./.venv/bin/xai-demo-data list
+./.venv/bin/xai-demo-data fetch mvtec_ad --category bottle --dry-run
+./.venv/bin/xai-demo-data fetch mvtec_ad --category bottle
+./.venv/bin/xai-demo-data prepare mvtec_ad --category bottle
 ```
 
 ## Main files

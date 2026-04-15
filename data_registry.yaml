@@ -1,16 +1,40 @@
 datasets:
   mvtec_ad:
     name: "MVTec AD"
-    status: "planned"
+    status: "supported"
     purpose:
       - "PatchCore baseline"
       - "nearest-normal patch provenance"
       - "nuisance contamination experiments"
     raw_data_committed: false
-    licence: "Record before enabling downloader."
-    source_url: "Record before enabling downloader."
-    citation: "Record before enabling downloader."
-    expected_layout: "data/raw/mvtec_ad/"
+    licence: "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)"
+    licence_url: "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+    restrictions:
+      - "Non-commercial use only."
+      - "Raw archives and extracted data must not be committed."
+    source_url: "https://www.mvtec.com/research-teaching/datasets/mvtec-ad"
+    download_url: "https://www.mvtec.com/research-teaching/datasets/mvtec-ad/downloads"
+    citation: "Bergmann et al., MVTec AD - A Comprehensive Real-World Dataset for Unsupervised Anomaly Detection."
+    expected_layout:
+      raw_archives: "data/raw/mvtec_ad/archives/<category>.tar.xz"
+      interim_extracted: "data/interim/mvtec_ad/<category>/"
+      processed_manifest: "data/processed/mvtec_ad/<category>/manifest.jsonl"
+    categories:
+      - "bottle"
+      - "cable"
+      - "capsule"
+      - "carpet"
+      - "grid"
+      - "hazelnut"
+      - "leather"
+      - "metal_nut"
+      - "pill"
+      - "screw"
+      - "tile"
+      - "toothbrush"
+      - "transistor"
+      - "wood"
+      - "zipper"
   mvtec_loco_ad:
     name: "MVTec LOCO AD"
     status: "planned"
