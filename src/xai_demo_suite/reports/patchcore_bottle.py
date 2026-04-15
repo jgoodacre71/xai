@@ -433,6 +433,84 @@ def _render_mask_check(
 """
 
 
+def _render_overview(examples: list[PatchCoreBottleExampleReport]) -> str:
+    mask_examples = [example for example in examples if example.mask_overlap is not None]
+    mask_hits = sum(
+        1
+        for example in mask_examples
+        if example.mask_overlap is not None and example.mask_overlap.intersects_mask
+    )
+    mean_mask_coverage = (
+        sum(
+            example.mask_overlap.mask_covered_fraction
+            for example in mask_examples
+            if example.mask_overlap is not None
+        )
+        / len(mask_examples)
+        if mask_examples
+        else None
+    )
+    mean_counterfactual_delta = sum(
+        example.counterfactual.score_delta for example in examples
+    ) / len(examples)
+
+    rows: list[str] = []
+    for example in examples:
+        overlap = example.mask_overlap
+        if overlap is None:
+            intersects = "not available"
+            patch_overlap = "not available"
+            mask_coverage = "not available"
+        else:
+            intersects = "yes" if overlap.intersects_mask else "no"
+            patch_overlap = _format_percentage(overlap.patch_mask_fraction)
+            mask_coverage = _format_percentage(overlap.mask_covered_fraction)
+        rows.append(
+            "<tr>"
+            f"<td>{example.example_number}</td>"
+            f"<td>{html.escape(example.query_record.defect_type)}</td>"
+            f"<td>{example.score.distance:.6f}</td>"
+            f"<td>{intersects}</td>"
+            f"<td>{patch_overlap}</td>"
+            f"<td>{mask_coverage}</td>"
+            f"<td>{example.counterfactual.score_delta:.6f}</td>"
+            "</tr>"
+        )
+
+    mean_mask_text = (
+        _format_percentage(mean_mask_coverage)
+        if mean_mask_coverage is not None
+        else "not available"
+    )
+    return f"""
+  <section>
+    <h2>Selected Example Overview</h2>
+    <ul>
+      <li>Mask-intersection hits: {mask_hits} / {len(mask_examples)} masked examples</li>
+      <li>Mean mask covered by top patch: {mean_mask_text}</li>
+      <li>Mean counterfactual score delta: {mean_counterfactual_delta:.6f}</li>
+    </ul>
+    <table>
+      <thead>
+        <tr>
+          <th>Example</th>
+          <th>Defect type</th>
+          <th>Top patch score</th>
+          <th>Intersects mask</th>
+          <th>Patch overlap</th>
+          <th>Mask covered</th>
+          <th>Counterfactual delta</th>
+        </tr>
+      </thead>
+      <tbody>{''.join(rows)}</tbody>
+    </table>
+    <p>
+      These are selected-example diagnostics only, not benchmark metrics.
+    </p>
+  </section>
+"""
+
+
 def _render_html(
     *,
     config: PatchCoreBottleReportConfig,
@@ -444,6 +522,7 @@ def _render_html(
         _render_example_section(example=example, output_path=output_path)
         for example in examples
     )
+    overview_section = _render_overview(examples)
 
     html_text = f"""<!doctype html>
 <html lang="en">
@@ -497,6 +576,8 @@ def _render_html(
       <li>feature extractor: <code>{html.escape(feature_name)}</code></li>
     </ul>
   </section>
+
+{overview_section}
 
 {example_sections}
 </main>

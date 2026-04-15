@@ -361,6 +361,10 @@ def test_patchcore_bottle_report_writes_mask_check_when_available(tmp_path: Path
 
     html = output_path.read_text(encoding="utf-8")
     assert "Ground Truth Localisation Check" in html
+    assert "Selected Example Overview" in html
+    assert "Mask-intersection hits: 1 / 1 masked examples" in html
+    assert "Mean mask covered by top patch: 100.0%" in html
+    assert "Counterfactual delta" in html
     assert "Top patch intersects mask: yes" in html
     assert "Patch pixels overlapping mask: 64 / 256 (25.0%)" in html
     assert "Mask covered by top patch: 64 / 64 (100.0%)" in html
