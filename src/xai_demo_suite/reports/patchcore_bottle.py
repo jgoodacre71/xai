@@ -28,7 +28,7 @@ from xai_demo_suite.models.patchcore import (
     score_image_with_extractor,
 )
 from xai_demo_suite.models.patchcore.types import PatchCoreMemoryBank, PatchScore
-from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index
+from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index_for_output_root
 from xai_demo_suite.utils.io import ensure_directory
 from xai_demo_suite.vis.image_panels import (
     draw_box_on_image,
@@ -711,5 +711,5 @@ def build_patchcore_bottle_report(
         feature_name=extractor.feature_name,
     )
     save_demo_card(card, config.output_dir)
-    save_demo_index((card,), config.output_dir.parent / "index.html")
+    save_demo_index_for_output_root(config.output_dir.parent)
     return output_path

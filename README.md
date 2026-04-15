@@ -73,6 +73,18 @@ The narrative notebook for the same demo is checked in at
 `notebooks/03_patchcore_mvtec_bottle.ipynb`. It is intentionally output-free and
 delegates the implementation to package code.
 
+## PatchCore Limits Report
+
+Generate the synthetic limits demo with:
+
+```bash
+./.venv/bin/xai-demo-report patchcore-limits
+```
+
+The report is written to `outputs/patchcore_limits/index.html`. It shows slot
+board examples where PatchCore-style novelty is useful, but count, severity, and
+semantic logic require extra modelling layers.
+
 ## Main files
 
 - `REPO_SPEC.md` — the long-form repository specification

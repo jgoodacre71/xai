@@ -3,7 +3,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index
+from xai_demo_suite.reports.cards import (
+    DemoCard,
+    save_demo_card,
+    save_demo_index,
+    save_demo_index_for_output_root,
+)
 
 
 def _card(tmp_path: Path) -> DemoCard:
@@ -55,3 +60,38 @@ def test_save_demo_index_links_report_and_card(tmp_path: Path) -> None:
     assert "Demo 03 - PatchCore" in html
     assert "patchcore_bottle/index.html" in html
     assert "patchcore_bottle/demo_card.html" in html
+
+
+def test_save_demo_index_for_output_root_discovers_cards(tmp_path: Path) -> None:
+    card = _card(tmp_path)
+    save_demo_card(card, tmp_path / "outputs" / "patchcore_bottle")
+
+    second_report = tmp_path / "outputs" / "patchcore_limits" / "index.html"
+    second_figure = tmp_path / "outputs" / "patchcore_limits" / "assets" / "overview.png"
+    second_report.parent.mkdir(parents=True)
+    second_figure.parent.mkdir(parents=True)
+    second_report.write_text("<html></html>", encoding="utf-8")
+    second_figure.write_bytes(b"figure")
+    save_demo_card(
+        DemoCard(
+            title="Demo 05 - Limits",
+            task="PatchCore limits.",
+            model="PatchCore-style memory bank.",
+            explanation_methods=("anomaly map",),
+            key_lesson="Novelty is not logic.",
+            failure_mode="No symbolic count.",
+            intervention="Add logic layer.",
+            remaining_caveats=("Synthetic.",),
+            report_path=second_report,
+            figure_paths=(second_figure,),
+        ),
+        tmp_path / "outputs" / "patchcore_limits",
+    )
+
+    index_path = save_demo_index_for_output_root(tmp_path / "outputs")
+
+    html = index_path.read_text(encoding="utf-8")
+    assert "Demo 03 - PatchCore" in html
+    assert "Demo 05 - Limits" in html
+    assert "patchcore_bottle/index.html" in html
+    assert "patchcore_limits/index.html" in html

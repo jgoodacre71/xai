@@ -23,6 +23,14 @@ Nominal-set nuisance contamination and false positives.
 ## Demo 05 — PatchCore cannot count
 Repeated-object anomaly layouts expose non-count semantics.
 
+Current artefacts:
+- static report: `outputs/patchcore_limits/index.html`
+- demo card: `outputs/patchcore_limits/demo_card.html`
+
+The first implementation uses deterministic synthetic slot boards. It also
+touches the Demo 06 severity and Demo 07 logic themes by including a scratch
+case and a component-identity swap case.
+
 ## Demo 06 — PatchCore does not know severity
 Novelty score versus severity mismatch.
 

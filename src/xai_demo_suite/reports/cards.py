@@ -6,6 +6,7 @@ import html
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Any
 
 from xai_demo_suite.utils.io import ensure_directory
 
@@ -137,3 +138,28 @@ def save_demo_index(cards: tuple[DemoCard, ...], output_path: Path) -> Path:
         encoding="utf-8",
     )
     return output_path
+
+
+def _card_from_json_dict(data: dict[str, Any], root: Path) -> DemoCard:
+    return DemoCard(
+        title=str(data["title"]),
+        task=str(data["task"]),
+        model=str(data["model"]),
+        explanation_methods=tuple(str(item) for item in data["explanation_methods"]),
+        key_lesson=str(data["key_lesson"]),
+        failure_mode=str(data["failure_mode"]),
+        intervention=str(data["intervention"]),
+        remaining_caveats=tuple(str(item) for item in data["remaining_caveats"]),
+        report_path=root / str(data["report_path"]),
+        figure_paths=tuple(root / str(path) for path in data["figure_paths"]),
+    )
+
+
+def save_demo_index_for_output_root(output_root: Path) -> Path:
+    """Write an index containing all demo cards under an output root."""
+
+    cards: list[DemoCard] = []
+    for card_path in sorted(output_root.glob("*/demo_card.json")):
+        data = json.loads(card_path.read_text(encoding="utf-8"))
+        cards.append(_card_from_json_dict(data, output_root))
+    return save_demo_index(tuple(cards), output_root / "index.html")
