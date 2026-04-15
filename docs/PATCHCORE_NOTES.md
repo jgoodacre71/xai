@@ -123,6 +123,18 @@ Example serious local run:
   --max-examples 3
 ```
 
+The same model path can be used from the full suite command:
+
+```bash
+./.venv/bin/xai-demo-report suite \
+  --include-mvtec \
+  --mvtec-feature-extractor feature_map_resnet18_pretrained \
+  --mvtec-max-train 20 \
+  --mvtec-max-examples 3 \
+  --mvtec-coreset-size 512 \
+  --mvtec-input-size 224
+```
+
 ## Recommended limitation demos
 
 - count mismatch

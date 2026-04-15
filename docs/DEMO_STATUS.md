@@ -17,6 +17,19 @@ Generate the full local suite when MVTec AD bottle has been prepared:
 ./.venv/bin/xai-demo-report suite --include-mvtec
 ```
 
+Generate the stronger local presentation suite with pretrained feature-map
+PatchCore for Demo 03:
+
+```bash
+./.venv/bin/xai-demo-report suite \
+  --include-mvtec \
+  --mvtec-feature-extractor feature_map_resnet18_pretrained \
+  --mvtec-max-train 20 \
+  --mvtec-max-examples 3 \
+  --mvtec-coreset-size 512 \
+  --mvtec-input-size 224
+```
+
 Verify generated reports, cards, selected figures, and the local index:
 
 ```bash
@@ -35,6 +48,10 @@ Verify generated reports, cards, selected figures, and the local index:
 | Demo 06 - PatchCore Severity Mismatch | Working synthetic report | `outputs/patchcore_severity/index.html` |
 | Demo 07 - PatchCore Logical Anomaly Limits | Working local MVTec LOCO report when data is prepared, with synthetic fallback | `outputs/patchcore_logic/index.html` |
 | Demo 08 - Explanation Drift Under Shift | Working synthetic report | `outputs/explanation_drift/index.html` |
+
+The local `outputs/index.html` is a static presentation index with one tile per
+demo, selected figures, report links, demo-card links, key lessons,
+interventions, and caveats.
 
 ## Known gaps
 

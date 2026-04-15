@@ -58,6 +58,8 @@ def test_save_demo_index_links_report_and_card(tmp_path: Path) -> None:
 
     html = index_path.read_text(encoding="utf-8")
     assert "Demo 03 - PatchCore" in html
+    assert 'class="demo-tile"' in html
+    assert 'class="thumb"' in html
     assert "patchcore_bottle/index.html" in html
     assert "patchcore_bottle/demo_card.html" in html
 
@@ -93,5 +95,6 @@ def test_save_demo_index_for_output_root_discovers_cards(tmp_path: Path) -> None
     html = index_path.read_text(encoding="utf-8")
     assert "Demo 03 - PatchCore" in html
     assert "Demo 05 - Limits" in html
+    assert "Static local entry point" in html
     assert "patchcore_bottle/index.html" in html
     assert "patchcore_limits/index.html" in html

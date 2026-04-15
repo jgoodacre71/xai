@@ -39,7 +39,21 @@ On this machine, after preparing MVTec AD bottle, include the hero MVTec report:
 ./.venv/bin/xai-demo-report verify
 ```
 
-The local index is written to `outputs/index.html`.
+For the stronger local presentation run, build Demo 03 with explicit
+ImageNet-pretrained ResNet-18 feature-map PatchCore and a 512-patch coreset:
+
+```bash
+./.venv/bin/xai-demo-report suite \
+  --include-mvtec \
+  --mvtec-feature-extractor feature_map_resnet18_pretrained \
+  --mvtec-max-train 20 \
+  --mvtec-max-examples 3 \
+  --mvtec-coreset-size 512 \
+  --mvtec-input-size 224
+./.venv/bin/xai-demo-report verify
+```
+
+The local presentation index is written to `outputs/index.html`.
 
 ## Data
 

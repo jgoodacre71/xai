@@ -176,6 +176,27 @@ def build_parser() -> argparse.ArgumentParser:
     )
     suite.add_argument("--output-root", type=Path, default=Path("outputs"))
     suite.add_argument("--include-mvtec", action="store_true")
+    suite.add_argument("--mvtec-manifest-path", type=Path, default=None)
+    suite.add_argument(
+        "--mvtec-feature-extractor",
+        choices=(
+            "colour_texture",
+            "mean_rgb",
+            "resnet18_random",
+            "feature_map_resnet18_random",
+            "feature_map_resnet18_pretrained",
+        ),
+        default=None,
+        help=(
+            "Feature extractor for the optional MVTec bottle report. "
+            "Pretrained weights are only used when feature_map_resnet18_pretrained "
+            "is selected."
+        ),
+    )
+    suite.add_argument("--mvtec-max-train", type=int, default=None)
+    suite.add_argument("--mvtec-max-examples", type=int, default=None)
+    suite.add_argument("--mvtec-coreset-size", type=int, default=None)
+    suite.add_argument("--mvtec-input-size", type=int, default=None)
     suite.add_argument("--no-cache", action="store_true")
 
     verify = subparsers.add_parser(
@@ -306,6 +327,12 @@ def _handle_suite(args: argparse.Namespace) -> int:
         output_root=args.output_root,
         include_mvtec=args.include_mvtec,
         use_cache=not args.no_cache,
+        mvtec_manifest_path=args.mvtec_manifest_path,
+        mvtec_feature_extractor_name=args.mvtec_feature_extractor,
+        mvtec_max_train=args.mvtec_max_train,
+        mvtec_max_examples=args.mvtec_max_examples,
+        mvtec_coreset_size=args.mvtec_coreset_size,
+        mvtec_input_size=args.mvtec_input_size,
     )
     failed = False
     for result in results:

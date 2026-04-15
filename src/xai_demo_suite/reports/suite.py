@@ -77,6 +77,12 @@ def build_demo_suite(
     output_root: Path = Path("outputs"),
     include_mvtec: bool = False,
     use_cache: bool = True,
+    mvtec_manifest_path: Path | None = None,
+    mvtec_feature_extractor_name: str | None = None,
+    mvtec_max_train: int | None = None,
+    mvtec_max_examples: int | None = None,
+    mvtec_coreset_size: int | None = None,
+    mvtec_input_size: int | None = None,
 ) -> tuple[SuiteBuildResult, ...]:
     """Build the current local demo suite.
 
@@ -154,12 +160,22 @@ def build_demo_suite(
         ),
     ]
     if include_mvtec:
+        bottle_defaults = PatchCoreBottleReportConfig()
         builders.append(
             (
                 "patchcore-bottle",
                 lambda: build_patchcore_bottle_report(
                     PatchCoreBottleReportConfig(
+                        manifest_path=mvtec_manifest_path or bottle_defaults.manifest_path,
                         output_dir=output_root / "patchcore_bottle",
+                        feature_extractor_name=(
+                            mvtec_feature_extractor_name
+                            or bottle_defaults.feature_extractor_name
+                        ),
+                        max_train=mvtec_max_train or bottle_defaults.max_train,
+                        max_examples=mvtec_max_examples or bottle_defaults.max_examples,
+                        input_size=mvtec_input_size or bottle_defaults.input_size,
+                        coreset_size=mvtec_coreset_size,
                         use_cache=use_cache,
                     )
                 ),
