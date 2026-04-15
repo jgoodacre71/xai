@@ -18,6 +18,8 @@ from xai_demo_suite.explain.counterfactuals import (
     replace_patch_from_source,
 )
 from xai_demo_suite.models.patchcore import (
+    ColourTexturePatchFeatureExtractor,
+    MeanRGBPatchFeatureExtractor,
     PatchFeatureExtractor,
     TorchvisionBackbonePatchFeatureExtractor,
     build_patchcore_memory_bank,
@@ -42,12 +44,13 @@ class PatchCoreBottleReportConfig:
 
     manifest_path: Path = Path("data/processed/mvtec_ad/bottle/manifest.jsonl")
     output_dir: Path = Path("outputs/patchcore_bottle")
-    cache_path: Path = Path("data/artefacts/patchcore/bottle/report_resnet18_bank.npz")
-    max_train: int = 2
+    cache_path: Path = Path("data/artefacts/patchcore/bottle/report_colour_texture_bank.npz")
+    feature_extractor_name: str = "colour_texture"
+    max_train: int = 10
     test_index: int = 0
     max_examples: int = 3
     patch_size: int = 128
-    stride: int = 128
+    stride: int = 64
     top_k: int = 3
     input_size: int = 64
     batch_size: int = 8
@@ -76,10 +79,19 @@ def _asset_path(output_dir: Path, name: str) -> Path:
 
 
 def _build_default_extractor(config: PatchCoreBottleReportConfig) -> PatchFeatureExtractor:
-    return TorchvisionBackbonePatchFeatureExtractor(
-        input_size=config.input_size,
-        batch_size=config.batch_size,
-        weights_name=None,
+    if config.feature_extractor_name == "colour_texture":
+        return ColourTexturePatchFeatureExtractor()
+    if config.feature_extractor_name == "mean_rgb":
+        return MeanRGBPatchFeatureExtractor()
+    if config.feature_extractor_name == "resnet18_random":
+        return TorchvisionBackbonePatchFeatureExtractor(
+            input_size=config.input_size,
+            batch_size=config.batch_size,
+            weights_name=None,
+        )
+    raise ValueError(
+        "Unsupported feature_extractor_name. Expected one of: "
+        "colour_texture, mean_rgb, resnet18_random."
     )
 
 
@@ -96,14 +108,16 @@ def _build_or_load_bank(
 
     if config.use_cache and config.cache_path.exists():
         memory_bank = load_memory_bank(config.cache_path)
-    else:
-        memory_bank = build_patchcore_memory_bank(
-            train_records,
-            extractor=extractor,
-            patch_size=config.patch_size,
-            stride=config.stride,
-        )
-        save_memory_bank(memory_bank, config.cache_path)
+        if memory_bank.feature_name == extractor.feature_name:
+            return memory_bank
+
+    memory_bank = build_patchcore_memory_bank(
+        train_records,
+        extractor=extractor,
+        patch_size=config.patch_size,
+        stride=config.stride,
+    )
+    save_memory_bank(memory_bank, config.cache_path)
     return memory_bank
 
 
@@ -423,6 +437,7 @@ def _render_html(
     *,
     config: PatchCoreBottleReportConfig,
     examples: list[PatchCoreBottleExampleReport],
+    feature_name: str,
     output_path: Path,
 ) -> None:
     example_sections = "\n".join(
@@ -479,7 +494,7 @@ def _render_html(
       <li>memory bank cache: <code>{html.escape(config.cache_path.as_posix())}</code></li>
       <li>examples: {len(examples)} selected from test index {config.test_index}</li>
       <li>patch size: {config.patch_size}, stride: {config.stride}, top-k: {config.top_k}</li>
-      <li>feature extractor: <code>torchvision_resnet18</code>, random weights</li>
+      <li>feature extractor: <code>{html.escape(feature_name)}</code></li>
     </ul>
   </section>
 
@@ -492,11 +507,18 @@ def _render_html(
     output_path.write_text(html_text, encoding="utf-8")
 
 
-def _build_demo_card(output_path: Path, assets: dict[str, Path]) -> DemoCard:
+def _build_demo_card(
+    output_path: Path,
+    assets: dict[str, Path],
+    feature_name: str,
+) -> DemoCard:
     return DemoCard(
         title="Demo 03 - PatchCore on MVTec AD bottle",
         task="Unsupervised industrial anomaly detection on the MVTec AD bottle category.",
-        model="PatchCore-style nearest-neighbour memory bank with ResNet-18 patch-crop features.",
+        model=(
+            "PatchCore-style nearest-neighbour memory bank with "
+            f"{feature_name} patch features."
+        ),
         explanation_methods=(
             "Coarse patch-score anomaly map",
             "Top anomalous patch crop",
@@ -509,9 +531,9 @@ def _build_demo_card(output_path: Path, assets: dict[str, Path]) -> DemoCard:
             "showing which nominal patches were nearest to the suspicious region."
         ),
         failure_mode=(
-            "Current features use random-weight ResNet-18 patch crops and a coarse "
-            "patch grid, so this is a pipeline/provenance slice rather than final "
-            "anomaly-detection quality."
+            "Current default features are deterministic colour/texture statistics "
+            "on a coarse patch grid, so this is still not full pretrained "
+            "multi-scale PatchCore."
         ),
         intervention=(
             "Replace the top scored query patch with its nearest normal patch and "
@@ -599,9 +621,14 @@ def build_patchcore_bottle_report(
     _render_html(
         config=config,
         examples=example_reports,
+        feature_name=extractor.feature_name,
         output_path=output_path,
     )
-    card = _build_demo_card(output_path=output_path, assets=example_reports[0].assets)
+    card = _build_demo_card(
+        output_path=output_path,
+        assets=example_reports[0].assets,
+        feature_name=extractor.feature_name,
+    )
     save_demo_card(card, config.output_dir)
     save_demo_index((card,), config.output_dir.parent / "index.html")
     return output_path

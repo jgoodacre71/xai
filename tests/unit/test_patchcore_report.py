@@ -365,3 +365,23 @@ def test_patchcore_bottle_report_writes_mask_check_when_available(tmp_path: Path
     assert "Patch pixels overlapping mask: 64 / 256 (25.0%)" in html
     assert "Mask covered by top patch: 64 / 64 (100.0%)" in html
     assert (config.output_dir / "assets" / "mask_overlay.png").exists()
+
+
+def test_patchcore_bottle_report_uses_configured_extractor(tmp_path: Path) -> None:
+    manifest_path = _write_manifest(tmp_path)
+    config = PatchCoreBottleReportConfig(
+        manifest_path=manifest_path,
+        output_dir=tmp_path / "outputs",
+        cache_path=tmp_path / "artefacts" / "bank.npz",
+        feature_extractor_name="mean_rgb",
+        max_examples=1,
+        patch_size=16,
+        stride=16,
+        top_k=1,
+        use_cache=False,
+    )
+
+    output_path = build_patchcore_bottle_report(config)
+
+    html = output_path.read_text(encoding="utf-8")
+    assert "feature extractor: <code>mean_rgb</code>" in html

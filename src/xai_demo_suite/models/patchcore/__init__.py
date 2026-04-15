@@ -9,6 +9,7 @@ from xai_demo_suite.models.patchcore.baseline import (
 )
 from xai_demo_suite.models.patchcore.cache import load_memory_bank, save_memory_bank
 from xai_demo_suite.models.patchcore.features import (
+    ColourTexturePatchFeatureExtractor,
     MeanRGBPatchFeatureExtractor,
     PatchFeatureExtractor,
     TorchvisionBackbonePatchFeatureExtractor,
@@ -21,6 +22,7 @@ from xai_demo_suite.models.patchcore.types import (
 )
 
 __all__ = [
+    "ColourTexturePatchFeatureExtractor",
     "MeanRGBPatchFeatureExtractor",
     "PatchCoreMemoryBank",
     "PatchFeatureExtractor",

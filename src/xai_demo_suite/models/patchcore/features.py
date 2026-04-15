@@ -50,6 +50,62 @@ class MeanRGBPatchFeatureExtractor:
 
 
 @dataclass(frozen=True, slots=True)
+class ColourTexturePatchFeatureExtractor:
+    """Deterministic colour and texture patch features for local demos."""
+
+    feature_name: str = "colour_texture"
+
+    def extract(self, image_path: Path, boxes: list[BoundingBox]) -> FloatArray:
+        """Extract low-dimensional colour, intensity, and edge statistics."""
+
+        image = load_rgb_array(image_path)
+        grayscale = image @ np.array([0.299, 0.587, 0.114], dtype=np.float64)
+        features = np.empty((len(boxes), 28), dtype=np.float64)
+        for index, box in enumerate(boxes):
+            patch_rgb = image[box.y : box.y + box.height, box.x : box.x + box.width, :]
+            patch_gray = grayscale[box.y : box.y + box.height, box.x : box.x + box.width]
+            features[index] = self._extract_patch_features(patch_rgb, patch_gray)
+        return features
+
+    def _extract_patch_features(self, patch_rgb: FloatArray, patch_gray: FloatArray) -> FloatArray:
+        gradient_y, gradient_x = np.gradient(patch_gray)
+        gradient = np.sqrt((gradient_x * gradient_x) + (gradient_y * gradient_y))
+        intensity_histogram, _ = np.histogram(
+            patch_gray,
+            bins=8,
+            range=(0.0, 1.0),
+            density=False,
+        )
+        gradient_histogram, _ = np.histogram(
+            np.clip(gradient, 0.0, 0.25),
+            bins=5,
+            range=(0.0, 0.25),
+            density=False,
+        )
+        patch_area = float(patch_gray.size)
+        grey_quantiles = np.quantile(patch_gray, [0.10, 0.25, 0.50, 0.75, 0.90])
+        return np.concatenate(
+            [
+                patch_rgb.mean(axis=(0, 1)) * 2.0,
+                patch_rgb.std(axis=(0, 1)) * 4.0,
+                np.array(
+                    [
+                        patch_gray.mean(),
+                        patch_gray.std(),
+                        gradient.mean(),
+                        gradient.std(),
+                    ],
+                    dtype=np.float64,
+                )
+                * 4.0,
+                grey_quantiles * 2.0,
+                intensity_histogram.astype(np.float64) / patch_area * 3.0,
+                gradient_histogram.astype(np.float64) / patch_area * 3.0,
+            ]
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class TorchvisionBackbonePatchFeatureExtractor:
     """Torch/Torchvision ResNet patch-crop feature extractor.
 

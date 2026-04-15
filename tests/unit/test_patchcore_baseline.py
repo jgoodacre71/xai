@@ -10,6 +10,7 @@ from PIL import Image
 from xai_demo_suite.data.manifests import ImageManifestRecord
 from xai_demo_suite.explain.contracts import BoundingBox
 from xai_demo_suite.models.patchcore import (
+    ColourTexturePatchFeatureExtractor,
     TorchvisionBackbonePatchFeatureExtractor,
     build_mean_colour_memory_bank,
     build_patchcore_memory_bank,
@@ -149,6 +150,25 @@ def test_custom_extractor_uses_same_provenance_path(tmp_path: Path) -> None:
     assert memory_bank.features.shape == (4, 2)
     assert scores[0].nearest[0].metadata.source_path == nominal
     assert scores[0].nearest[0].metadata.box == scores[0].query_box
+
+
+def test_colour_texture_extractor_returns_stable_patch_features(tmp_path: Path) -> None:
+    image_path = tmp_path / "image.png"
+    _write_colour_image(image_path, (120, 80, 40), size=32)
+    extractor = ColourTexturePatchFeatureExtractor()
+
+    features = extractor.extract(
+        image_path,
+        [
+            BoundingBox(x=0, y=0, width=16, height=16),
+            BoundingBox(x=16, y=16, width=16, height=16),
+        ],
+    )
+
+    assert extractor.feature_name == "colour_texture"
+    assert features.shape == (2, 28)
+    assert np.isfinite(features).all()
+    assert np.array_equal(features[0], features[1])
 
 
 def test_extractor_mismatch_is_rejected(tmp_path: Path) -> None:

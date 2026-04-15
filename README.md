@@ -44,8 +44,9 @@ when working on the deep PatchCore path:
 ./.venv/bin/python -m pip install -e ".[ml]"
 ```
 
-The current ResNet extractor defaults to random weights and does not download
-pretrained weights implicitly.
+The local PatchCore report defaults to deterministic colour/texture patch
+features, so it does not require Torch. The optional ResNet extractor defaults
+to random weights and does not download pretrained weights implicitly.
 
 ## First Local Report
 
@@ -53,13 +54,20 @@ After preparing MVTec AD bottle and installing the optional ML stack, generate
 the first static PatchCore report slice with:
 
 ```bash
-./.venv/bin/xai-demo-report patchcore-bottle --max-train 2 --patch-size 128 --stride 128 --max-examples 3
+./.venv/bin/xai-demo-report patchcore-bottle --max-examples 3
 ```
 
 The report is written to `outputs/patchcore_bottle/index.html`. When prepared
 MVTec masks are available, each selected anomaly also includes a ground-truth
 localisation check for the top scored patch. Generated reports, demo cards,
 local index files, and cached model artefacts are ignored by git.
+
+You can switch extractors explicitly:
+
+```bash
+./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor mean_rgb
+./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor resnet18_random
+```
 
 ## Main files
 

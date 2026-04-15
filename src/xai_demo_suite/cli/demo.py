@@ -28,6 +28,12 @@ def build_parser() -> argparse.ArgumentParser:
     bottle.add_argument("--manifest-path", type=Path, default=defaults.manifest_path)
     bottle.add_argument("--output-dir", type=Path, default=defaults.output_dir)
     bottle.add_argument("--cache-path", type=Path, default=defaults.cache_path)
+    bottle.add_argument(
+        "--feature-extractor",
+        choices=("colour_texture", "mean_rgb", "resnet18_random"),
+        default=defaults.feature_extractor_name,
+        help="Patch feature extractor to use for report generation.",
+    )
     bottle.add_argument("--max-train", type=int, default=defaults.max_train)
     bottle.add_argument("--test-index", type=int, default=defaults.test_index)
     bottle.add_argument("--max-examples", type=int, default=defaults.max_examples)
@@ -46,6 +52,7 @@ def _handle_patchcore_bottle(args: argparse.Namespace) -> int:
         manifest_path=args.manifest_path,
         output_dir=args.output_dir,
         cache_path=args.cache_path,
+        feature_extractor_name=args.feature_extractor,
         max_train=args.max_train,
         test_index=args.test_index,
         max_examples=args.max_examples,
