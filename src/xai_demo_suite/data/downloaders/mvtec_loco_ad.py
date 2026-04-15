@@ -268,6 +268,9 @@ def _find_loco_mask_path(category_root: Path, defect_type: str, image_path: Path
     candidates = [
         ground_truth_root / defect_type / f"{image_path.stem}.png",
         ground_truth_root / defect_type / f"{image_path.stem}_mask.png",
+        ground_truth_root / defect_type / image_path.stem / "000.png",
+        ground_truth_root / defect_type / image_path.stem / f"{image_path.stem}.png",
+        ground_truth_root / defect_type / image_path.stem / f"{image_path.stem}_mask.png",
         ground_truth_root / f"{image_path.stem}.png",
         ground_truth_root / f"{image_path.stem}_mask.png",
     ]

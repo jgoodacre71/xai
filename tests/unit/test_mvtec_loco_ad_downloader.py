@@ -28,14 +28,16 @@ def _write_fixture_archive(archive_path: Path) -> None:
     (category_root / "test" / "logical_anomalies").mkdir(parents=True)
     (category_root / "test" / "structural_anomalies").mkdir(parents=True)
     (category_root / "test" / "good").mkdir(parents=True)
-    (category_root / "ground_truth" / "logical_anomalies").mkdir(parents=True)
+    (category_root / "ground_truth" / "logical_anomalies" / "030").mkdir(parents=True)
     (category_root / "ground_truth" / "structural_anomalies").mkdir(parents=True)
     (category_root / "train" / "good" / "000.png").write_bytes(b"train")
     (category_root / "validation" / "good" / "010.png").write_bytes(b"validation")
     (category_root / "test" / "good" / "020.png").write_bytes(b"good")
     (category_root / "test" / "logical_anomalies" / "030.png").write_bytes(b"logical")
     (category_root / "test" / "structural_anomalies" / "040.png").write_bytes(b"structural")
-    (category_root / "ground_truth" / "logical_anomalies" / "030.png").write_bytes(b"mask")
+    (category_root / "ground_truth" / "logical_anomalies" / "030" / "000.png").write_bytes(
+        b"mask"
+    )
     (category_root / "ground_truth" / "structural_anomalies" / "040.png").write_bytes(
         b"mask"
     )
@@ -122,7 +124,7 @@ def test_loco_extract_and_manifest_from_fixture_archive(tmp_path: Path) -> None:
 
     assert record_count == 5
     assert logical_record["is_anomalous"] is True
-    assert logical_record["mask_path"].endswith("030.png")
+    assert logical_record["mask_path"].endswith("logical_anomalies/030/000.png")
     assert validation_record["is_anomalous"] is False
 
 

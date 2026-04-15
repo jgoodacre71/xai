@@ -72,12 +72,12 @@ severity-area metadata with PatchCore-style patch novelty scores.
 MVTec LOCO AD and symbolic / relational failure cases.
 
 Current artefacts:
-- static synthetic proxy report: `outputs/patchcore_logic/index.html`
+- static MVTec LOCO report when data is prepared: `outputs/patchcore_logic/index.html`
 - demo card: `outputs/patchcore_logic/demo_card.html`
 
-The first implementation contrasts a missing component with a component-identity
-swap on synthetic slot boards. MVTec LOCO AD sourcing remains the real-data
-follow-up.
+The current local implementation uses MVTec LOCO AD `juice_bottle` structural
+and logical anomaly examples when the prepared manifest exists. Fresh clones
+fall back to the synthetic slot-board proxy until LOCO data is fetched.
 
 ## Demo 08 — Explanation drift under shift
 Prediction drift and explanation drift compared under nuisance changes.

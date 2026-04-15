@@ -33,17 +33,15 @@ Verify generated reports, cards, selected figures, and the local index:
 | Demo 04 - PatchCore Learns the Wrong Normal | Working synthetic report | `outputs/patchcore_wrong_normal/index.html` |
 | Demo 05 - PatchCore Limits Lab | Working synthetic report | `outputs/patchcore_limits/index.html` |
 | Demo 06 - PatchCore Severity Mismatch | Working synthetic report | `outputs/patchcore_severity/index.html` |
-| Demo 07 - PatchCore Logical Anomaly Limits | Working synthetic proxy report | `outputs/patchcore_logic/index.html` |
+| Demo 07 - PatchCore Logical Anomaly Limits | Working local MVTec LOCO report when data is prepared, with synthetic fallback | `outputs/patchcore_logic/index.html` |
 | Demo 08 - Explanation Drift Under Shift | Working synthetic report | `outputs/explanation_drift/index.html` |
 
 ## Known gaps
 
 - Demo 01 still needs a real Waterbirds or equivalent shortcut dataset path;
   the current report is a synthetic proxy.
-- Demo 07 still needs a real MVTec LOCO AD comparison; the current report is a
-  synthetic logical-anomaly proxy.
-- MVTec LOCO AD has a fetch/prepare workflow, but Demo 07 does not yet use real
-  LOCO examples.
+- Demo 07 currently uses one local MVTec LOCO AD category when prepared; broader
+  category coverage and a component-aware comparator remain future work.
 - The PatchCore hero report still uses deterministic local patch features rather
   than pretrained multi-scale PatchCore.
 - The repository has no configured Git remote in this checkout.
