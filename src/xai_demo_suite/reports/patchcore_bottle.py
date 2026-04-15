@@ -21,7 +21,7 @@ from xai_demo_suite.models.patchcore import (
 )
 from xai_demo_suite.models.patchcore.types import PatchCoreMemoryBank, PatchScore
 from xai_demo_suite.utils.io import ensure_directory
-from xai_demo_suite.vis.image_panels import draw_box_on_image, save_patch_crop
+from xai_demo_suite.vis.image_panels import draw_box_on_image, save_patch_crop, save_score_overlay
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,9 +97,15 @@ def _select_query_record(config: PatchCoreBottleReportConfig) -> ImageManifestRe
 def _write_assets(
     *,
     score: PatchScore,
+    all_scores: list[PatchScore],
     output_dir: Path,
 ) -> dict[str, Path]:
     assets: dict[str, Path] = {}
+    assets["score_overlay"] = save_score_overlay(
+        image_path=score.image_path,
+        scores=all_scores,
+        output_path=_asset_path(output_dir, "score_overlay.png"),
+    )
     assets["query_box"] = draw_box_on_image(
         image_path=score.image_path,
         box=score.query_box,
@@ -158,6 +164,7 @@ def _render_html(
 
     query_box_src = rel(assets["query_box"])
     query_crop_src = rel(assets["query_crop"])
+    score_overlay_src = rel(assets["score_overlay"])
     neighbour_blocks: list[str] = []
     for index in range(1, len(score.nearest) + 1):
         crop_src = rel(assets[f"normal_crop_{index}"])
@@ -234,6 +241,13 @@ def _render_html(
     <h2>Top Scored Patch</h2>
     <div class="grid">
       <figure>
+        <img src="{score_overlay_src}" alt="Coarse anomaly-map overlay">
+        <figcaption>
+          Coarse patch-score anomaly map. Brighter red means higher patch
+          distance to the nominal memory bank.
+        </figcaption>
+      </figure>
+      <figure>
         <img src="{query_box_src}" alt="Input image with top scored patch box">
         <figcaption>Input image with the top scored patch highlighted.</figcaption>
       </figure>
@@ -302,7 +316,11 @@ def build_patchcore_bottle_report(
         raise ValueError("No query patch scores were produced.")
 
     top_score = scores[0]
-    assets = _write_assets(score=top_score, output_dir=config.output_dir)
+    assets = _write_assets(
+        score=top_score,
+        all_scores=scores,
+        output_dir=config.output_dir,
+    )
     output_path = config.output_dir / "index.html"
     _render_html(
         config=config,

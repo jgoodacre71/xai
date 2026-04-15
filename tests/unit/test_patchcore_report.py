@@ -7,12 +7,22 @@ import numpy as np
 from PIL import Image
 
 from xai_demo_suite.explain.contracts import BoundingBox
-from xai_demo_suite.models.patchcore.types import FloatArray
+from xai_demo_suite.models.patchcore.types import (
+    FloatArray,
+    PatchMetadata,
+    PatchNearestNeighbour,
+    PatchScore,
+)
 from xai_demo_suite.reports.patchcore_bottle import (
     PatchCoreBottleReportConfig,
     build_patchcore_bottle_report,
 )
-from xai_demo_suite.vis.image_panels import draw_box_on_image, save_patch_crop
+from xai_demo_suite.vis.image_panels import (
+    draw_box_on_image,
+    normalise_patch_scores,
+    save_patch_crop,
+    save_score_overlay,
+)
 
 
 class ConstantPatchFeatureExtractor:
@@ -109,6 +119,54 @@ def test_draw_box_on_image_writes_panel(tmp_path: Path) -> None:
         assert panel.getpixel((4, 4)) == (1, 2, 3)
 
 
+def _patch_score(distance: float, box: BoundingBox, image_path: Path) -> PatchScore:
+    metadata = PatchMetadata(
+        patch_id="nominal/patch",
+        source_image_id="nominal",
+        source_split="train",
+        source_path=image_path,
+        box=box,
+        feature_vector_id=0,
+    )
+    return PatchScore(
+        sample_id="query",
+        image_path=image_path,
+        query_box=box,
+        distance=distance,
+        nearest=(PatchNearestNeighbour(metadata=metadata, distance=distance),),
+    )
+
+
+def test_normalise_patch_scores_is_deterministic(tmp_path: Path) -> None:
+    image_path = tmp_path / "image.png"
+    scores = [
+        _patch_score(10.0, BoundingBox(x=0, y=0, width=8, height=8), image_path),
+        _patch_score(20.0, BoundingBox(x=8, y=0, width=8, height=8), image_path),
+        _patch_score(30.0, BoundingBox(x=16, y=0, width=8, height=8), image_path),
+    ]
+
+    assert normalise_patch_scores(scores) == [0.0, 0.5, 1.0]
+
+
+def test_save_score_overlay_writes_coarse_map(tmp_path: Path) -> None:
+    image_path = tmp_path / "image.png"
+    _write_image(image_path, (10, 10, 10), size=32)
+    scores = [
+        _patch_score(0.0, BoundingBox(x=0, y=0, width=16, height=16), image_path),
+        _patch_score(10.0, BoundingBox(x=16, y=16, width=16, height=16), image_path),
+    ]
+
+    overlay_path = save_score_overlay(
+        image_path=image_path,
+        scores=scores,
+        output_path=tmp_path / "overlay.png",
+    )
+
+    with Image.open(overlay_path) as overlay:
+        assert overlay.size == (32, 32)
+        assert overlay.getpixel((24, 24)) != (10, 10, 10)
+
+
 def test_patchcore_bottle_report_writes_html_and_assets(tmp_path: Path) -> None:
     manifest_path = _write_manifest(tmp_path)
     config = PatchCoreBottleReportConfig(
@@ -129,5 +187,7 @@ def test_patchcore_bottle_report_writes_html_and_assets(tmp_path: Path) -> None:
     html = output_path.read_text(encoding="utf-8")
     assert "PatchCore Bottle Report" in html
     assert "Nearest Normal Patch Evidence" in html
+    assert "Coarse patch-score anomaly map" in html
+    assert (config.output_dir / "assets" / "score_overlay.png").exists()
     assert (config.output_dir / "assets" / "query_patch.png").exists()
     assert (config.output_dir / "assets" / "normal_patch_1.png").exists()
