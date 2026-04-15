@@ -109,6 +109,18 @@ The report is written to `outputs/shortcut_industrial/index.html`. It shows a
 corner-stamp shortcut, counterfactual stamp swaps/removal, and a central-shape
 intervention.
 
+## Explanation Drift Report
+
+Generate the synthetic drift demo with:
+
+```bash
+./.venv/bin/xai-demo-report explanation-drift
+```
+
+The report is written to `outputs/explanation_drift/index.html`. It separates
+prediction movement from evidence-region movement under deterministic
+perturbations.
+
 ## Main files
 
 - `REPO_SPEC.md` — the long-form repository specification

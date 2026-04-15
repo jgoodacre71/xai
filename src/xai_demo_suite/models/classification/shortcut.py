@@ -36,6 +36,10 @@ class IndustrialClassifier(Protocol):
     def predict_score(self, image_path: Path) -> float:
         """Return a positive score for the defect class."""
 
+    @property
+    def evidence_region(self) -> BoundingBox:
+        """Return the primary evidence region used by the classifier."""
+
 
 def _region_array(image_path: Path, box: BoundingBox) -> np.ndarray:
     with Image.open(image_path) as image:
@@ -58,6 +62,12 @@ class StampShortcutClassifier:
         blue = float(region[:, :, 2].mean())
         return red - blue
 
+    @property
+    def evidence_region(self) -> BoundingBox:
+        """Return the shortcut stamp region."""
+
+        return self.stamp_region
+
 
 @dataclass(frozen=True, slots=True)
 class ShapeClassifier:
@@ -76,6 +86,43 @@ class ShapeClassifier:
         centre_column_count = int(np.count_nonzero(occupied[:, occupied.shape[1] // 2]))
         # Blocks have many full rows; discs have fewer full rows and a rounder outline.
         return float(full_rows - (centre_column_count * 0.15) - 20.0)
+
+    @property
+    def evidence_region(self) -> BoundingBox:
+        """Return the central object region."""
+
+        return self.object_region
+
+
+@dataclass(frozen=True, slots=True)
+class HybridShortcutClassifier:
+    """Classifier that can keep a prediction while shifting its evidence source."""
+
+    name: str = "hybrid_shortcut_shape"
+    shortcut_weight: float = 1.0
+    shape_weight: float = 0.05
+    stamp_classifier: StampShortcutClassifier = field(default_factory=StampShortcutClassifier)
+    shape_classifier: ShapeClassifier = field(default_factory=ShapeClassifier)
+
+    def predict_score(self, image_path: Path) -> float:
+        stamp_score = self.stamp_classifier.predict_score(image_path) * self.shortcut_weight
+        shape_score = self.shape_classifier.predict_score(image_path) * self.shape_weight
+        return stamp_score + shape_score
+
+    def evidence_region_for(self, image_path: Path) -> BoundingBox:
+        """Return whichever region contributes the larger absolute score."""
+
+        stamp_score = abs(self.stamp_classifier.predict_score(image_path) * self.shortcut_weight)
+        shape_score = abs(self.shape_classifier.predict_score(image_path) * self.shape_weight)
+        if stamp_score >= shape_score:
+            return self.stamp_classifier.evidence_region
+        return self.shape_classifier.evidence_region
+
+    @property
+    def evidence_region(self) -> BoundingBox:
+        """Return the default shortcut region for protocol compatibility."""
+
+        return self.stamp_classifier.evidence_region
 
 
 def predict_label(score: float) -> str:

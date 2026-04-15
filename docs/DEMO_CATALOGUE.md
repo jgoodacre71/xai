@@ -54,3 +54,10 @@ MVTec LOCO AD and symbolic / relational failure cases.
 
 ## Demo 08 — Explanation drift under shift
 Prediction drift and explanation drift compared under nuisance changes.
+
+Current artefacts:
+- static report: `outputs/explanation_drift/index.html`
+- demo card: `outputs/explanation_drift/demo_card.html`
+
+The first implementation uses deterministic shortcut-demo perturbations to show
+that a stable prediction can still move its evidence region.

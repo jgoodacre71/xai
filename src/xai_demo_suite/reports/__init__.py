@@ -1,6 +1,10 @@
 """Static report builders for demos."""
 
 from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index
+from xai_demo_suite.reports.explanation_drift import (
+    ExplanationDriftReportConfig,
+    build_explanation_drift_report,
+)
 from xai_demo_suite.reports.patchcore_bottle import (
     PatchCoreBottleReportConfig,
     build_patchcore_bottle_report,
@@ -20,10 +24,12 @@ from xai_demo_suite.reports.shortcut_industrial import (
 
 __all__ = [
     "DemoCard",
+    "ExplanationDriftReportConfig",
     "IndustrialShortcutReportConfig",
     "PatchCoreBottleReportConfig",
     "PatchCoreLimitsReportConfig",
     "PatchCoreWrongNormalReportConfig",
+    "build_explanation_drift_report",
     "build_industrial_shortcut_report",
     "build_patchcore_bottle_report",
     "build_patchcore_limits_report",

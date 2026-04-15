@@ -5,6 +5,10 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from xai_demo_suite.reports.explanation_drift import (
+    ExplanationDriftReportConfig,
+    build_explanation_drift_report,
+)
 from xai_demo_suite.reports.patchcore_bottle import (
     PatchCoreBottleReportConfig,
     build_patchcore_bottle_report,
@@ -27,6 +31,7 @@ def build_parser() -> argparse.ArgumentParser:
     """Build the demo CLI parser."""
 
     bottle_defaults = PatchCoreBottleReportConfig()
+    drift_defaults = ExplanationDriftReportConfig()
     limits_defaults = PatchCoreLimitsReportConfig()
     wrong_normal_defaults = PatchCoreWrongNormalReportConfig()
     shortcut_defaults = IndustrialShortcutReportConfig()
@@ -103,6 +108,13 @@ def build_parser() -> argparse.ArgumentParser:
     shortcut.add_argument("--output-dir", type=Path, default=shortcut_defaults.output_dir)
     shortcut.add_argument("--synthetic-dir", type=Path, default=shortcut_defaults.synthetic_dir)
 
+    drift = subparsers.add_parser(
+        "explanation-drift",
+        help="Generate the synthetic explanation drift report.",
+    )
+    drift.add_argument("--output-dir", type=Path, default=drift_defaults.output_dir)
+    drift.add_argument("--synthetic-dir", type=Path, default=drift_defaults.synthetic_dir)
+
     return parser
 
 
@@ -168,6 +180,16 @@ def _handle_shortcut_industrial(args: argparse.Namespace) -> int:
     return 0
 
 
+def _handle_explanation_drift(args: argparse.Namespace) -> int:
+    config = ExplanationDriftReportConfig(
+        output_dir=args.output_dir,
+        synthetic_dir=args.synthetic_dir,
+    )
+    output_path = build_explanation_drift_report(config)
+    print(f"report: {output_path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the demo/report CLI."""
 
@@ -181,6 +203,8 @@ def main(argv: list[str] | None = None) -> int:
         return _handle_patchcore_wrong_normal(args)
     if args.command == "shortcut-industrial":
         return _handle_shortcut_industrial(args)
+    if args.command == "explanation-drift":
+        return _handle_explanation_drift(args)
     parser.error(f"Unsupported command: {args.command}")
     return 2
 
