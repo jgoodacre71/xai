@@ -27,6 +27,7 @@ Verify generated reports, cards, selected figures, and the local index:
 
 | Demo | Status | Default output |
 | --- | --- | --- |
+| Demo 01 - Waterbirds Shortcut Proxy | Working synthetic report | `outputs/waterbirds_shortcut/index.html` |
 | Demo 02 - Industrial Shortcut Trap | Working synthetic report | `outputs/shortcut_industrial/index.html` |
 | Demo 03 - PatchCore on MVTec AD bottle | Working local MVTec report when data is prepared | `outputs/patchcore_bottle/index.html` |
 | Demo 04 - PatchCore Learns the Wrong Normal | Working synthetic report | `outputs/patchcore_wrong_normal/index.html` |
@@ -35,7 +36,8 @@ Verify generated reports, cards, selected figures, and the local index:
 
 ## Known gaps
 
-- Demo 01 still needs a real Waterbirds or equivalent shortcut dataset path.
+- Demo 01 still needs a real Waterbirds or equivalent shortcut dataset path;
+  the current report is a synthetic proxy.
 - Demo 06 and Demo 07 are represented inside the current limits report, but do
   not yet have dedicated reports.
 - MVTec LOCO AD is not sourced yet.

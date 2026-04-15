@@ -27,6 +27,10 @@ from xai_demo_suite.reports.suite import (
     build_demo_suite,
     verify_demo_suite_outputs,
 )
+from xai_demo_suite.reports.waterbirds_shortcut import (
+    WaterbirdsShortcutReportConfig,
+    build_waterbirds_shortcut_report,
+)
 
 __all__ = [
     "DemoCard",
@@ -37,12 +41,14 @@ __all__ = [
     "PatchCoreWrongNormalReportConfig",
     "SuiteBuildResult",
     "SuiteVerificationResult",
+    "WaterbirdsShortcutReportConfig",
     "build_demo_suite",
     "build_explanation_drift_report",
     "build_industrial_shortcut_report",
     "build_patchcore_bottle_report",
     "build_patchcore_limits_report",
     "build_patchcore_wrong_normal_report",
+    "build_waterbirds_shortcut_report",
     "save_demo_card",
     "save_demo_index",
     "verify_demo_suite_outputs",

@@ -7,6 +7,14 @@ Use `./.venv/bin/xai-demo-report suite` to regenerate the synthetic reports and
 ## Demo 01 — Waterbirds shortcut
 A canonical background-spurious classification story.
 
+Current artefacts:
+- static synthetic proxy report: `outputs/waterbirds_shortcut/index.html`
+- demo card: `outputs/waterbirds_shortcut/demo_card.html`
+
+The first implementation uses generated bird silhouettes on land/water
+backgrounds, worst-group metrics, evidence boxes, and background-swap
+counterfactuals. A real Waterbirds adapter is still a separate dataset task.
+
 ## Demo 02 — Industrial shortcut trap
 A classifier learns border, watermark, or fixture leakage.
 

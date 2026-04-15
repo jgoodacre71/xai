@@ -11,14 +11,24 @@ from xai_demo_suite.data.synthetic.slot_boards import (
     generate_nuisance_board_dataset,
     generate_slot_board_dataset,
 )
+from xai_demo_suite.data.synthetic.waterbirds import (
+    HabitatBirdSample,
+    generate_habitat_bird_dataset,
+    render_habitat_bird_image,
+    write_habitat_counterfactual,
+)
 
 __all__ = [
+    "HabitatBirdSample",
     "IndustrialShortcutSample",
     "NuisanceBoardSample",
     "SlotBoardSample",
     "SyntheticImageSample",
+    "generate_habitat_bird_dataset",
     "generate_industrial_shortcut_dataset",
     "generate_nuisance_board_dataset",
     "generate_slot_board_dataset",
     "make_striped_fixture",
+    "render_habitat_bird_image",
+    "write_habitat_counterfactual",
 ]

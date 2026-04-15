@@ -26,6 +26,10 @@ from xai_demo_suite.reports.shortcut_industrial import (
     build_industrial_shortcut_report,
 )
 from xai_demo_suite.reports.suite import build_demo_suite, verify_demo_suite_outputs
+from xai_demo_suite.reports.waterbirds_shortcut import (
+    WaterbirdsShortcutReportConfig,
+    build_waterbirds_shortcut_report,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -36,11 +40,19 @@ def build_parser() -> argparse.ArgumentParser:
     limits_defaults = PatchCoreLimitsReportConfig()
     wrong_normal_defaults = PatchCoreWrongNormalReportConfig()
     shortcut_defaults = IndustrialShortcutReportConfig()
+    waterbirds_defaults = WaterbirdsShortcutReportConfig()
     parser = argparse.ArgumentParser(
         prog="xai-demo-report",
         description="Generate local demo reports from package code.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    waterbirds = subparsers.add_parser(
+        "waterbirds-shortcut",
+        help="Generate the synthetic Waterbirds-style shortcut report.",
+    )
+    waterbirds.add_argument("--output-dir", type=Path, default=waterbirds_defaults.output_dir)
+    waterbirds.add_argument("--synthetic-dir", type=Path, default=waterbirds_defaults.synthetic_dir)
 
     bottle = subparsers.add_parser(
         "patchcore-bottle",
@@ -154,6 +166,16 @@ def _handle_patchcore_bottle(args: argparse.Namespace) -> int:
     return 0
 
 
+def _handle_waterbirds_shortcut(args: argparse.Namespace) -> int:
+    config = WaterbirdsShortcutReportConfig(
+        output_dir=args.output_dir,
+        synthetic_dir=args.synthetic_dir,
+    )
+    output_path = build_waterbirds_shortcut_report(config)
+    print(f"report: {output_path}")
+    return 0
+
+
 def _handle_patchcore_limits(args: argparse.Namespace) -> int:
     config = PatchCoreLimitsReportConfig(
         output_dir=args.output_dir,
@@ -239,6 +261,8 @@ def main(argv: list[str] | None = None) -> int:
 
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.command == "waterbirds-shortcut":
+        return _handle_waterbirds_shortcut(args)
     if args.command == "patchcore-bottle":
         return _handle_patchcore_bottle(args)
     if args.command == "patchcore-limits":

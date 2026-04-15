@@ -53,6 +53,12 @@ Use for:
 - classic shortcut demonstration
 - background reliance and counterfactual swaps
 
+Current local status:
+- Demo 01 has a generated Waterbirds-style proxy under
+  `outputs/waterbirds_shortcut/synthetic/`.
+- The real Waterbirds dataset is not sourced yet and must not be committed when
+  added.
+
 ## Strong second-wave datasets
 
 - MVTec AD 2
@@ -67,6 +73,7 @@ Use for:
 Inject:
 - border
 - stamp
+- habitat background
 - corner tab
 - lighting gradient
 - crop shift

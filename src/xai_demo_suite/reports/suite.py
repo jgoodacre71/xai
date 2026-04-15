@@ -29,6 +29,10 @@ from xai_demo_suite.reports.shortcut_industrial import (
     IndustrialShortcutReportConfig,
     build_industrial_shortcut_report,
 )
+from xai_demo_suite.reports.waterbirds_shortcut import (
+    WaterbirdsShortcutReportConfig,
+    build_waterbirds_shortcut_report,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,6 +77,15 @@ def build_demo_suite(
     """
 
     builders: list[tuple[str, ReportBuilder]] = [
+        (
+            "waterbirds-shortcut",
+            lambda: build_waterbirds_shortcut_report(
+                WaterbirdsShortcutReportConfig(
+                    output_dir=output_root / "waterbirds_shortcut",
+                    synthetic_dir=output_root / "waterbirds_shortcut" / "synthetic",
+                )
+            ),
+        ),
         (
             "shortcut-industrial",
             lambda: build_industrial_shortcut_report(
