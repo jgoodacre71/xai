@@ -41,6 +41,16 @@ from xai_demo_suite.data.downloaders.mvtec_loco_ad import (
     iter_mvtec_loco_ad_categories,
     plan_mvtec_loco_ad_fetch,
 )
+from xai_demo_suite.data.downloaders.neu_cls import (
+    NEUCLSDataset,
+    build_neu_cls_shortcut_manifest,
+    download_neu_cls_dataset,
+    extract_neu_cls_dataset,
+    get_neu_cls_dataset,
+    iter_neu_cls_datasets,
+    neu_cls_archive_dir,
+    plan_neu_cls_fetch,
+)
 from xai_demo_suite.data.downloaders.visa import (
     VisADataset,
     build_visa_manifests,
@@ -78,7 +88,15 @@ def build_parser() -> argparse.ArgumentParser:
     fetch_parser = subparsers.add_parser("fetch", help="Fetch a raw dataset archive.")
     fetch_parser.add_argument(
         "dataset",
-        choices=["metashift", "mvtec_ad", "mvtec_ad_2", "mvtec_loco_ad", "visa", "waterbirds"],
+        choices=[
+            "metashift",
+            "mvtec_ad",
+            "mvtec_ad_2",
+            "mvtec_loco_ad",
+            "neu_cls",
+            "visa",
+            "waterbirds",
+        ],
     )
     fetch_parser.add_argument("--category", required=True, help="Dataset category name.")
     fetch_parser.add_argument("--raw-root", type=Path, default=Path("data/raw"))
@@ -96,7 +114,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     prepare_parser.add_argument(
         "dataset",
-        choices=["metashift", "mvtec_ad", "mvtec_ad_2", "mvtec_loco_ad", "visa", "waterbirds"],
+        choices=[
+            "metashift",
+            "mvtec_ad",
+            "mvtec_ad_2",
+            "mvtec_loco_ad",
+            "neu_cls",
+            "visa",
+            "waterbirds",
+        ],
     )
     prepare_parser.add_argument("--category", required=True, help="Dataset category name.")
     prepare_parser.add_argument("--raw-root", type=Path, default=Path("data/raw"))
@@ -150,6 +176,10 @@ def _print_visa_dataset(dataset: VisADataset) -> None:
     print(f"{dataset.name:12} {dataset.subset_count:>2} categories  {dataset.archive_name}")
 
 
+def _print_neu_cls_dataset(dataset: NEUCLSDataset) -> None:
+    print(f"{dataset.name:20} {dataset.expected_root_name}")
+
+
 def _handle_list() -> int:
     print("MVTec AD")
     print("  source: https://www.mvtec.com/research-teaching/datasets/mvtec-ad")
@@ -185,6 +215,14 @@ def _handle_list() -> int:
     print("  datasets:")
     for visa_dataset in iter_visa_datasets():
         _print_visa_dataset(visa_dataset)
+    print()
+    print("NEU-CLS")
+    print("  source: https://faculty.neu.edu.cn/songkechen/zh_CN/zhym/263269/list/index.htm")
+    print("  downloads: use --archive-url or place a local archive")
+    print("  licence: verify upstream terms; treat as research-only")
+    print("  datasets:")
+    for neu_dataset in iter_neu_cls_datasets():
+        _print_neu_cls_dataset(neu_dataset)
     print()
     print("MVTec LOCO AD")
     print("  source: https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad")
@@ -244,6 +282,37 @@ def _handle_fetch(args: argparse.Namespace) -> int:
         )
         print(f"{visa_result.status}: {visa_result.archive_path}")
         print(f"split csv: {split_csv_file}")
+        return 0
+
+    if args.dataset == "neu_cls":
+        neu_dataset = get_neu_cls_dataset(args.category)
+        neu_plan = plan_neu_cls_fetch(
+            dataset=neu_dataset,
+            raw_root=args.raw_root,
+            archive_url=args.archive_url,
+            overwrite=args.overwrite,
+        )
+        if args.dry_run:
+            if neu_plan.should_download:
+                print(f"download: {neu_plan.url}")
+                print(f"target: {neu_plan.archive_path}")
+            else:
+                print("manual: supply --archive-url or place a single archive under")
+                print(f"target dir: {neu_cls_archive_dir(args.raw_root)}")
+            print(f"reason: {neu_plan.reason}")
+            return 0
+        if args.archive_url is None:
+            raise ValueError(
+                "NEU-CLS fetch requires --archive-url, or place the archive manually and run "
+                "prepare with --archive-path or --source-root."
+            )
+        neu_result = download_neu_cls_dataset(
+            dataset=neu_dataset,
+            raw_root=args.raw_root,
+            archive_url=args.archive_url,
+            overwrite=args.overwrite,
+        )
+        print(f"{neu_result.status}: {neu_result.archive_path}")
         return 0
 
     if args.dataset == "mvtec_ad_2":
@@ -391,6 +460,26 @@ def _handle_prepare(args: argparse.Namespace) -> int:
         for category_name, record_count in sorted(category_counts.items()):
             manifest_path = args.processed_root / "visa" / category_name / "manifest.jsonl"
             print(f"manifest: {manifest_path} ({record_count} records)")
+        return 0
+
+    if args.dataset == "neu_cls":
+        neu_dataset = get_neu_cls_dataset(args.category)
+        extracted_root = extract_neu_cls_dataset(
+            raw_root=args.raw_root,
+            interim_root=args.interim_root,
+            overwrite=args.overwrite,
+            archive_path=args.archive_path,
+            source_root=args.source_root,
+        )
+        record_count = build_neu_cls_shortcut_manifest(
+            extracted_root=extracted_root,
+            interim_root=args.interim_root,
+            processed_root=args.processed_root,
+            project_root=Path.cwd(),
+        )
+        manifest_path = args.processed_root / "neu_cls" / neu_dataset.name / "manifest.jsonl"
+        print(f"extracted: {extracted_root}")
+        print(f"manifest: {manifest_path} ({record_count} records)")
         return 0
 
     if args.dataset == "mvtec_ad_2":

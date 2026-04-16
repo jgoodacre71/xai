@@ -123,6 +123,7 @@ def build_demo_suite(
                 IndustrialShortcutReportConfig(
                     output_dir=output_root / "shortcut_industrial",
                     synthetic_dir=output_root / "shortcut_industrial" / "synthetic",
+                    use_real_data=use_local_data_defaults,
                 )
             ),
         ),
@@ -177,6 +178,11 @@ def build_demo_suite(
                 ExplanationDriftReportConfig(
                     output_dir=output_root / "explanation_drift",
                     synthetic_dir=output_root / "explanation_drift" / "synthetic",
+                    industrial_manifest_path=(
+                        ExplanationDriftReportConfig().industrial_manifest_path
+                        if use_local_data_defaults
+                        else _disabled_manifest_path(output_root, "industrial_shortcut")
+                    ),
                     include_mvtec_if_available=use_local_data_defaults,
                     visa_processed_root=(
                         visa_processed_root

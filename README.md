@@ -81,12 +81,25 @@ Waterbirds now has the same explicit local data flow:
 ```
 
 When the prepared Waterbirds manifest exists, Demo 01 switches into a real-data
-path with frozen ResNet-18 linear probes, worst-group metrics, Grad-CAM,
-Integrated Gradients, simple context-masking perturbation checks, and a
+path with configurable ResNet-18 tuning, worst-group metrics, Grad-CAM,
+Integrated Gradients, context-masking perturbation checks, and a
 prototype-exemplar comparator. When the prepared MetaShift manifest also
 exists, the same report adds a natural-context extension section with the same
 ERM-versus-group-balanced comparison. The synthetic proxy remains as the
 fallback for fresh clones without local data.
+
+NEU-CLS now provides the real industrial shortcut path for Demo 02 and Demo 08:
+
+```bash
+./.venv/bin/xai-demo-data fetch neu_cls --category shortcut_binary --dry-run
+./.venv/bin/xai-demo-data fetch neu_cls --category shortcut_binary --archive-url <direct-archive-url>
+./.venv/bin/xai-demo-data prepare neu_cls --category shortcut_binary
+```
+
+The fetch path is intentionally conservative. If the upstream page does not
+give you a stable direct archive URL, place one archive under
+`data/raw/neu_cls/archives/`, or point `prepare` at a manual source root with
+`--source-root`.
 
 MVTec AD 2 now has a second-wave local adapter:
 
@@ -185,9 +198,11 @@ tracked by git.
 Use `--benchmark-limit` for quick smoke runs; omit it to score the full local
 MVTec AD bottle test split in the report diagnostics.
 
-The narrative notebook for the same demo is checked in at
-`notebooks/03_patchcore_mvtec_bottle.ipynb`. It is intentionally output-free and
-delegates the implementation to package code.
+The narrative notebooks are checked in under `notebooks/` as output-free
+`.ipynb` files paired with Jupytext-style percent scripts. The Demo 03 pair is
+`notebooks/03_patchcore_mvtec_ad.ipynb` and `notebooks/03_patchcore_mvtec_ad.py`.
+All notebook sources delegate the implementation to package code, and the test
+suite now includes notebook smoke execution over reduced local configs.
 
 ## PatchCore Limits Report
 
@@ -227,16 +242,18 @@ acquisition tab.
 
 ## Industrial Shortcut Report
 
-Generate the synthetic shortcut demo with:
+Generate the shortcut demo with:
 
 ```bash
 ./.venv/bin/xai-demo-report shortcut-industrial
 ```
 
-The report is written to `outputs/shortcut_industrial/index.html`. It shows a
-learned corner-stamp shortcut, a stamp-invariant intervention model,
-Grad-CAM and Integrated Gradients overlays, and known-region perturbation
-diagnostics over the stamp and the part.
+When the prepared NEU-CLS shortcut manifest exists, the report at
+`outputs/shortcut_industrial/index.html` uses real steel defect images with a
+correlated stamp intervention. Otherwise it falls back to the synthetic
+shortcut generator. In both modes it shows a learned shortcut model, a
+stamp-invariant intervention model, Grad-CAM and Integrated Gradients overlays,
+and known-region perturbation diagnostics over the stamp and the part.
 
 ## Explanation Drift Report
 
@@ -248,13 +265,14 @@ Generate the synthetic drift demo with:
 
 The report is written to `outputs/explanation_drift/index.html`. It separates
 performance drift from explanation drift for the learned industrial shortcut
-models under blur, contrast, compression, lighting, and shadow shifts. When
-local MVTec bottle data is prepared, it adds a PatchCore anomaly-drift section
-with image-level AUC, top-patch movement, and mask-coverage checks. When local
-MVTec AD 2 scenario manifests are prepared, the same report now adds second-wave
-anomaly-drift sections for those scenarios as well. When local VisA manifests
-are prepared, the same report adds cross-dataset anomaly-drift sections there
-too.
+models under blur, contrast, compression, lighting, and shadow shifts. When the
+prepared NEU-CLS manifest exists, the classifier section uses real industrial
+images. When local MVTec bottle data is prepared, it adds a PatchCore
+anomaly-drift section with image-level AUC, top-patch movement, and
+mask-coverage checks. When local MVTec AD 2 scenario manifests are prepared,
+the same report now adds second-wave anomaly-drift sections for those
+scenarios as well. When local VisA manifests are prepared, the same report adds
+cross-dataset anomaly-drift sections there too.
 
 ## Main files
 
@@ -266,6 +284,7 @@ too.
 - `docs/` — source-of-truth documentation skeleton
 - `data_registry.yaml` — dataset metadata placeholders
 - `src/xai_demo_suite/` — reusable package code
+- `notebooks/` — output-free notebook showroom plus paired percent scripts
 - `tests/` — unit and integration tests
 
 Use `docs/tasks/active/` for substantial work so another engineer or Codex

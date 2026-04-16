@@ -17,7 +17,8 @@ For:
 - report generation
 
 ### Notebook smoke tests
-At least one notebook per lab should run against a tiny fixture dataset or cached toy artefacts.
+Notebook smoke runs should execute the paired percent-script sources against
+tiny fixture settings or synthetic fallbacks.
 
 ## Required quality checks
 
@@ -25,7 +26,7 @@ At least one notebook per lab should run against a tiny fixture dataset or cache
 - MyPy
 - Pytest
 - coverage on the package code
-- notebook smoke on at least the overview notebook and one hero demo
+- notebook smoke on representative paired notebook scripts across the main demo pillars
 
 ## Testing principle
 

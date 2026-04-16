@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import html
+import os
 from dataclasses import dataclass, replace
 from pathlib import Path
 
 import numpy as np
 
+from xai_demo_suite.data.industrial_manifest import (
+    load_industrial_shortcut_manifest,
+    manifest_records_to_samples,
+)
 from xai_demo_suite.data.manifests import (
     ImageManifestRecord,
     filter_manifest_records,
@@ -71,6 +76,7 @@ class ExplanationDriftReportConfig:
     classifier_batch_size: int = 16
     classifier_epochs: int = 18
     classifier_seed: int = 19
+    industrial_manifest_path: Path = Path("data/processed/neu_cls/shortcut_binary/manifest.jsonl")
     mvtec_manifest_path: Path = Path("data/processed/mvtec_ad/bottle/manifest.jsonl")
     mvtec_cache_path: Path = DEFAULT_DRIFT_CACHE_PATH
     mvtec_feature_extractor_name: str = "colour_texture"
@@ -161,7 +167,7 @@ class ExplanationDriftReportData:
 
 
 def _relative(path: Path, root: Path) -> str:
-    return path.resolve().relative_to(root.resolve()).as_posix()
+    return Path(os.path.relpath(path.resolve(), start=root.resolve())).as_posix()
 
 
 def _asset_path(output_dir: Path, name: str) -> Path:
@@ -267,7 +273,13 @@ def _train_classifier_models(
     FrozenResNetIndustrialProbe,
     FrozenResNetIndustrialProbe,
 ]:
-    train_samples, test_samples = generate_industrial_shortcut_dataset(config.synthetic_dir)
+    if config.industrial_manifest_path.exists():
+        records = load_industrial_shortcut_manifest(config.industrial_manifest_path)
+        samples = manifest_records_to_samples(records)
+        train_samples = [sample for sample in samples if sample.split == "train"]
+        test_samples = [sample for sample in samples if sample.split == "test"]
+    else:
+        train_samples, test_samples = generate_industrial_shortcut_dataset(config.synthetic_dir)
     intervention_train_samples = augment_stamp_invariant_samples(
         train_samples,
         output_dir=config.synthetic_dir / "drift_intervention_train",
@@ -301,7 +313,12 @@ def _build_classifier_report(
     perturbation_root: Path,
 ) -> ClassifierDriftReport:
     baseline_sample = next(
-        sample for sample in test_samples if sample.sample_id == "test_defect_clean"
+        (
+            sample
+            for sample in test_samples
+            if sample.variant == "clean"
+        ),
+        test_samples[0],
     )
     baseline_explanation = model.explain(baseline_sample)
     baseline_overlay_path = save_heatmap_overlay(

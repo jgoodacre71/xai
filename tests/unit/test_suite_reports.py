@@ -8,6 +8,7 @@ import xai_demo_suite.reports.suite as suite_module
 from xai_demo_suite.reports.explanation_drift import ExplanationDriftReportConfig
 from xai_demo_suite.reports.patchcore_bottle import PatchCoreBottleReportConfig
 from xai_demo_suite.reports.patchcore_logic import PatchCoreLogicReportConfig
+from xai_demo_suite.reports.shortcut_industrial import IndustrialShortcutReportConfig
 from xai_demo_suite.reports.suite import build_demo_suite, verify_demo_suite_outputs
 from xai_demo_suite.reports.waterbirds_shortcut import WaterbirdsShortcutReportConfig
 
@@ -38,6 +39,7 @@ def test_build_demo_suite_disables_implicit_local_data_for_temp_outputs(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     waterbirds_configs: list[WaterbirdsShortcutReportConfig] = []
+    industrial_configs: list[IndustrialShortcutReportConfig] = []
     drift_configs: list[ExplanationDriftReportConfig] = []
     logic_configs: list[PatchCoreLogicReportConfig] = []
 
@@ -55,6 +57,13 @@ def test_build_demo_suite_disables_implicit_local_data_for_temp_outputs(
         output_path.write_text("<html></html>", encoding="utf-8")
         return output_path
 
+    def fake_industrial_report(config: IndustrialShortcutReportConfig) -> Path:
+        industrial_configs.append(config)
+        output_path = config.output_dir / "index.html"
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text("<html></html>", encoding="utf-8")
+        return output_path
+
     def fake_logic_report(config: PatchCoreLogicReportConfig) -> Path:
         logic_configs.append(config)
         output_path = config.output_dir / "index.html"
@@ -63,6 +72,7 @@ def test_build_demo_suite_disables_implicit_local_data_for_temp_outputs(
         return output_path
 
     monkeypatch.setattr(suite_module, "build_waterbirds_shortcut_report", fake_waterbirds_report)
+    monkeypatch.setattr(suite_module, "build_industrial_shortcut_report", fake_industrial_report)
     monkeypatch.setattr(suite_module, "build_explanation_drift_report", fake_drift_report)
     monkeypatch.setattr(suite_module, "build_patchcore_logic_report", fake_logic_report)
 
@@ -71,8 +81,12 @@ def test_build_demo_suite_disables_implicit_local_data_for_temp_outputs(
     assert len(waterbirds_configs) == 1
     assert not waterbirds_configs[0].use_real_data
 
+    assert len(industrial_configs) == 1
+    assert not industrial_configs[0].use_real_data
+
     assert len(drift_configs) == 1
     assert not drift_configs[0].include_mvtec_if_available
+    assert not drift_configs[0].industrial_manifest_path.exists()
 
     assert len(logic_configs) == 1
     assert not logic_configs[0].manifest_path.exists()

@@ -53,6 +53,7 @@ class WaterbirdsProbeConfig:
     seed: int = 7
     positive_label: str | None = None
     negative_label: str | None = None
+    backbone_tuning: str = "frozen"
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,6 +124,7 @@ class FrozenResNetWaterbirdsProbe:
         self._feature_dim = 512
         self._head = torch.nn.Linear(self._feature_dim, 1)
         self._head.to(self._device)
+        self._frozen_backbone = config.backbone_tuning == "frozen"
         self._positive_label = config.positive_label
         self._negative_label = config.negative_label
 
@@ -134,31 +136,64 @@ class FrozenResNetWaterbirdsProbe:
 
         torch = self._torch
         self._set_label_order(records)
-        embeddings = self.extract_embeddings(records)
+        record_weights = self._sample_weights(records)
         labels = torch.tensor(
             [[1.0 if record.label == self._positive_label else 0.0] for record in records],
             dtype=torch.float32,
             device=self._device,
         )
         sample_weights = torch.tensor(
-            [[weight] for weight in self._sample_weights(records)],
+            [[weight] for weight in record_weights],
             dtype=torch.float32,
             device=self._device,
         )
         optimiser = torch.optim.AdamW(
-            self._head.parameters(),
+            self._trainable_parameters(),
             lr=self.config.learning_rate,
             weight_decay=self.config.weight_decay,
         )
         loss_fn = torch.nn.BCEWithLogitsLoss(reduction="none")
         self._head.train()
+        if self._frozen_backbone:
+            embeddings = self.extract_embeddings(records)
+            for _ in range(self.config.epochs):
+                optimiser.zero_grad()
+                logits = self._head(embeddings)
+                loss = loss_fn(logits, labels)
+                weighted_loss = (loss * sample_weights).mean()
+                weighted_loss.backward()
+                optimiser.step()
+            self._head.eval()
+            return
+
+        self._feature_extractor.train()
         for _ in range(self.config.epochs):
-            optimiser.zero_grad()
-            logits = self._head(embeddings)
-            loss = loss_fn(logits, labels)
-            weighted_loss = (loss * sample_weights).mean()
-            weighted_loss.backward()
-            optimiser.step()
+            for start in range(0, len(records), self.config.batch_size):
+                batch_records = records[start : start + self.config.batch_size]
+                batch_weights_values = record_weights[start : start + self.config.batch_size]
+                batch = torch.stack(
+                    [self._load_tensor(record.image_path) for record in batch_records]
+                ).to(self._device)
+                batch_labels = torch.tensor(
+                    [
+                        [1.0 if record.label == self._positive_label else 0.0]
+                        for record in batch_records
+                    ],
+                    dtype=torch.float32,
+                    device=self._device,
+                )
+                batch_weights = torch.tensor(
+                    [[weight] for weight in batch_weights_values],
+                    dtype=torch.float32,
+                    device=self._device,
+                )
+                optimiser.zero_grad()
+                _, logits = self._forward_from_input(batch)
+                loss = loss_fn(logits, batch_labels)
+                weighted_loss = (loss * batch_weights).mean()
+                weighted_loss.backward()
+                optimiser.step()
+        self._feature_extractor.eval()
         self._head.eval()
 
     def extract_embeddings(self, records: list[WaterbirdsManifestRecord]) -> Any:
@@ -292,6 +327,8 @@ class FrozenResNetWaterbirdsProbe:
         models = self._models
         if self.config.backbone_name != "resnet18":
             raise ValueError("Only resnet18 is currently supported.")
+        if self.config.backbone_tuning not in {"frozen", "layer4", "full"}:
+            raise ValueError("backbone_tuning must be 'frozen', 'layer4', or 'full'.")
 
         weights = None
         preprocess = None
@@ -303,8 +340,21 @@ class FrozenResNetWaterbirdsProbe:
         backbone = models.resnet18(weights=weights)
         for parameter in backbone.parameters():
             parameter.requires_grad = False
+        if self.config.backbone_tuning == "layer4":
+            for parameter in backbone.layer4.parameters():
+                parameter.requires_grad = True
+        elif self.config.backbone_tuning == "full":
+            for parameter in backbone.parameters():
+                parameter.requires_grad = True
         feature_extractor = torch.nn.Sequential(*list(backbone.children())[:-1])
         return backbone, feature_extractor, preprocess
+
+    def _trainable_parameters(self) -> list[Any]:
+        parameters = list(self._head.parameters())
+        parameters.extend(
+            parameter for parameter in self._backbone.parameters() if parameter.requires_grad
+        )
+        return parameters
 
     def _load_tensor(self, image_path: Path) -> Any:
         torch = self._torch

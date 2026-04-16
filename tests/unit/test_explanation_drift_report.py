@@ -6,6 +6,10 @@ from pathlib import Path
 import pytest
 from PIL import Image, ImageDraw
 
+from xai_demo_suite.data.downloaders.neu_cls import (
+    build_neu_cls_shortcut_manifest,
+    extract_neu_cls_dataset,
+)
 from xai_demo_suite.data.synthetic import generate_industrial_shortcut_dataset
 from xai_demo_suite.explain import DriftMeasurement, perturb_image
 from xai_demo_suite.explain.contracts import BoundingBox
@@ -46,6 +50,7 @@ def test_explanation_drift_report_writes_html_assets_and_card(tmp_path: Path) ->
     config = ExplanationDriftReportConfig(
         output_dir=tmp_path / "outputs" / "explanation_drift",
         synthetic_dir=tmp_path / "outputs" / "explanation_drift" / "synthetic",
+        industrial_manifest_path=tmp_path / "missing_neu_manifest.jsonl",
         include_mvtec_if_available=False,
         classifier_epochs=4,
         classifier_batch_size=4,
@@ -78,6 +83,51 @@ def _write_mvtec_image(path: Path, *, anomaly: bool = False) -> None:
     if anomaly:
         draw.rectangle((60, 60, 92, 92), fill=(220, 80, 70))
     image.save(path)
+
+
+def _write_neu_source(source_root: Path) -> Path:
+    images_root = source_root / "IMAGES"
+    images_root.mkdir(parents=True, exist_ok=True)
+    for class_code in ("Cr", "RS", "Sc", "In", "Pa", "PS"):
+        for index in range(2):
+            Image.new("L", (64, 64), color=60 + index * 20).save(
+                images_root / f"{class_code}_{index:03d}.bmp"
+            )
+    return source_root
+
+
+def test_explanation_drift_report_can_use_real_industrial_manifest(tmp_path: Path) -> None:
+    source_root = _write_neu_source(tmp_path / "external" / "NEU_CLS")
+    interim_root = tmp_path / "data" / "interim"
+    processed_root = tmp_path / "data" / "processed"
+    extracted_root = extract_neu_cls_dataset(
+        raw_root=tmp_path / "data" / "raw",
+        interim_root=interim_root,
+        source_root=source_root,
+    )
+    build_neu_cls_shortcut_manifest(
+        extracted_root=extracted_root,
+        interim_root=interim_root,
+        processed_root=processed_root,
+        project_root=tmp_path,
+    )
+    manifest_path = processed_root / "neu_cls" / "shortcut_binary" / "manifest.jsonl"
+    config = ExplanationDriftReportConfig(
+        output_dir=tmp_path / "outputs" / "explanation_drift",
+        synthetic_dir=tmp_path / "outputs" / "explanation_drift" / "synthetic",
+        industrial_manifest_path=manifest_path,
+        include_mvtec_if_available=False,
+        classifier_epochs=2,
+        classifier_batch_size=4,
+        classifier_input_size=64,
+    )
+
+    output_path = build_explanation_drift_report(config)
+
+    html = output_path.read_text(encoding="utf-8")
+    assert "Explanation Drift Under Shift" in html
+    assert "Classifier Drift Summary" in html
+    assert "disabled by configuration" in html
 
 
 def _write_mask(path: Path, box: tuple[int, int, int, int]) -> None:

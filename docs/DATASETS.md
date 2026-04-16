@@ -115,8 +115,9 @@ Storage policy:
 
 Current local status:
 - when the prepared manifest exists, Demo 01 uses a real Waterbirds report path
-  with frozen ResNet-18 linear probes, worst-group metrics, Grad-CAM,
-  Integrated Gradients, and simple context-masking perturbation checks;
+  with configurable ResNet-18 tuning, worst-group metrics, Grad-CAM,
+  Integrated Gradients, context-masking perturbation checks, and prototype
+  exemplars;
 - when the manifest is absent, Demo 01 falls back to the generated
   Waterbirds-style proxy under `outputs/waterbirds_shortcut/synthetic/`.
 
@@ -127,6 +128,49 @@ Current local status:
 - Spawrious
 - VisA
 - NEU / GC10-DET
+
+### NEU-CLS
+Use for:
+- real-image industrial shortcut learning
+- Demo 02 shortcut correlation checks
+- Demo 08 classifier drift with a real industrial data path
+
+Source:
+- upstream page:
+  <https://faculty.neu.edu.cn/songkechen/zh_CN/zhym/263269/list/index.htm>
+
+Licence / usage:
+- the upstream page should be checked before any broader use claim is made;
+- this repo treats NEU-CLS conservatively as research-only until the upstream
+  terms are confirmed by the user.
+
+Local workflow:
+
+```bash
+./.venv/bin/python -m xai_demo_suite.cli.data list
+./.venv/bin/python -m xai_demo_suite.cli.data fetch neu_cls --category shortcut_binary --dry-run
+./.venv/bin/python -m xai_demo_suite.cli.data fetch neu_cls --category shortcut_binary --archive-url <direct-archive-url>
+./.venv/bin/python -m xai_demo_suite.cli.data prepare neu_cls --category shortcut_binary
+```
+
+Storage policy:
+- place raw archives under `data/raw/neu_cls/archives/`, or point `prepare` at
+  a manual source root with `--source-root`;
+- extracted source copies are written to `data/interim/neu_cls/raw/`;
+- the prepared binary shortcut layout is written to
+  `data/interim/neu_cls/shortcut_binary/`;
+- the processed manifest is written to
+  `data/processed/neu_cls/shortcut_binary/manifest.jsonl`;
+- raw archives, extracted data, prepared copies, and processed manifests are
+  local artefacts and are excluded from git.
+
+Notes:
+- the current adapter maps the six NEU surface-defect classes into a binary
+  `linear_defect` versus `area_defect` shortcut task;
+- training images receive a correlated corner stamp so the report can show the
+  shortcut trap and the intervention on top of real defect imagery;
+- when the prepared manifest exists, Demo 02 and the classifier section of Demo
+  08 use this real-image path automatically.
 
 ### MVTec AD 2
 Use for:

@@ -80,6 +80,28 @@ datasets:
       processed_manifest: "data/processed/waterbirds/<category>/manifest.jsonl"
     categories:
       - "waterbird_complete95_forest2water2"
+  neu_cls:
+    name: "NEU-CLS Shortcut Binary"
+    status: "supported"
+    purpose:
+      - "real-image industrial shortcut learning"
+      - "Demo 02 shortcut correlation checks"
+      - "Demo 08 classifier drift with a real industrial data path"
+    raw_data_committed: false
+    licence: "Verify upstream NEU-CLS terms before use."
+    restrictions:
+      - "Treat as research-only unless the upstream dataset page clearly allows broader use."
+      - "Raw archives, extracted data, prepared copies, and processed manifests must not be committed."
+    source_url: "https://faculty.neu.edu.cn/songkechen/zh_CN/zhym/263269/list/index.htm"
+    download_url: "Manual archive URL or local archive placement under data/raw/neu_cls/archives/"
+    citation: "Song and Yan, Surface defect classification data from Northeastern University."
+    expected_layout:
+      raw_archives: "data/raw/neu_cls/archives/<downloaded-archive>"
+      interim_extracted: "data/interim/neu_cls/raw/"
+      interim_prepared: "data/interim/neu_cls/shortcut_binary/"
+      processed_manifest: "data/processed/neu_cls/shortcut_binary/manifest.jsonl"
+    categories:
+      - "shortcut_binary"
   mvtec_ad_2:
     name: "MVTec AD 2"
     status: "supported"

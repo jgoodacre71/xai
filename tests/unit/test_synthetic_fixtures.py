@@ -54,8 +54,10 @@ def test_generate_industrial_shortcut_dataset_writes_swapped_cases(tmp_path: Pat
     by_id = {sample.sample_id: sample for sample in test_samples}
     assert by_id["test_normal_swapped_stamp"].label == "normal"
     assert by_id["test_normal_swapped_stamp"].stamp == "red"
+    assert by_id["test_normal_swapped_stamp"].variant == "swapped_stamp"
     assert by_id["test_defect_swapped_stamp"].label == "defect"
     assert by_id["test_defect_swapped_stamp"].stamp == "blue"
+    assert by_id["test_defect_no_stamp"].variant == "no_stamp"
     assert "test_normal_shifted_fixture" in by_id
     assert "test_defect_shifted_fixture" in by_id
 

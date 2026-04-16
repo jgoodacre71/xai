@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import html
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 
+from xai_demo_suite.data.industrial_manifest import (
+    load_industrial_shortcut_manifest,
+    manifest_records_to_samples,
+)
 from xai_demo_suite.data.synthetic import (
     IndustrialShortcutSample,
     generate_industrial_shortcut_dataset,
@@ -41,6 +46,8 @@ class IndustrialShortcutReportConfig:
     seed: int = 13
     max_train_records: int | None = None
     diagnostic_sample_limit: int = 6
+    real_manifest_path: Path = Path("data/processed/neu_cls/shortcut_binary/manifest.jsonl")
+    use_real_data: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,10 +75,11 @@ class ShortcutReportData:
     intervention_summary: IndustrialExplanationSummary
     selected_sample: IndustrialShortcutSample
     assets: dict[str, Path]
+    data_source_label: str
 
 
 def _relative(path: Path, root: Path) -> str:
-    return path.resolve().relative_to(root.resolve()).as_posix()
+    return Path(os.path.relpath(path.resolve(), start=root.resolve())).as_posix()
 
 
 def _asset_path(output_dir: Path, name: str) -> Path:
@@ -79,11 +87,7 @@ def _asset_path(output_dir: Path, name: str) -> Path:
 
 
 def _challenge_samples(samples: list[IndustrialShortcutSample]) -> list[IndustrialShortcutSample]:
-    return [
-        sample
-        for sample in samples
-        if sample.sample_id not in {"test_normal_clean", "test_defect_clean"}
-    ]
+    return [sample for sample in samples if sample.variant != "clean"]
 
 
 def _prediction_map(
@@ -178,7 +182,10 @@ def _select_sample(
         prediction = prediction_by_id[sample.sample_id]
         if not prediction.correct:
             return sample
-    return next(sample for sample in samples if sample.sample_id == "test_normal_swapped_stamp")
+    for sample in samples:
+        if sample.variant == "swapped_stamp":
+            return sample
+    return samples[0]
 
 
 def _write_assets(
@@ -255,12 +262,15 @@ def _render_html(config: IndustrialShortcutReportConfig, data: ShortcutReportDat
     output_path = config.output_dir / "index.html"
     test_ids = {sample.sample_id for sample in data.test_samples}
     swapped_ids = {
-        "test_normal_swapped_stamp",
-        "test_defect_swapped_stamp",
-        "test_normal_shifted_fixture",
-        "test_defect_shifted_fixture",
+        sample.sample_id
+        for sample in data.test_samples
+        if sample.variant in {"swapped_stamp", "shifted_fixture"}
     }
-    no_stamp_ids = {"test_normal_no_stamp", "test_defect_no_stamp"}
+    no_stamp_ids = {
+        sample.sample_id
+        for sample in data.test_samples
+        if sample.variant == "no_stamp"
+    }
     rows = _render_results_rows(
         data.test_samples,
         data.baseline_predictions,
@@ -319,10 +329,10 @@ def _render_html(config: IndustrialShortcutReportConfig, data: ShortcutReportDat
 <main>
   <h1>Industrial Shortcut Trap</h1>
   <p>
-    This upgraded Demo 02 keeps the industrial story synthetic, but replaces the
-    old hand-written rule with learned convolutional probes. The baseline is
-    trained on shortcut-correlated images. The intervention sees stamp-randomised
-    and stamp-masked augmentations of the same parts.
+    This upgraded Demo 02 uses {html.escape(data.data_source_label)} with learned
+    probes. The baseline is trained on shortcut-correlated images. The
+    intervention sees stamp-randomised and stamp-masked augmentations of the
+    same parts.
   </p>
 
   <section>
@@ -458,10 +468,13 @@ def _render_html(config: IndustrialShortcutReportConfig, data: ShortcutReportDat
 def _build_demo_card(output_path: Path, data: ShortcutReportData) -> DemoCard:
     return DemoCard(
         title="Demo 02 - Industrial Shortcut Trap",
-        task="Synthetic industrial classification with a spuriously predictive fixture stamp.",
+        task=(
+            "Industrial classification with a spuriously predictive fixture stamp, "
+            "using a synthetic fallback or a prepared real-image NEU-CLS shortcut split."
+        ),
         model=(
-            "Compact convolutional probes: correlated baseline versus "
-            "stamp-augmented intervention."
+            "Compact convolutional probes over shortcut-correlated industrial images, "
+            "with a baseline versus stamp-augmented intervention."
         ),
         explanation_methods=(
             "Grad-CAM",
@@ -482,10 +495,10 @@ def _build_demo_card(output_path: Path, data: ShortcutReportData) -> DemoCard:
             "same parts."
         ),
         remaining_caveats=(
-            "Still synthetic, not NEU or GC10-DET.",
-            "The learned models are still synthetic demo baselines, not "
-            "industrial benchmark systems.",
-            "Demo 08 still needs a real shift path on top of stronger learned models.",
+            "The real-image path depends on a locally prepared NEU-CLS shortcut manifest.",
+            "The real industrial shortcut still uses injected nuisance stamps to make "
+            "the shortcut legible.",
+            "The learned models are local demo baselines, not industrial benchmark systems.",
         ),
         report_path=output_path,
         figure_paths=(
@@ -501,7 +514,15 @@ def build_industrial_shortcut_report(config: IndustrialShortcutReportConfig) -> 
     """Build the neural industrial shortcut report."""
 
     ensure_directory(config.output_dir)
-    train_samples, test_samples = generate_industrial_shortcut_dataset(config.synthetic_dir)
+    if config.use_real_data and config.real_manifest_path.exists():
+        records = load_industrial_shortcut_manifest(config.real_manifest_path)
+        samples = manifest_records_to_samples(records)
+        train_samples = [sample for sample in samples if sample.split == "train"]
+        test_samples = [sample for sample in samples if sample.split == "test"]
+        data_source_label = "real NEU-CLS images with a prepared shortcut split"
+    else:
+        train_samples, test_samples = generate_industrial_shortcut_dataset(config.synthetic_dir)
+        data_source_label = "synthetic industrial images"
     if config.max_train_records is not None:
         train_samples = train_samples[: config.max_train_records]
 
@@ -555,6 +576,7 @@ def build_industrial_shortcut_report(config: IndustrialShortcutReportConfig) -> 
         ),
         selected_sample=selected_sample,
         assets=assets,
+        data_source_label=data_source_label,
     )
     output_path = _render_html(config, data)
     card = _build_demo_card(output_path, data)

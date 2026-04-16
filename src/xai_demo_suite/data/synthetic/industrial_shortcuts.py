@@ -23,6 +23,7 @@ class IndustrialShortcutSample:
     stamp: str
     object_region: BoundingBox
     stamp_region: BoundingBox
+    variant: str = "clean"
 
 
 def _clamp_colour(value: int) -> int:
@@ -113,6 +114,7 @@ def _write_sample(
     panel_delta: int = 0,
     part_delta: int = 0,
     add_fixture_line: bool = False,
+    variant: str = "clean",
 ) -> IndustrialShortcutSample:
     image_dir = output_dir / split
     ensure_directory(image_dir)
@@ -136,6 +138,7 @@ def _write_sample(
         stamp=stamp,
         object_region=object_region,
         stamp_region=BoundingBox(x=6, y=6, width=20, height=20),
+        variant=variant,
     )
 
 
@@ -159,7 +162,9 @@ def generate_industrial_shortcut_dataset(
         ((3, -6), 0.88, -6, -5, False),
         ((2, 2), 1.00, 1, 0, True),
     ]
-    train_specs: list[tuple[str, str, str, str, tuple[int, int], float, int, int, bool]] = []
+    train_specs: list[
+        tuple[str, str, str, str, tuple[int, int], float, int, int, bool, str]
+    ] = []
     for index, (offset, scale, panel_delta, part_delta, fixture_line) in enumerate(variant_specs):
         train_specs.append(
             (
@@ -172,6 +177,7 @@ def generate_industrial_shortcut_dataset(
                 panel_delta,
                 part_delta,
                 fixture_line,
+                "correlated",
             )
         )
         train_specs.append(
@@ -185,17 +191,84 @@ def generate_industrial_shortcut_dataset(
                 panel_delta,
                 part_delta,
                 fixture_line,
+                "correlated",
             )
         )
     test_specs = [
-        ("test_normal_clean", "normal", "disc", "blue", (0, 0), 1.00, 0, 0, False),
-        ("test_defect_clean", "defect", "block", "red", (0, 0), 1.00, 0, 0, False),
-        ("test_normal_swapped_stamp", "normal", "disc", "red", (0, 0), 1.00, 0, 0, False),
-        ("test_defect_swapped_stamp", "defect", "block", "blue", (0, 0), 1.00, 0, 0, False),
-        ("test_normal_no_stamp", "normal", "disc", "none", (0, 0), 1.00, 0, 0, False),
-        ("test_defect_no_stamp", "defect", "block", "none", (0, 0), 1.00, 0, 0, False),
-        ("test_normal_shifted_fixture", "normal", "disc", "red", (5, -5), 1.06, 5, 2, True),
-        ("test_defect_shifted_fixture", "defect", "block", "blue", (-5, 5), 0.94, -4, -1, True),
+        ("test_normal_clean", "normal", "disc", "blue", (0, 0), 1.00, 0, 0, False, "clean"),
+        ("test_defect_clean", "defect", "block", "red", (0, 0), 1.00, 0, 0, False, "clean"),
+        (
+            "test_normal_swapped_stamp",
+            "normal",
+            "disc",
+            "red",
+            (0, 0),
+            1.00,
+            0,
+            0,
+            False,
+            "swapped_stamp",
+        ),
+        (
+            "test_defect_swapped_stamp",
+            "defect",
+            "block",
+            "blue",
+            (0, 0),
+            1.00,
+            0,
+            0,
+            False,
+            "swapped_stamp",
+        ),
+        (
+            "test_normal_no_stamp",
+            "normal",
+            "disc",
+            "none",
+            (0, 0),
+            1.00,
+            0,
+            0,
+            False,
+            "no_stamp",
+        ),
+        (
+            "test_defect_no_stamp",
+            "defect",
+            "block",
+            "none",
+            (0, 0),
+            1.00,
+            0,
+            0,
+            False,
+            "no_stamp",
+        ),
+        (
+            "test_normal_shifted_fixture",
+            "normal",
+            "disc",
+            "red",
+            (5, -5),
+            1.06,
+            5,
+            2,
+            True,
+            "shifted_fixture",
+        ),
+        (
+            "test_defect_shifted_fixture",
+            "defect",
+            "block",
+            "blue",
+            (-5, 5),
+            0.94,
+            -4,
+            -1,
+            True,
+            "shifted_fixture",
+        ),
     ]
     train_samples = [
         _write_sample(
@@ -210,6 +283,7 @@ def generate_industrial_shortcut_dataset(
             panel_delta=panel_delta,
             part_delta=part_delta,
             add_fixture_line=fixture_line,
+            variant=variant,
         )
         for (
             sample_id,
@@ -221,6 +295,7 @@ def generate_industrial_shortcut_dataset(
             panel_delta,
             part_delta,
             fixture_line,
+            variant,
         ) in train_specs
     ]
     test_samples = [
@@ -236,6 +311,7 @@ def generate_industrial_shortcut_dataset(
             panel_delta=panel_delta,
             part_delta=part_delta,
             add_fixture_line=fixture_line,
+            variant=variant,
         )
         for (
             sample_id,
@@ -247,6 +323,7 @@ def generate_industrial_shortcut_dataset(
             panel_delta,
             part_delta,
             fixture_line,
+            variant,
         ) in test_specs
     ]
     return train_samples, test_samples

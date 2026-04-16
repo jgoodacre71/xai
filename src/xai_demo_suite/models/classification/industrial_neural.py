@@ -52,6 +52,8 @@ class IndustrialProbeConfig:
     weights_name: str | None = None
     device: str = "cpu"
     seed: int = 11
+    positive_label: str | None = None
+    negative_label: str | None = None
 
 
 class FrozenResNetIndustrialProbe:
@@ -86,6 +88,8 @@ class FrozenResNetIndustrialProbe:
         self._backbone.to(self._device)
         self._head = torch.nn.Linear(self._feature_dim, 1)
         self._head.to(self._device)
+        self._positive_label = config.positive_label
+        self._negative_label = config.negative_label
 
     def fit(self, samples: list[IndustrialShortcutSample]) -> None:
         """Train the linear head on frozen image embeddings."""
@@ -94,8 +98,9 @@ class FrozenResNetIndustrialProbe:
             raise ValueError("Training requires at least one industrial sample.")
 
         torch = self._torch
+        self._set_label_order(samples)
         labels = torch.tensor(
-            [[1.0 if sample.label == "defect" else 0.0] for sample in samples],
+            [[1.0 if sample.label == self._positive_label else 0.0] for sample in samples],
             dtype=torch.float32,
             device=self._device,
         )
@@ -151,6 +156,8 @@ class FrozenResNetIndustrialProbe:
 
         if not samples:
             return []
+        if self._positive_label is None or self._negative_label is None:
+            raise RuntimeError("Probe label order is unset. Call fit() before predict().")
 
         torch = self._torch
         with torch.no_grad():
@@ -161,7 +168,9 @@ class FrozenResNetIndustrialProbe:
         for sample, logit, probability in zip(samples, logits, probabilities, strict=True):
             score = float(logit.detach().cpu().item())
             probability_value = float(probability.detach().cpu().item())
-            predicted = "defect" if probability_value >= 0.5 else "normal"
+            predicted = (
+                self._positive_label if probability_value >= 0.5 else self._negative_label
+            )
             predictions.append(
                 IndustrialPrediction(
                     sample_id=sample.sample_id,
@@ -173,6 +182,17 @@ class FrozenResNetIndustrialProbe:
                 )
             )
         return predictions
+
+    def _set_label_order(self, samples: list[IndustrialShortcutSample]) -> None:
+        labels = sorted({sample.label for sample in samples})
+        if len(labels) != 2:
+            raise ValueError("FrozenResNetIndustrialProbe requires exactly two class labels.")
+        if self._positive_label is None:
+            self._positive_label = labels[-1]
+        if self._negative_label is None:
+            self._negative_label = next(
+                label for label in labels if label != self._positive_label
+            )
 
     def explain(
         self,

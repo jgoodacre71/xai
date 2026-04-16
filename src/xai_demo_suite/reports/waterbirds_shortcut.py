@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+import os
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -78,6 +79,7 @@ class WaterbirdsShortcutReportConfig:
     weights_name: str | None = "DEFAULT"
     seed: int = 7
     diagnostic_sample_limit: int = 8
+    backbone_tuning: str = "layer4"
 
 
 @dataclass(frozen=True, slots=True)
@@ -138,7 +140,7 @@ class RealWaterbirdsShortcutReportData:
 
 
 def _relative(path: Path, root: Path) -> str:
-    return path.resolve().relative_to(root.resolve()).as_posix()
+    return Path(os.path.relpath(path.resolve(), start=root.resolve())).as_posix()
 
 
 def _asset_path(output_dir: Path, name: str) -> Path:
@@ -669,6 +671,7 @@ def _build_real_report_data(
         weight_decay=config.weight_decay,
         weights_name=config.weights_name,
         seed=config.seed,
+        backbone_tuning=config.backbone_tuning,
     )
     erm_probe = FrozenResNetWaterbirdsProbe(config=probe_config, training_mode="erm")
     erm_probe.fit(train_records)
@@ -984,8 +987,8 @@ def _render_real_dataset_section(
     <h3>Prototype Exemplar Evidence</h3>
     <p>
       This comparator replaces a linear decision head with class prototypes in
-      frozen feature space, then shows which training exemplars are nearest to
-      the selected crossed-group sample.
+      the current feature space, then shows which training exemplars are nearest
+      to the selected crossed-group sample.
     </p>
     <h4>Nearest Exemplars for the Predicted Class</h4>
     <div class="grid">
@@ -1029,8 +1032,8 @@ def _render_real_html(
             "intervention."
         ),
         boundary=(
-            "These are frozen-feature probes and proxy centre-versus-background checks, not a full "
-            "end-to-end benchmark reproduction."
+            "These are local ResNet-18 shortcut models plus proxy centre-versus-background "
+            "checks, not a large-model benchmark reproduction."
         ),
         related=(
             ReportLink(
@@ -1128,7 +1131,10 @@ def _build_real_demo_card(output_path: Path, data: RealWaterbirdsShortcutReportD
             "Prepared Waterbirds classification with a canonical shortcut setup: "
             "bird class is spuriously correlated with habitat context."
         ),
-        model="Frozen ResNet-18 linear probes: plain ERM versus inverse-group-frequency weighting.",
+        model=(
+            "ResNet-18 classifiers with configurable frozen or partially fine-tuned backbones: "
+            "plain ERM versus inverse-group-frequency weighting."
+        ),
         explanation_methods=(
             "Worst-group evaluation",
             "Grad-CAM",
@@ -1146,8 +1152,8 @@ def _build_real_demo_card(output_path: Path, data: RealWaterbirdsShortcutReportD
         ),
         intervention="Reweight the training objective by group and re-check the evidence path.",
         remaining_caveats=(
-            "Linear probes on frozen features are a serious local baseline, "
-            "not a full end-to-end benchmark reproduction.",
+            "This is a strong local ResNet-18 shortcut benchmark, not a full large-model "
+            "Waterbirds reproduction.",
             "Centre-versus-background attribution is a proxy rather than a true bird mask metric.",
             "Waterbirds usage terms should still be checked conservatively upstream.",
             "Optional MetaShift extension depends on locally prepared upstream assets.",
@@ -1211,7 +1217,7 @@ def build_waterbirds_shortcut_report(config: WaterbirdsShortcutReportConfig) -> 
                 title="Natural-Context Extension - MetaShift",
                 narrative=(
                     "Prepared MetaShift cat-vs-dog indoor/outdoor slice using the same "
-                    "frozen-backbone ERM-versus-group-balanced comparison."
+                    "ERM-versus-group-balanced ResNet-18 comparison."
                 ),
                 asset_prefix="metashift",
             )

@@ -75,6 +75,12 @@ def build_parser() -> argparse.ArgumentParser:
     waterbirds.add_argument("--batch-size", type=int, default=waterbirds_defaults.batch_size)
     waterbirds.add_argument("--epochs", type=int, default=waterbirds_defaults.epochs)
     waterbirds.add_argument(
+        "--backbone-tuning",
+        choices=("frozen", "layer4", "full"),
+        default=waterbirds_defaults.backbone_tuning,
+        help="Backbone tuning mode for the real Waterbirds path.",
+    )
+    waterbirds.add_argument(
         "--weights",
         choices=("DEFAULT", "none"),
         default="DEFAULT" if waterbirds_defaults.weights_name is not None else "none",
@@ -191,6 +197,12 @@ def build_parser() -> argparse.ArgumentParser:
     shortcut.add_argument("--epochs", type=int, default=shortcut_defaults.epochs)
     shortcut.add_argument("--max-train", type=int, default=shortcut_defaults.max_train_records)
     shortcut.add_argument(
+        "--real-manifest-path",
+        type=Path,
+        default=shortcut_defaults.real_manifest_path,
+    )
+    shortcut.add_argument("--no-real-data", action="store_true")
+    shortcut.add_argument(
         "--weights",
         choices=("DEFAULT", "none"),
         default="DEFAULT" if shortcut_defaults.weights_name is not None else "none",
@@ -217,6 +229,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--visa-processed-root",
         type=Path,
         default=drift_defaults.visa_processed_root,
+    )
+    drift.add_argument(
+        "--industrial-manifest-path",
+        type=Path,
+        default=drift_defaults.industrial_manifest_path,
     )
 
     suite = subparsers.add_parser(
@@ -295,6 +312,7 @@ def _handle_waterbirds_shortcut(args: argparse.Namespace) -> int:
         input_size=args.input_size,
         batch_size=args.batch_size,
         epochs=args.epochs,
+        backbone_tuning=args.backbone_tuning,
         weights_name=None if args.weights == "none" else args.weights,
     )
     output_path = build_waterbirds_shortcut_report(config)
@@ -371,6 +389,8 @@ def _handle_shortcut_industrial(args: argparse.Namespace) -> int:
         batch_size=args.batch_size,
         epochs=args.epochs,
         max_train_records=args.max_train,
+        real_manifest_path=args.real_manifest_path,
+        use_real_data=not args.no_real_data,
         weights_name=None if args.weights == "none" else args.weights,
     )
     output_path = build_industrial_shortcut_report(config)
@@ -385,6 +405,7 @@ def _handle_explanation_drift(args: argparse.Namespace) -> int:
         mvtec_manifest_path=args.mvtec_manifest_path,
         mvtec_ad_2_processed_root=args.mvtec_ad2_processed_root,
         visa_processed_root=args.visa_processed_root,
+        industrial_manifest_path=args.industrial_manifest_path,
     )
     output_path = build_explanation_drift_report(config)
     print(f"report: {output_path}")
