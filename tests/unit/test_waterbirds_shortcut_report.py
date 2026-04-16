@@ -162,6 +162,9 @@ def test_waterbirds_shortcut_report_uses_real_manifest_when_available(tmp_path: 
 
     html = output_path.read_text(encoding="utf-8")
     assert "Waterbirds Shortcut</h1>" in html
+    assert "Demo Brief" in html
+    assert "Where to go next" in html
+    assert "../index.html" in html
     assert "ERM worst-group accuracy" in html
     assert "Prototype comparator accuracy" in html
     assert "Prototype Exemplar Evidence" in html
@@ -219,6 +222,7 @@ def test_waterbirds_shortcut_report_adds_metashift_extension_when_available(
     html = output_path.read_text(encoding="utf-8")
     assert "Waterbirds Benchmark Slice" in html
     assert "Natural-Context Extension - MetaShift" in html
+    assert "How to present it live" in html
     assert "Prototype comparator accuracy" in html
     assert "cat_indoor" in html
     assert "dog_outdoor" in html

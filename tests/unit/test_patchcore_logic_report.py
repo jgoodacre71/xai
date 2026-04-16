@@ -123,6 +123,9 @@ def test_patchcore_logic_report_uses_real_loco_manifest_when_available(
 
     html = output_path.read_text(encoding="utf-8")
     assert "PatchCore Logical Anomaly Limits on MVTec LOCO" in html
+    assert "Demo Brief" in html
+    assert "Where to go next" in html
+    assert "../patchcore_bottle/index.html" in html
     assert "Component-aware Packaging-Rule Comparator" in html
     assert "good vs logical ROC AUC" in html
     assert "Required front label or packaging element is missing" in html

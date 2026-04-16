@@ -32,6 +32,14 @@ from xai_demo_suite.models.patchcore import (
 )
 from xai_demo_suite.models.patchcore.types import PatchCoreMemoryBank, PatchScore
 from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index_for_output_root
+from xai_demo_suite.reports.report_chrome import (
+    ReportBrief,
+    ReportLink,
+    render_related_reports,
+    render_report_brief,
+    render_report_header,
+    report_chrome_css,
+)
 from xai_demo_suite.utils.io import ensure_directory
 from xai_demo_suite.vis.image_panels import (
     draw_box_on_image,
@@ -835,6 +843,45 @@ def _render_html(
         else f"not used; {memory_bank_size} patches retained"
     )
     feature_description = html.escape(_feature_path_description(feature_name))
+    brief = ReportBrief(
+        claim=(
+            "PatchCore becomes much easier to trust and discuss once the anomaly score is tied "
+            "to nearest-normal patch provenance and a simple local replacement probe."
+        ),
+        evidence=(
+            "The strongest sequence is the selected example view plus the benchmark panel: the "
+            "report shows the top anomalous patch, the nearest nominal source patch, and the "
+            "effect of replacing the anomalous region."
+        ),
+        live_demo=(
+            "Start with one bottle example, show the top patch and nearest-normal exemplar, then "
+            "use the benchmark panel to show that the same run separates the full test split."
+        ),
+        boundary=(
+            "This report is a strong local PatchCore-style implementation, not a full official "
+            "benchmark reproduction or a calibrated severity model."
+        ),
+        related=(
+            ReportLink(
+                slug="patchcore_wrong_normal",
+                title="Demo 04 - PatchCore Learns the Wrong Normal",
+                reason=(
+                    "Tests how the same provenance machinery behaves when normality itself is "
+                    "contaminated."
+                ),
+            ),
+            ReportLink(
+                slug="patchcore_logic",
+                title="Demo 07 - PatchCore Logical Anomaly Limits",
+                reason="Shows where local novelty is not enough for rule-level inspection.",
+            ),
+            ReportLink(
+                slug="explanation_drift",
+                title="Demo 08 - Explanation Drift Under Shift",
+                reason="Shows how anomaly evidence moves under nuisance perturbations.",
+            ),
+        ),
+    )
 
     html_text = f"""<!doctype html>
 <html lang="en">
@@ -846,10 +893,11 @@ def _render_html(
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       margin: 32px;
       color: #1f2933;
+      background: #f7f8fb;
     }}
     main {{ max-width: 1120px; margin: 0 auto; }}
     h1, h2, h3 {{ margin: 0 0 12px; }}
-    section {{ margin: 28px 0; }}
+    section {{ margin: 28px 0; background: #fff; padding: 20px; border: 1px solid #d8dee4; }}
     .example {{ border-top: 2px solid #d8dee4; padding-top: 24px; }}
     .grid {{
       display: grid;
@@ -868,16 +916,21 @@ def _render_html(
       vertical-align: top;
     }}
     code {{ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }}
+    {report_chrome_css()}
   </style>
 </head>
 <body>
 <main>
-  <h1>PatchCore Bottle Report</h1>
-  <p>
-    This report is generated from package code. It shows test-split diagnostics
-    plus nearest-normal patch provenance for {len(examples)} selected MVTec AD
-    bottle anomaly example(s).
-  </p>
+  {render_report_header(
+      output_path=output_path,
+      eyebrow="Demo 03 · PatchCore hero demo",
+      title="PatchCore on MVTec AD bottle",
+      lede=(
+          "Nearest-normal patch provenance, local counterfactual probes, and dataset-level "
+          "diagnostics for the flagship industrial anomaly demo."
+      ),
+  )}
+  {render_report_brief(brief)}
 
   <section>
     <h2>Run Context</h2>
@@ -898,6 +951,7 @@ def _render_html(
 {benchmark_section}
 
 {example_sections}
+  {render_related_reports(output_path=output_path, heading="Where to go next", links=brief.related)}
 </main>
 </body>
 </html>

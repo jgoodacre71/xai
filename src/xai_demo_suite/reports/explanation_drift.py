@@ -43,6 +43,14 @@ from xai_demo_suite.reports.cards import (
     save_demo_card,
     save_demo_index_for_output_root,
 )
+from xai_demo_suite.reports.report_chrome import (
+    ReportBrief,
+    ReportLink,
+    render_related_reports,
+    render_report_brief,
+    render_report_header,
+    report_chrome_css,
+)
 from xai_demo_suite.utils.io import ensure_directory
 from xai_demo_suite.vis.image_panels import (
     save_heatmap_overlay,
@@ -1092,6 +1100,44 @@ def _render_html(
     <ul>{note_items}</ul>
   </section>
 """
+    brief = ReportBrief(
+        claim=(
+            "Prediction drift and explanation drift are different signals, and the explanation can "
+            "move into the wrong region before headline metrics collapse."
+        ),
+        evidence=(
+            "Use the baseline-versus-intervention tables first, then compare attribution-mass "
+            "columns and anomaly top-patch movement across the perturbation rows."
+        ),
+        live_demo=(
+            "Pick one nuisance shift, compare the baseline and intervention rows, and then show "
+            "the corresponding overlays so the audience sees drift rather than only the metric."
+        ),
+        boundary=(
+            "The classifier path is still synthetic industrial data, while the anomaly sections "
+            "depend on whichever local datasets are prepared on this machine."
+        ),
+        related=(
+            ReportLink(
+                slug="waterbirds_shortcut",
+                title="Demo 01 - Waterbirds Shortcut",
+                reason="Returns to the canonical context-shortcut classifier story.",
+            ),
+            ReportLink(
+                slug="shortcut_industrial",
+                title="Demo 02 - Industrial Shortcut Trap",
+                reason=(
+                    "Shows the learned industrial baseline before the drift perturbations are "
+                    "applied."
+                ),
+            ),
+            ReportLink(
+                slug="patchcore_bottle",
+                title="Demo 03 - PatchCore on MVTec AD bottle",
+                reason="Returns to the strongest anomaly demo in its clean, non-drift setting.",
+            ),
+        ),
+    )
 
     html_text = f"""<!doctype html>
 <html lang="en">
@@ -1124,17 +1170,21 @@ def _render_html(
       text-align: left;
       vertical-align: top;
     }}
+    {report_chrome_css()}
   </style>
 </head>
 <body>
 <main>
-  <h1>Explanation Drift Under Shift</h1>
-  <p>
-    This upgraded Demo 08 separates prediction drift from explanation drift for
-    a learned shortcut-sensitive classifier, and adds an optional local
-    PatchCore anomaly-drift layers when local MVTec AD, MVTec AD 2, or VisA
-    data are prepared.
-  </p>
+  {render_report_header(
+      output_path=output_path,
+      eyebrow="Demo 08 · Robustness and explanation drift",
+      title="Explanation Drift Under Shift",
+      lede=(
+          "This report separates metric movement from explanation movement for both "
+          "shortcut-sensitive classifiers and optional local anomaly-detector paths."
+      ),
+  )}
+  {render_report_brief(brief)}
 
   <section>
     <h2>Classifier Drift Summary</h2>
@@ -1186,6 +1236,7 @@ def _render_html(
     </div>
   </section>
 {anomaly_sections}
+  {render_related_reports(output_path=output_path, heading="Where to go next", links=brief.related)}
 </main>
 </body>
 </html>

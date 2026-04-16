@@ -43,6 +43,14 @@ from xai_demo_suite.models.classification import (
     worst_group_accuracy,
 )
 from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index_for_output_root
+from xai_demo_suite.reports.report_chrome import (
+    ReportBrief,
+    ReportLink,
+    render_related_reports,
+    render_report_brief,
+    render_report_header,
+    report_chrome_css,
+)
 from xai_demo_suite.utils.io import ensure_directory
 from xai_demo_suite.vis.image_panels import draw_box_on_image, save_heatmap_overlay
 
@@ -1001,6 +1009,47 @@ def _render_real_html(
     metashift_section = ""
     if metashift_data is not None:
         metashift_section = _render_real_dataset_section(metashift_data, output_path=output_path)
+    lede = (
+        "Real Waterbirds group shifts, explanation maps, and perturbation probes show that "
+        "high average accuracy can still hide heavy context reliance."
+    )
+    brief = ReportBrief(
+        claim=(
+            "The shortcut is not just a metric artefact. It is visible in worst-group accuracy, "
+            "attribution mass, and background-masking sensitivity."
+        ),
+        evidence=(
+            "Compare ERM against the group-balanced probe, then line up the group table with the "
+            "Grad-CAM, Integrated Gradients, and masking deltas for the selected crossed-group "
+            "case."
+        ),
+        live_demo=(
+            "Start from ERM average accuracy, then immediately move to worst-group accuracy and "
+            "the selected crossed-group example so the audience sees the failure before the "
+            "intervention."
+        ),
+        boundary=(
+            "These are frozen-feature probes and proxy centre-versus-background checks, not a full "
+            "end-to-end benchmark reproduction."
+        ),
+        related=(
+            ReportLink(
+                slug="shortcut_industrial",
+                title="Demo 02 - Industrial Shortcut Trap",
+                reason="Shows the same shortcut logic in a controlled industrial setting.",
+            ),
+            ReportLink(
+                slug="explanation_drift",
+                title="Demo 08 - Explanation Drift Under Shift",
+                reason="Extends the shortcut story into perturbation and acquisition drift.",
+            ),
+            ReportLink(
+                slug="patchcore_bottle",
+                title="Demo 03 - PatchCore on MVTec AD bottle",
+                reason="Moves from classifier shortcuts to provenance-rich anomaly inspection.",
+            ),
+        ),
+    )
 
     html_text = f"""<!doctype html>
 <html lang="en">
@@ -1035,17 +1084,18 @@ def _render_real_html(
     }}
     code {{ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }}
     .meta {{ color: #52606d; font-size: 14px; }}
+    {report_chrome_css()}
   </style>
 </head>
 <body>
 <main>
-  <h1>Waterbirds Shortcut</h1>
-  <p>
-    This real-data Demo 01 path trains frozen ResNet-18 linear probes on the
-    prepared Waterbirds manifest. The comparison is deliberately simple: plain
-    ERM against inverse-group-frequency weighting. The point is to show that the
-    shortcut is visible in group metrics, explanations, and perturbation tests.
-  </p>
+  {render_report_header(
+      output_path=output_path,
+      eyebrow="Demo 01 · Shortcut learning",
+      title="Waterbirds Shortcut",
+      lede=lede,
+  )}
+  {render_report_brief(brief)}
   {_render_real_dataset_section(primary_data, output_path=output_path)}
   {metashift_section}
   <section>
@@ -1061,6 +1111,7 @@ def _render_real_html(
       benchmark with the same evaluation and explanation contract.
     </p>
   </section>
+  {render_related_reports(output_path=output_path, heading="Where to go next", links=brief.related)}
 </main>
 </body>
 </html>

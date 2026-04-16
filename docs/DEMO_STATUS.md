@@ -52,6 +52,9 @@ Verify generated reports, cards, selected figures, and the local index:
 The local `outputs/index.html` is a static presentation index with one tile per
 demo, selected figures, report links, demo-card links, key lessons,
 interventions, caveats, and a prepared-dataset summary for the current machine.
+The four flagship reports now also share a presenter-facing header, demo-brief
+section, and related-demo links so the suite reads like one coherent local demo
+product rather than disconnected HTML pages.
 
 ## Known gaps
 

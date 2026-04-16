@@ -54,6 +54,9 @@ ImageNet-pretrained ResNet-18 feature-map PatchCore and a 512-patch coreset:
 ```
 
 The local presentation index is written to `outputs/index.html`.
+The flagship reports now also share a consistent static presentation chrome:
+each one links back to the local hub, includes a presenter-facing demo brief,
+and links onward to the next relevant demos in the suite.
 It now surfaces the prepared local dataset state as well as the generated demo
 order, so a fresh run is easier to inspect as a coherent suite.
 

@@ -55,6 +55,9 @@ def test_explanation_drift_report_writes_html_assets_and_card(tmp_path: Path) ->
 
     html = output_path.read_text(encoding="utf-8")
     assert "Explanation Drift Under Shift" in html
+    assert "Demo Brief" in html
+    assert "Where to go next" in html
+    assert "../patchcore_bottle/index.html" in html
     assert "Classifier Drift Summary" in html
     assert "lighting_warm" in html
     assert "Anomaly Detector Drift" in html
@@ -284,6 +287,7 @@ def test_explanation_drift_report_uses_second_wave_manifests_when_prepared(tmp_p
     assert "Anomaly Detector Drift - MVTec AD Bottle" in html
     assert "Anomaly Detector Drift - MVTec AD 2 cable_gland" in html
     assert "Anomaly Detector Drift - VisA candle" in html
+    assert "How to present it live" in html
     assert "Second-wave scenario comparison on prepared MVTec AD 2 public-test data" in html
     assert "Cross-dataset comparison on prepared VisA one-class data" in html
     assert (

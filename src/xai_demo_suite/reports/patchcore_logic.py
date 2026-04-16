@@ -38,6 +38,14 @@ from xai_demo_suite.reports.patchcore_synthetic_helpers import (
     format_percentage,
     relative_path,
 )
+from xai_demo_suite.reports.report_chrome import (
+    ReportBrief,
+    ReportLink,
+    render_related_reports,
+    render_report_brief,
+    render_report_header,
+    report_chrome_css,
+)
 from xai_demo_suite.utils.io import ensure_directory
 from xai_demo_suite.vis.image_panels import (
     draw_box_on_image,
@@ -403,6 +411,42 @@ def _render_real_html(
     structural_auc_text = (
         "n/a" if benchmark.structural_auc is None else f"{benchmark.structural_auc:.3f}"
     )
+    brief = ReportBrief(
+        claim=(
+            "PatchCore can expose local novelty on LOCO images, but it does not itself contain "
+            "the product rule that says a front label must exist."
+        ),
+        evidence=(
+            "Compare the logical and structural cases, then use the component-aware benchmark "
+            "table to show that a narrow rule check can make a claim the patch distance alone "
+            "cannot."
+        ),
+        live_demo=(
+            "Show the logical example first, ask what the detector can honestly claim, and then "
+            "contrast PatchCore provenance with the front-label comparator."
+        ),
+        boundary=(
+            "The comparator is deliberately narrow and category-specific. It proves the reasoning "
+            "gap in PatchCore, not a general solution to logical anomaly detection."
+        ),
+        related=(
+            ReportLink(
+                slug="patchcore_bottle",
+                title="Demo 03 - PatchCore on MVTec AD bottle",
+                reason="Shows the same provenance story on a task that fits PatchCore better.",
+            ),
+            ReportLink(
+                slug="patchcore_limits",
+                title="Demo 05 - PatchCore Limits Lab",
+                reason="Extends the limitation story into counting and component identity.",
+            ),
+            ReportLink(
+                slug="explanation_drift",
+                title="Demo 08 - Explanation Drift Under Shift",
+                reason="Shows how even local evidence can drift under nuisance changes.",
+            ),
+        ),
+    )
     html_text = f"""<!doctype html>
 <html lang="en">
 <head>
@@ -413,10 +457,11 @@ def _render_real_html(
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       margin: 32px;
       color: #1f2933;
+      background: #f7f8fb;
     }}
     main {{ max-width: 1120px; margin: 0 auto; }}
     h1, h2 {{ margin: 0 0 12px; }}
-    section {{ margin: 28px 0; }}
+    section {{ margin: 28px 0; background: #fff; padding: 20px; border: 1px solid #d8dee4; }}
     .example {{ border-top: 2px solid #d8dee4; padding-top: 24px; }}
     .grid {{
       display: grid;
@@ -435,16 +480,21 @@ def _render_real_html(
       vertical-align: top;
     }}
     code {{ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }}
+    {report_chrome_css()}
   </style>
 </head>
 <body>
 <main>
-  <h1>PatchCore Logical Anomaly Limits on MVTec LOCO</h1>
-  <p>
-    Demo 07 now uses real MVTec LOCO AD juice-bottle images. The detector sees
-    local patch novelty and nearest normal evidence; the product-level question
-    asks whether the bottle satisfies a semantic packaging rule.
-  </p>
+  {render_report_header(
+      output_path=output_path,
+      eyebrow="Demo 07 · Logical anomaly boundary",
+      title="PatchCore Logical Anomaly Limits on MVTec LOCO",
+      lede=(
+          "Real LOCO examples show the exact point where provenance-rich patch novelty "
+          "stops and rule-level inspection has to begin."
+      ),
+  )}
+  {render_report_brief(brief)}
 
   <section>
     <h2>Run Context</h2>
@@ -526,6 +576,7 @@ def _render_real_html(
       whole logical-inspection stack.
     </p>
   </section>
+  {render_related_reports(output_path=output_path, heading="Where to go next", links=brief.related)}
 </main>
 </body>
 </html>

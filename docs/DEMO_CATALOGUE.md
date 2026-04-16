@@ -4,7 +4,9 @@ Use `./.venv/bin/xai-demo-report suite` to regenerate the synthetic reports and
 `./.venv/bin/xai-demo-report verify` to check generated report integrity. See
 `docs/DEMO_STATUS.md` for the current runnable status. For the strongest local
 presentation suite, use the `suite --include-mvtec` command with the pretrained
-MVTec flags listed in `docs/DEMO_STATUS.md`.
+MVTec flags listed in `docs/DEMO_STATUS.md`. The flagship reports share a
+common presentation chrome with a local-hub link, a concise demo brief, and
+related-demo hand-offs for live walkthroughs.
 
 ## Demo 01 — Waterbirds shortcut
 A canonical background-spurious classification story.
