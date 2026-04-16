@@ -15,10 +15,10 @@ Current artefacts:
 
 The current implementation uses the prepared Waterbirds manifest when present,
 with frozen ResNet-18 probes, worst-group metrics, Grad-CAM, Integrated
-Gradients, and perturbation checks. When the prepared MetaShift manifest is
-also present, the same report adds a natural-context extension on the
-cat-vs-dog indoor/outdoor split. Fresh clones still fall back to the synthetic
-proxy.
+Gradients, perturbation checks, and a prototype-exemplar comparator. When the
+prepared MetaShift manifest is also present, the same report adds a
+natural-context extension on the cat-vs-dog indoor/outdoor split. Fresh clones
+still fall back to the synthetic proxy.
 
 ## Demo 02 — Industrial shortcut trap
 A classifier learns border, watermark, or fixture leakage.

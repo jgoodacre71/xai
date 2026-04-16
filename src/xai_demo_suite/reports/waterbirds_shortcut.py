@@ -26,12 +26,17 @@ from xai_demo_suite.models.classification import (
     FrozenResNetWaterbirdsProbe,
     GroupMetric,
     HabitatShortcutClassifier,
+    PrototypeExemplar,
+    PrototypeExemplarComparator,
+    PrototypePrediction,
     WaterbirdsGroupMetric,
     WaterbirdsPrediction,
     WaterbirdsProbeConfig,
     accuracy,
     evaluate_bird_classifier,
     group_accuracy,
+    prototype_accuracy,
+    prototype_group_accuracy,
     waterbirds_accuracy,
     waterbirds_group_accuracy,
     waterbirds_worst_group_accuracy,
@@ -91,6 +96,14 @@ class WaterbirdsExplanationSummary:
 
 
 @dataclass(frozen=True, slots=True)
+class PrototypeComparatorSummary:
+    """Perturbation diagnostics for the prototype comparator."""
+
+    background_mask_delta: float
+    centre_mask_delta: float
+
+
+@dataclass(frozen=True, slots=True)
 class RealWaterbirdsShortcutReportData:
     """Computed data for one manifest-backed natural-context shortcut dataset."""
 
@@ -102,11 +115,17 @@ class RealWaterbirdsShortcutReportData:
     test_records: list[WaterbirdsManifestRecord]
     erm_predictions: list[WaterbirdsPrediction]
     balanced_predictions: list[WaterbirdsPrediction]
+    prototype_predictions: list[PrototypePrediction]
     erm_group_metrics: tuple[WaterbirdsGroupMetric, ...]
     balanced_group_metrics: tuple[WaterbirdsGroupMetric, ...]
+    prototype_group_metrics: tuple[WaterbirdsGroupMetric, ...]
     erm_summary: WaterbirdsExplanationSummary
     balanced_summary: WaterbirdsExplanationSummary
+    prototype_summary: PrototypeComparatorSummary
     selected_record: WaterbirdsManifestRecord
+    selected_prototype_prediction: PrototypePrediction
+    nearest_predicted_exemplars: tuple[PrototypeExemplar, ...]
+    nearest_contrast_exemplars: tuple[PrototypeExemplar, ...]
     assets: dict[str, Path]
 
 
@@ -413,6 +432,21 @@ def _copy_image(image_path: Path, output_path: Path) -> Path:
     return output_path
 
 
+def _copy_exemplar_assets(
+    exemplars: tuple[PrototypeExemplar, ...],
+    *,
+    output_dir: Path,
+    prefix: str,
+) -> dict[str, Path]:
+    assets: dict[str, Path] = {}
+    for index, exemplar in enumerate(exemplars):
+        assets[f"{prefix}_{index}"] = _copy_image(
+            exemplar.image_path,
+            _asset_path(output_dir, f"{prefix}_{index:02d}.png"),
+        )
+    return assets
+
+
 def _masked_background(image_path: Path, output_path: Path) -> Path:
     ensure_directory(output_path.parent)
     with Image.open(image_path) as image:
@@ -500,6 +534,37 @@ def _diagnostic_summary(
     )
 
 
+def _prototype_diagnostic_summary(
+    *,
+    comparator: PrototypeExemplarComparator,
+    records: list[WaterbirdsManifestRecord],
+    limit: int,
+    output_dir: Path,
+    prefix: str,
+) -> PrototypeComparatorSummary:
+    selected = records[:limit]
+    if not selected:
+        return PrototypeComparatorSummary(0.0, 0.0)
+    background_deltas: list[float] = []
+    centre_deltas: list[float] = []
+    for index, record in enumerate(selected):
+        original_score = comparator.score_image(record.image_path)
+        background_masked = _masked_background(
+            record.image_path,
+            _asset_path(output_dir, f"{prefix}_background_mask_{index:02d}.png"),
+        )
+        centre_masked = _masked_centre(
+            record.image_path,
+            _asset_path(output_dir, f"{prefix}_centre_mask_{index:02d}.png"),
+        )
+        background_deltas.append(abs(original_score - comparator.score_image(background_masked)))
+        centre_deltas.append(abs(original_score - comparator.score_image(centre_masked)))
+    return PrototypeComparatorSummary(
+        background_mask_delta=float(np.mean(background_deltas)),
+        centre_mask_delta=float(np.mean(centre_deltas)),
+    )
+
+
 def _prediction_rows(
     records: list[WaterbirdsManifestRecord],
     erm_predictions: list[WaterbirdsPrediction],
@@ -533,17 +598,21 @@ def _prediction_rows(
 def _real_group_rows(
     erm_metrics: tuple[WaterbirdsGroupMetric, ...],
     balanced_metrics: tuple[WaterbirdsGroupMetric, ...],
+    prototype_metrics: tuple[WaterbirdsGroupMetric, ...],
 ) -> str:
     balanced_by_group = {metric.group: metric for metric in balanced_metrics}
+    prototype_by_group = {metric.group: metric for metric in prototype_metrics}
     rows: list[str] = []
     for erm_metric in erm_metrics:
         balanced_metric = balanced_by_group[erm_metric.group]
+        prototype_metric = prototype_by_group[erm_metric.group]
         rows.append(
             "<tr>"
             f"<td>{html.escape(erm_metric.group)}</td>"
             f"<td>{erm_metric.count}</td>"
             f"<td>{erm_metric.accuracy:.1%}</td>"
             f"<td>{balanced_metric.accuracy:.1%}</td>"
+            f"<td>{prototype_metric.accuracy:.1%}</td>"
             "</tr>"
         )
     return "".join(rows)
@@ -602,6 +671,11 @@ def _build_real_report_data(
     balanced_probe.fit(train_records)
     erm_predictions = erm_probe.predict(test_records)
     balanced_predictions = balanced_probe.predict(test_records)
+    prototype_comparator = PrototypeExemplarComparator(
+        probe=erm_probe,
+        train_records=train_records,
+    )
+    prototype_predictions = prototype_comparator.predict(test_records)
     selected_record = _select_visual_record(test_records, erm_predictions)
     erm_explanation = erm_probe.explain(selected_record)
     balanced_explanation = balanced_probe.explain(selected_record)
@@ -645,6 +719,35 @@ def _build_real_report_data(
             ),
         ),
     }
+    prototype_by_id = {prediction.sample_id: prediction for prediction in prototype_predictions}
+    selected_prototype_prediction = prototype_by_id[selected_record.sample_id]
+    nearest_predicted_exemplars = prototype_comparator.nearest_exemplars(
+        selected_record,
+        label=selected_prototype_prediction.predicted,
+    )
+    contrast_label = next(
+        label
+        for label in sorted({record.label for record in train_records})
+        if label != selected_prototype_prediction.predicted
+    )
+    nearest_contrast_exemplars = prototype_comparator.nearest_exemplars(
+        selected_record,
+        label=contrast_label,
+    )
+    assets.update(
+        _copy_exemplar_assets(
+            nearest_predicted_exemplars,
+            output_dir=config.output_dir,
+            prefix=f"{asset_prefix}_prototype_predicted",
+        )
+    )
+    assets.update(
+        _copy_exemplar_assets(
+            nearest_contrast_exemplars,
+            output_dir=config.output_dir,
+            prefix=f"{asset_prefix}_prototype_contrast",
+        )
+    )
     crossed_records = [record for record in test_records if not record.is_aligned]
     return RealWaterbirdsShortcutReportData(
         manifest_path=manifest_path,
@@ -655,10 +758,15 @@ def _build_real_report_data(
         test_records=test_records,
         erm_predictions=erm_predictions,
         balanced_predictions=balanced_predictions,
+        prototype_predictions=prototype_predictions,
         erm_group_metrics=waterbirds_group_accuracy(test_records, erm_predictions),
         balanced_group_metrics=waterbirds_group_accuracy(
             test_records,
             balanced_predictions,
+        ),
+        prototype_group_metrics=prototype_group_accuracy(
+            test_records,
+            prototype_predictions,
         ),
         erm_summary=_diagnostic_summary(
             model=erm_probe,
@@ -674,7 +782,17 @@ def _build_real_report_data(
             output_dir=config.output_dir,
             prefix=f"{asset_prefix}_balanced",
         ),
+        prototype_summary=_prototype_diagnostic_summary(
+            comparator=prototype_comparator,
+            records=crossed_records,
+            limit=config.diagnostic_sample_limit,
+            output_dir=config.output_dir,
+            prefix=f"{asset_prefix}_prototype",
+        ),
         selected_record=selected_record,
+        selected_prototype_prediction=selected_prototype_prediction,
+        nearest_predicted_exemplars=nearest_predicted_exemplars,
+        nearest_contrast_exemplars=nearest_contrast_exemplars,
         assets=assets,
     )
 
@@ -692,11 +810,39 @@ def _render_real_dataset_section(
         data.erm_predictions,
         data.balanced_predictions,
     )
-    group_rows = _real_group_rows(data.erm_group_metrics, data.balanced_group_metrics)
+    group_rows = _real_group_rows(
+        data.erm_group_metrics,
+        data.balanced_group_metrics,
+        data.prototype_group_metrics,
+    )
     erm_accuracy = waterbirds_accuracy(data.erm_predictions)
     balanced_accuracy = waterbirds_accuracy(data.balanced_predictions)
+    prototype_acc = prototype_accuracy(data.prototype_predictions)
     erm_worst = waterbirds_worst_group_accuracy(data.erm_group_metrics)
     balanced_worst = waterbirds_worst_group_accuracy(data.balanced_group_metrics)
+    prototype_worst = waterbirds_worst_group_accuracy(data.prototype_group_metrics)
+    predicted_exemplar_figures = "".join(
+        (
+            "<figure>"
+            f'<img src="{rel(data.assets[f"{data.dataset_name}_prototype_predicted_{index}"])}" '
+            'alt="Prototype exemplar">'
+            f"<figcaption>{html.escape(exemplar.sample_id)} | "
+            f"{html.escape(exemplar.group)} | d={exemplar.distance:.3f}</figcaption>"
+            "</figure>"
+        )
+        for index, exemplar in enumerate(data.nearest_predicted_exemplars)
+    )
+    contrast_exemplar_figures = "".join(
+        (
+            "<figure>"
+            f'<img src="{rel(data.assets[f"{data.dataset_name}_prototype_contrast_{index}"])}" '
+            'alt="Contrast exemplar">'
+            f"<figcaption>{html.escape(exemplar.sample_id)} | "
+            f"{html.escape(exemplar.group)} | d={exemplar.distance:.3f}</figcaption>"
+            "</figure>"
+        )
+        for index, exemplar in enumerate(data.nearest_contrast_exemplars)
+    )
 
     return f"""
   <section>
@@ -713,8 +859,10 @@ def _render_real_dataset_section(
     <ul>
       <li>ERM accuracy: {erm_accuracy:.1%}</li>
       <li>Group-balanced accuracy: {balanced_accuracy:.1%}</li>
+      <li>Prototype comparator accuracy: {prototype_acc:.1%}</li>
       <li>ERM worst-group accuracy: {erm_worst:.1%}</li>
       <li>Group-balanced worst-group accuracy: {balanced_worst:.1%}</li>
+      <li>Prototype comparator worst-group accuracy: {prototype_worst:.1%}</li>
     </ul>
     <table>
       <thead>
@@ -723,6 +871,7 @@ def _render_real_dataset_section(
           <th>Count</th>
           <th>ERM accuracy</th>
           <th>Group-balanced accuracy</th>
+          <th>Prototype comparator accuracy</th>
         </tr>
       </thead>
       <tbody>{group_rows}</tbody>
@@ -794,8 +943,20 @@ def _render_real_dataset_section(
           <td>{data.balanced_summary.background_mask_delta:.3f}</td>
           <td>{data.balanced_summary.centre_mask_delta:.3f}</td>
         </tr>
+        <tr>
+          <td>Prototype comparator</td>
+          <td>n/a</td>
+          <td>n/a</td>
+          <td>{data.prototype_summary.background_mask_delta:.3f}</td>
+          <td>{data.prototype_summary.centre_mask_delta:.3f}</td>
+        </tr>
       </tbody>
     </table>
+    <p>
+      Prototype comparator selected prediction:
+      <code>{html.escape(data.selected_prototype_prediction.predicted)}</code>
+      with margin {data.selected_prototype_prediction.score:.3f}.
+    </p>
     <h3>Selected Test Predictions</h3>
     <table>
       <thead>
@@ -812,6 +973,20 @@ def _render_real_dataset_section(
       </thead>
       <tbody>{prediction_rows}</tbody>
     </table>
+    <h3>Prototype Exemplar Evidence</h3>
+    <p>
+      This comparator replaces a linear decision head with class prototypes in
+      frozen feature space, then shows which training exemplars are nearest to
+      the selected crossed-group sample.
+    </p>
+    <h4>Nearest Exemplars for the Predicted Class</h4>
+    <div class="grid">
+      {predicted_exemplar_figures}
+    </div>
+    <h4>Nearest Exemplars for the Contrast Class</h4>
+    <div class="grid">
+      {contrast_exemplar_figures}
+    </div>
   </section>
 """
 
@@ -908,6 +1083,7 @@ def _build_real_demo_card(output_path: Path, data: RealWaterbirdsShortcutReportD
             "Grad-CAM",
             "Integrated Gradients",
             "Background and centre perturbation probes",
+            "Prototype exemplar retrieval",
         ),
         key_lesson=(
             "Shortcut behaviour is visible in group metrics, explanation mass, and "
@@ -931,6 +1107,8 @@ def _build_real_demo_card(output_path: Path, data: RealWaterbirdsShortcutReportD
             data.assets["erm_integrated_gradients"],
             data.assets["balanced_grad_cam"],
             data.assets["balanced_integrated_gradients"],
+            data.assets[f"{data.dataset_name}_prototype_predicted_0"],
+            data.assets[f"{data.dataset_name}_prototype_contrast_0"],
         ),
     )
 

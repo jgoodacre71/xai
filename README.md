@@ -77,10 +77,11 @@ Waterbirds now has the same explicit local data flow:
 
 When the prepared Waterbirds manifest exists, Demo 01 switches into a real-data
 path with frozen ResNet-18 linear probes, worst-group metrics, Grad-CAM,
-Integrated Gradients, and simple context-masking perturbation checks. When the
-prepared MetaShift manifest also exists, the same report adds a natural-context
-extension section with the same ERM-versus-group-balanced comparison. The
-synthetic proxy remains as the fallback for fresh clones without local data.
+Integrated Gradients, simple context-masking perturbation checks, and a
+prototype-exemplar comparator. When the prepared MetaShift manifest also
+exists, the same report adds a natural-context extension section with the same
+ERM-versus-group-balanced comparison. The synthetic proxy remains as the
+fallback for fresh clones without local data.
 
 MVTec AD 2 now has a second-wave local adapter:
 

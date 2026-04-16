@@ -56,10 +56,11 @@ interventions, and caveats.
 ## Known gaps
 
 - Demo 01 now has a real Waterbirds path with frozen ResNet-18 probes,
-  worst-group metrics, Grad-CAM, Integrated Gradients, and perturbation checks.
-  When the prepared MetaShift manifest exists, the same report adds a
-  natural-context extension on the cat-vs-dog indoor/outdoor split. The
-  synthetic proxy remains as the fallback when the manifest is absent.
+  worst-group metrics, Grad-CAM, Integrated Gradients, perturbation checks, and
+  a prototype-exemplar comparator. When the prepared MetaShift manifest exists,
+  the same report adds a natural-context extension on the cat-vs-dog
+  indoor/outdoor split. The synthetic proxy remains as the fallback when the
+  manifest is absent.
 - Demo 02 now uses a learned convolutional shortcut baseline with
   stamp-randomised intervention training, Grad-CAM, Integrated Gradients, and
   known-region shortcut diagnostics. A real industrial classification dataset is

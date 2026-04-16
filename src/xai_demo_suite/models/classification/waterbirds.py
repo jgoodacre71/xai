@@ -63,6 +63,30 @@ class WaterbirdsExplanation:
     integrated_gradients: np.ndarray
 
 
+@dataclass(frozen=True, slots=True)
+class PrototypeExemplar:
+    """Nearest training exemplar retrieved by the prototype comparator."""
+
+    sample_id: str
+    label: str
+    group: str
+    distance: float
+    image_path: Path
+
+
+@dataclass(frozen=True, slots=True)
+class PrototypePrediction:
+    """Prediction from the prototype-style comparator."""
+
+    sample_id: str
+    label: str
+    habitat: str
+    group: str
+    predicted: str
+    score: float
+    correct: bool
+
+
 class FrozenResNetWaterbirdsProbe:
     """Frozen ResNet-18 backbone with a trainable linear probe."""
 
@@ -152,6 +176,22 @@ class FrozenResNetWaterbirdsProbe:
                 output_batches.append(batch_embeddings)
         return torch.cat(output_batches, dim=0)
 
+    def extract_embedding_array(self, records: list[WaterbirdsManifestRecord]) -> np.ndarray:
+        """Extract embeddings as a NumPy array."""
+
+        embeddings = self.extract_embeddings(records)
+        return np.asarray(embeddings.detach().cpu().numpy(), dtype=np.float32)
+
+    def extract_image_embedding(self, image_path: Path) -> np.ndarray:
+        """Extract one frozen backbone embedding for an arbitrary image path."""
+
+        torch = self._torch
+        with torch.no_grad():
+            embedding = self._feature_extractor(
+                self._load_tensor(image_path).unsqueeze(0).to(self._device)
+            ).flatten(start_dim=1)[0]
+        return np.asarray(embedding.detach().cpu().numpy(), dtype=np.float32)
+
     def predict(self, records: list[WaterbirdsManifestRecord]) -> list[WaterbirdsPrediction]:
         """Run the trained probe on prepared Waterbirds records."""
 
@@ -199,6 +239,14 @@ class FrozenResNetWaterbirdsProbe:
             )
         if self._positive_label == self._negative_label:
             raise ValueError("positive_label and negative_label must differ.")
+
+    @property
+    def label_order(self) -> tuple[str, str]:
+        """Return the current negative and positive label order."""
+
+        if self._negative_label is None or self._positive_label is None:
+            raise RuntimeError("Probe label order is unset. Call fit() before using label_order.")
+        return self._negative_label, self._positive_label
 
     def explain(
         self,
@@ -371,6 +419,132 @@ def as_classification_results(
         )
         for prediction in predictions
     ]
+
+
+class PrototypeExemplarComparator:
+    """Prototype-style comparator over frozen image embeddings."""
+
+    def __init__(
+        self,
+        *,
+        probe: FrozenResNetWaterbirdsProbe,
+        train_records: list[WaterbirdsManifestRecord],
+    ) -> None:
+        if not train_records:
+            raise ValueError("PrototypeExemplarComparator requires training records.")
+        self._probe = probe
+        self._train_records = list(train_records)
+        self._train_embeddings = probe.extract_embedding_array(train_records)
+        labels = sorted({record.label for record in train_records})
+        if len(labels) != 2:
+            raise ValueError("PrototypeExemplarComparator requires exactly two class labels.")
+        self._labels = tuple(labels)
+        self._prototypes = {
+            label: self._train_embeddings[
+                [index for index, record in enumerate(train_records) if record.label == label]
+            ].mean(axis=0)
+            for label in self._labels
+        }
+
+    def predict(self, records: list[WaterbirdsManifestRecord]) -> list[PrototypePrediction]:
+        """Predict labels for manifest-backed records."""
+
+        if not records:
+            return []
+        embeddings = self._probe.extract_embedding_array(records)
+        predictions: list[PrototypePrediction] = []
+        for record, embedding in zip(records, embeddings, strict=True):
+            label_distances = {
+                label: float(np.linalg.norm(embedding - prototype))
+                for label, prototype in self._prototypes.items()
+            }
+            ordered = sorted(label_distances.items(), key=lambda item: item[1])
+            predicted = ordered[0][0]
+            score = ordered[1][1] - ordered[0][1]
+            predictions.append(
+                PrototypePrediction(
+                    sample_id=record.sample_id,
+                    label=record.label,
+                    habitat=record.habitat,
+                    group=record.group,
+                    predicted=predicted,
+                    score=score,
+                    correct=predicted == record.label,
+                )
+            )
+        return predictions
+
+    def score_image(self, image_path: Path) -> float:
+        """Return the prototype-margin score for an arbitrary image."""
+
+        embedding = self._probe.extract_image_embedding(image_path)
+        ordered = sorted(
+            (
+                (label, float(np.linalg.norm(embedding - prototype)))
+                for label, prototype in self._prototypes.items()
+            ),
+            key=lambda item: item[1],
+        )
+        return ordered[1][1] - ordered[0][1]
+
+    def nearest_exemplars(
+        self,
+        record: WaterbirdsManifestRecord,
+        *,
+        k: int = 4,
+        label: str | None = None,
+    ) -> tuple[PrototypeExemplar, ...]:
+        """Return the nearest training exemplars for a query record."""
+
+        query_embedding = self._probe.extract_embedding_array([record])[0]
+        neighbours: list[PrototypeExemplar] = []
+        for exemplar_record, exemplar_embedding in zip(
+            self._train_records,
+            self._train_embeddings,
+            strict=True,
+        ):
+            if label is not None and exemplar_record.label != label:
+                continue
+            neighbours.append(
+                PrototypeExemplar(
+                    sample_id=exemplar_record.sample_id,
+                    label=exemplar_record.label,
+                    group=exemplar_record.group,
+                    distance=float(np.linalg.norm(query_embedding - exemplar_embedding)),
+                    image_path=exemplar_record.image_path,
+                )
+            )
+        neighbours.sort(key=lambda exemplar: exemplar.distance)
+        return tuple(neighbours[:k])
+
+
+def prototype_accuracy(predictions: list[PrototypePrediction]) -> float:
+    """Return overall prototype-comparator accuracy."""
+
+    if not predictions:
+        return 0.0
+    return sum(1 for prediction in predictions if prediction.correct) / len(predictions)
+
+
+def prototype_group_accuracy(
+    records: list[WaterbirdsManifestRecord],
+    predictions: list[PrototypePrediction],
+) -> tuple[WaterbirdsGroupMetric, ...]:
+    """Return per-group accuracies for the prototype comparator."""
+
+    by_id = {prediction.sample_id: prediction for prediction in predictions}
+    metrics: list[WaterbirdsGroupMetric] = []
+    for group in sorted({record.group for record in records}):
+        group_predictions = [by_id[record.sample_id] for record in records if record.group == group]
+        correct = sum(1 for prediction in group_predictions if prediction.correct)
+        metrics.append(
+            WaterbirdsGroupMetric(
+                group=group,
+                accuracy=correct / len(group_predictions) if group_predictions else 0.0,
+                count=len(group_predictions),
+            )
+        )
+    return tuple(metrics)
 
 
 def _normalise_map(values: np.ndarray) -> np.ndarray:

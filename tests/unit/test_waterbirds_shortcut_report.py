@@ -163,6 +163,8 @@ def test_waterbirds_shortcut_report_uses_real_manifest_when_available(tmp_path: 
     html = output_path.read_text(encoding="utf-8")
     assert "Waterbirds Shortcut</h1>" in html
     assert "ERM worst-group accuracy" in html
+    assert "Prototype comparator accuracy" in html
+    assert "Prototype Exemplar Evidence" in html
     assert "Grad-CAM centre mass" in html
     assert "Group-balanced probability" in html
     assert (config.output_dir / "assets" / "waterbirds_erm_grad_cam.png").exists()
@@ -171,6 +173,9 @@ def test_waterbirds_shortcut_report_uses_real_manifest_when_available(tmp_path: 
     ).exists()
     assert (
         config.output_dir / "assets" / "waterbirds_selected_background_masked.png"
+    ).exists()
+    assert (
+        config.output_dir / "assets" / "waterbirds_prototype_predicted_00.png"
     ).exists()
     assert (config.output_dir / "demo_card.json").exists()
 
@@ -214,9 +219,13 @@ def test_waterbirds_shortcut_report_adds_metashift_extension_when_available(
     html = output_path.read_text(encoding="utf-8")
     assert "Waterbirds Benchmark Slice" in html
     assert "Natural-Context Extension - MetaShift" in html
+    assert "Prototype comparator accuracy" in html
     assert "cat_indoor" in html
     assert "dog_outdoor" in html
     assert (config.output_dir / "assets" / "metashift_erm_grad_cam.png").exists()
     assert (
         config.output_dir / "assets" / "metashift_balanced_integrated_gradients.png"
+    ).exists()
+    assert (
+        config.output_dir / "assets" / "metashift_prototype_contrast_00.png"
     ).exists()
