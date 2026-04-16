@@ -70,6 +70,8 @@ interventions, and caveats.
   MVTec LOCO AD `juice_bottle`, so the report can contrast PatchCore patch
   novelty with a narrow packaging-rule check. Broader category coverage remains
   future work.
+- MVTec AD 2 now has local dataset support and per-scenario manifest building,
+  but no generated report consumes it yet.
 - Demo 03 now has an explicit pretrained ResNet-18 feature-map path, but it is
   still not an official PatchCore benchmark reproduction. Its benchmark panel
   reports local image-level max-patch AUC and top-patch mask diagnostics.

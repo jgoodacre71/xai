@@ -128,6 +128,35 @@ Current local status:
 - VisA
 - NEU / GC10-DET
 
+### MVTec AD 2
+Use for:
+- second-wave anomaly detection stress tests
+- harder acquisition and realism experiments
+- future PatchCore robustness evaluation
+
+Source:
+- official dataset page: <https://www.mvtec.com/research-teaching/datasets/mvtec-ad-2>
+
+Licence:
+- Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+  (CC BY-NC-SA 4.0)
+- non-commercial use only
+
+Local workflow:
+
+```bash
+./.venv/bin/python -m xai_demo_suite.cli.data list
+./.venv/bin/python -m xai_demo_suite.cli.data fetch mvtec_ad_2 --category all --dry-run
+./.venv/bin/python -m xai_demo_suite.cli.data fetch mvtec_ad_2 --category all --archive-url <direct-archive-url>
+./.venv/bin/python -m xai_demo_suite.cli.data prepare mvtec_ad_2 --category all
+```
+
+Notes:
+- the official page is currently treated as the authoritative source URL, but
+  the repo does not hard-code a brittle direct archive link for fetch;
+- prepare discovers scenario folders locally and writes one manifest per
+  scenario under `data/processed/mvtec_ad_2/<scenario>/manifest.jsonl`.
+
 ## Synthetic generators to build in-repo
 
 ### Nuisance injector

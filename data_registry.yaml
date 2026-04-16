@@ -62,12 +62,43 @@ datasets:
       - "splicing_connectors"
   waterbirds:
     name: "Waterbirds"
-    status: "planned"
+    status: "supported"
     purpose:
       - "canonical spurious-correlation classification"
       - "background reliance and counterfactual swaps"
     raw_data_committed: false
-    licence: "Record before enabling downloader."
-    source_url: "Record before enabling downloader."
-    citation: "Record before enabling downloader."
-    expected_layout: "data/raw/waterbirds/"
+    licence: "Verify upstream CUB and Places terms before use."
+    restrictions:
+      - "Treat as research-only unless upstream terms clearly allow more."
+      - "Raw archives and extracted data must not be committed."
+    source_url: "https://github.com/kohpangwei/group_DRO"
+    download_url: "https://nlp.stanford.edu/data/dro/waterbird_complete95_forest2water2.tar.gz"
+    citation: "Sagawa et al., Distributionally Robust Neural Networks for Group Shifts."
+    expected_layout:
+      raw_archives: "data/raw/waterbirds/archives/<category>.tar.gz"
+      interim_extracted: "data/interim/waterbirds/<category>/"
+      processed_manifest: "data/processed/waterbirds/<category>/manifest.jsonl"
+    categories:
+      - "waterbird_complete95_forest2water2"
+  mvtec_ad_2:
+    name: "MVTec AD 2"
+    status: "supported"
+    purpose:
+      - "second-wave industrial anomaly detection"
+      - "harder acquisition and realism stress tests"
+      - "future PatchCore robustness evaluation"
+    raw_data_committed: false
+    licence: "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)"
+    licence_url: "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+    restrictions:
+      - "Non-commercial use only."
+      - "Raw archives and extracted data must not be committed."
+    source_url: "https://www.mvtec.com/research-teaching/datasets/mvtec-ad-2"
+    download_url: "https://www.mvtec.com/research-teaching/datasets/mvtec-ad-2"
+    citation: "Bergmann et al., MVTec AD 2 - Advanced Scenarios for Unsupervised Anomaly Detection."
+    expected_layout:
+      raw_archives: "data/raw/mvtec_ad_2/archives/<downloaded-archive>"
+      interim_extracted: "data/interim/mvtec_ad_2/"
+      processed_manifest: "data/processed/mvtec_ad_2/<scenario>/manifest.jsonl"
+    categories:
+      - "<scenario discovered at prepare time>"

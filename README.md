@@ -80,6 +80,19 @@ path with frozen ResNet-18 linear probes, worst-group metrics, Grad-CAM,
 Integrated Gradients, and simple context-masking perturbation checks. The
 synthetic proxy remains as the fallback for fresh clones without local data.
 
+MVTec AD 2 now has a second-wave local adapter:
+
+```bash
+./.venv/bin/xai-demo-data fetch mvtec_ad_2 --category all --dry-run
+./.venv/bin/xai-demo-data fetch mvtec_ad_2 --category all --archive-url <direct-archive-url>
+./.venv/bin/xai-demo-data prepare mvtec_ad_2 --category all
+```
+
+The fetch path is intentionally conservative: the official source page is
+recorded, but the repo does not hard-code a brittle direct dataset link. If you
+already have the archive locally, place it under `data/raw/mvtec_ad_2/archives/`
+or pass `--archive-path` to `prepare`.
+
 ## Optional ML Dependencies
 
 The base package and tests do not require Torch. Install the optional ML stack

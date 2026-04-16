@@ -14,6 +14,16 @@ from xai_demo_suite.data.downloaders.mvtec_ad import (
     iter_mvtec_ad_categories,
     plan_mvtec_ad_fetch,
 )
+from xai_demo_suite.data.downloaders.mvtec_ad_2 import (
+    MVTecAD2Dataset,
+    build_mvtec_ad_2_manifests,
+    download_mvtec_ad_2_dataset,
+    extract_mvtec_ad_2_dataset,
+    get_mvtec_ad_2_dataset,
+    iter_mvtec_ad_2_datasets,
+    mvtec_ad_2_archive_dir,
+    plan_mvtec_ad_2_fetch,
+)
 from xai_demo_suite.data.downloaders.mvtec_loco_ad import (
     MVTecLOCOADCategory,
     build_mvtec_loco_ad_manifest,
@@ -46,22 +56,40 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("list", help="List supported datasets and categories.")
 
     fetch_parser = subparsers.add_parser("fetch", help="Fetch a raw dataset archive.")
-    fetch_parser.add_argument("dataset", choices=["mvtec_ad", "mvtec_loco_ad", "waterbirds"])
+    fetch_parser.add_argument(
+        "dataset",
+        choices=["mvtec_ad", "mvtec_ad_2", "mvtec_loco_ad", "waterbirds"],
+    )
     fetch_parser.add_argument("--category", required=True, help="Dataset category name.")
     fetch_parser.add_argument("--raw-root", type=Path, default=Path("data/raw"))
     fetch_parser.add_argument("--overwrite", action="store_true")
     fetch_parser.add_argument("--dry-run", action="store_true")
+    fetch_parser.add_argument(
+        "--archive-url",
+        help="Explicit direct archive URL for datasets whose official page does not expose one.",
+    )
 
     prepare_parser = subparsers.add_parser(
         "prepare",
         help="Extract a raw archive and build a processed manifest.",
     )
-    prepare_parser.add_argument("dataset", choices=["mvtec_ad", "mvtec_loco_ad", "waterbirds"])
+    prepare_parser.add_argument(
+        "dataset",
+        choices=["mvtec_ad", "mvtec_ad_2", "mvtec_loco_ad", "waterbirds"],
+    )
     prepare_parser.add_argument("--category", required=True, help="Dataset category name.")
     prepare_parser.add_argument("--raw-root", type=Path, default=Path("data/raw"))
     prepare_parser.add_argument("--interim-root", type=Path, default=Path("data/interim"))
     prepare_parser.add_argument("--processed-root", type=Path, default=Path("data/processed"))
     prepare_parser.add_argument("--overwrite", action="store_true")
+    prepare_parser.add_argument(
+        "--archive-path",
+        type=Path,
+        help=(
+            "Optional explicit archive path when the raw archive directory contains "
+            "multiple files."
+        ),
+    )
 
     return parser
 
@@ -78,6 +106,10 @@ def _print_waterbirds_category(category: WaterbirdsCategory) -> None:
     print(f"{category.name:32} {category.archive_name}")
 
 
+def _print_mvtec_ad_2_dataset(dataset: MVTecAD2Dataset) -> None:
+    print(f"{dataset.name:12} {dataset.scenario_count:>2} scenarios  discovered at prepare time")
+
+
 def _handle_list() -> int:
     print("MVTec AD")
     print("  source: https://www.mvtec.com/research-teaching/datasets/mvtec-ad")
@@ -86,6 +118,14 @@ def _handle_list() -> int:
     print("  categories:")
     for ad_category in iter_mvtec_ad_categories():
         _print_category(ad_category)
+    print()
+    print("MVTec AD 2")
+    print("  source: https://www.mvtec.com/research-teaching/datasets/mvtec-ad-2")
+    print("  downloads: official page is gated; use --archive-url or place a local archive")
+    print("  licence: CC BY-NC-SA 4.0; non-commercial use only")
+    print("  datasets:")
+    for ad2_dataset in iter_mvtec_ad_2_datasets():
+        _print_mvtec_ad_2_dataset(ad2_dataset)
     print()
     print("MVTec LOCO AD")
     print("  source: https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad")
@@ -107,6 +147,37 @@ def _handle_list() -> int:
 
 
 def _handle_fetch(args: argparse.Namespace) -> int:
+    if args.dataset == "mvtec_ad_2":
+        ad2_dataset = get_mvtec_ad_2_dataset(args.category)
+        ad2_plan = plan_mvtec_ad_2_fetch(
+            dataset=ad2_dataset,
+            raw_root=args.raw_root,
+            archive_url=args.archive_url,
+            overwrite=args.overwrite,
+        )
+        if args.dry_run:
+            if ad2_plan.should_download:
+                print(f"download: {ad2_plan.url}")
+                print(f"target: {ad2_plan.archive_path}")
+            else:
+                print("manual: supply --archive-url or place a single archive under")
+                print(f"target dir: {mvtec_ad_2_archive_dir(args.raw_root)}")
+            print(f"reason: {ad2_plan.reason}")
+            return 0
+        if args.archive_url is None:
+            raise ValueError(
+                "MVTec AD 2 fetch requires --archive-url, or place the archive manually and run "
+                "prepare with --archive-path if needed."
+            )
+        ad2_result = download_mvtec_ad_2_dataset(
+            dataset=ad2_dataset,
+            raw_root=args.raw_root,
+            archive_url=args.archive_url,
+            overwrite=args.overwrite,
+        )
+        print(f"{ad2_result.status}: {ad2_result.archive_path}")
+        return 0
+
     if args.dataset == "waterbirds":
         waterbirds_category = get_waterbirds_category(args.category)
         waterbirds_plan = plan_waterbirds_fetch(
@@ -176,6 +247,26 @@ def _handle_fetch(args: argparse.Namespace) -> int:
 
 
 def _handle_prepare(args: argparse.Namespace) -> int:
+    if args.dataset == "mvtec_ad_2":
+        get_mvtec_ad_2_dataset(args.category)
+        extracted_root = extract_mvtec_ad_2_dataset(
+            raw_root=args.raw_root,
+            interim_root=args.interim_root,
+            archive_path=args.archive_path,
+            overwrite=args.overwrite,
+        )
+        scenario_counts = build_mvtec_ad_2_manifests(
+            extracted_root=extracted_root,
+            processed_root=args.processed_root,
+            project_root=Path.cwd(),
+        )
+        print(f"extracted: {extracted_root}")
+        print(f"scenario manifests: {len(scenario_counts)}")
+        for scenario_name, record_count in sorted(scenario_counts.items()):
+            manifest_path = args.processed_root / "mvtec_ad_2" / scenario_name / "manifest.jsonl"
+            print(f"manifest: {manifest_path} ({record_count} records)")
+        return 0
+
     if args.dataset == "waterbirds":
         waterbirds_category = get_waterbirds_category(args.category)
         extracted_root = extract_waterbirds_category(
