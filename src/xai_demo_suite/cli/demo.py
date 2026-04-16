@@ -198,6 +198,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     drift.add_argument("--output-dir", type=Path, default=drift_defaults.output_dir)
     drift.add_argument("--synthetic-dir", type=Path, default=drift_defaults.synthetic_dir)
+    drift.add_argument(
+        "--mvtec-manifest-path",
+        type=Path,
+        default=drift_defaults.mvtec_manifest_path,
+    )
+    drift.add_argument(
+        "--mvtec-ad2-processed-root",
+        type=Path,
+        default=drift_defaults.mvtec_ad_2_processed_root,
+    )
 
     suite = subparsers.add_parser(
         "suite",
@@ -360,6 +370,8 @@ def _handle_explanation_drift(args: argparse.Namespace) -> int:
     config = ExplanationDriftReportConfig(
         output_dir=args.output_dir,
         synthetic_dir=args.synthetic_dir,
+        mvtec_manifest_path=args.mvtec_manifest_path,
+        mvtec_ad_2_processed_root=args.mvtec_ad2_processed_root,
     )
     output_path = build_explanation_drift_report(config)
     print(f"report: {output_path}")

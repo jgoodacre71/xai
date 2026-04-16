@@ -65,7 +65,9 @@ interventions, and caveats.
   for this pillar.
 - Demo 08 now uses learned industrial classifier drift under blur, contrast,
   compression, lighting, and shadow shifts, and adds an optional local PatchCore
-  anomaly-drift section when MVTec bottle data is prepared.
+  anomaly-drift section when MVTec bottle data is prepared. When MVTec AD 2
+  scenario manifests are prepared, the same report now adds second-wave anomaly
+  sections for those scenarios.
 - Demo 07 now adds a category-specific front-label template comparator on local
   MVTec LOCO AD `juice_bottle`, so the report can contrast PatchCore patch
   novelty with a narrow packaging-rule check. Broader category coverage remains

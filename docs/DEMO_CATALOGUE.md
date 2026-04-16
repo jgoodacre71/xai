@@ -92,5 +92,7 @@ Current artefacts:
 - static report: `outputs/explanation_drift/index.html`
 - demo card: `outputs/explanation_drift/demo_card.html`
 
-The first implementation uses deterministic shortcut-demo perturbations to show
-that a stable prediction can still move its evidence region.
+The current implementation uses learned industrial shortcut perturbations for
+the classifier path, an optional MVTec AD bottle anomaly-drift section, and now
+optional second-wave MVTec AD 2 scenario sections when those local manifests
+are prepared.

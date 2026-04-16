@@ -71,6 +71,14 @@ class ExplanationDriftReportConfig:
     mvtec_patch_size: int = 128
     mvtec_stride: int = 128
     mvtec_top_k: int = 3
+    mvtec_ad_2_processed_root: Path = Path("data/processed/mvtec_ad_2")
+    mvtec_ad_2_cache_root: Path = Path("data/artefacts/patchcore/mvtec_ad_2")
+    mvtec_ad_2_max_scenarios: int = 2
+    mvtec_ad_2_max_train: int = 10
+    mvtec_ad_2_benchmark_limit: int = 16
+    mvtec_ad_2_patch_size: int = 128
+    mvtec_ad_2_stride: int = 128
+    mvtec_ad_2_top_k: int = 3
     include_mvtec_if_available: bool = True
 
 
@@ -115,6 +123,9 @@ class AnomalyPerturbationSummary:
 class AnomalyDriftReport:
     """Optional anomaly-detector drift report."""
 
+    section_title: str
+    section_description: str
+    dataset_label: str
     baseline_overlay_path: Path
     baseline_mask_overlay_path: Path
     example_sample_id: str
@@ -129,8 +140,8 @@ class ExplanationDriftReportData:
 
     baseline_classifier: ClassifierDriftReport
     intervention_classifier: ClassifierDriftReport
-    anomaly_report: AnomalyDriftReport | None
-    anomaly_note: str | None = None
+    anomaly_reports: tuple[AnomalyDriftReport, ...]
+    anomaly_notes: tuple[str, ...] = ()
 
 
 def _relative(path: Path, root: Path) -> str:
@@ -160,6 +171,19 @@ def _anomaly_perturbations() -> tuple[str, ...]:
         "blur",
         "jpeg_low_quality",
     )
+
+
+def _manifest_stem_key(path: Path) -> str:
+    return path.parent.name if path.parent.name != "processed" else path.stem
+
+
+def _mvtec_ad_2_manifest_paths(config: ExplanationDriftReportConfig) -> list[Path]:
+    if not config.mvtec_ad_2_processed_root.exists():
+        return []
+    return sorted(
+        config.mvtec_ad_2_processed_root.glob("*/manifest.jsonl"),
+        key=_manifest_stem_key,
+    )[: config.mvtec_ad_2_max_scenarios]
 
 
 def _prediction_map(
@@ -317,36 +341,54 @@ def _build_patchcore_extractor(config: ExplanationDriftReportConfig) -> PatchFea
     raise ValueError("mvtec_feature_extractor_name must be colour_texture or mean_rgb.")
 
 
+def _cache_path_with_feature(base_path: Path, feature_name: str) -> Path:
+    return base_path.with_name(f"{base_path.stem}_{feature_name}{base_path.suffix}")
+
+
+def _cache_path_for_manifest(
+    cache_root: Path,
+    manifest_path: Path,
+    feature_name: str,
+) -> Path:
+    return cache_root / f"{manifest_path.parent.name}_{feature_name}_drift_bank.npz"
+
+
 def _build_or_load_mvtec_bank(
     *,
-    config: ExplanationDriftReportConfig,
+    manifest_path: Path,
+    cache_path: Path,
     extractor: PatchFeatureExtractor,
+    max_train: int,
+    patch_size: int,
+    stride: int,
 ) -> PatchCoreMemoryBank:
     train_records = filter_manifest_records(
-        load_image_manifest(config.mvtec_manifest_path),
+        load_image_manifest(manifest_path),
         split="train",
         defect_type="good",
-    )[: config.mvtec_max_train]
+    )[:max_train]
     if not train_records:
-        raise ValueError("No nominal training records found for MVTec bottle drift section.")
-    if config.mvtec_cache_path.exists():
-        memory_bank = load_memory_bank(config.mvtec_cache_path)
+        raise ValueError(f"No nominal training records found for drift section {manifest_path}.")
+    if cache_path.exists():
+        memory_bank = load_memory_bank(cache_path)
         if memory_bank.feature_name == extractor.feature_name:
             return memory_bank
     memory_bank = build_patchcore_memory_bank(
         train_records,
         extractor=extractor,
-        patch_size=config.mvtec_patch_size,
-        stride=config.mvtec_stride,
+        patch_size=patch_size,
+        stride=stride,
     )
-    save_memory_bank(memory_bank, config.mvtec_cache_path)
+    save_memory_bank(memory_bank, cache_path)
     return memory_bank
 
 
 def _top_patch_score(
     record: ImageManifestRecord,
     *,
-    config: ExplanationDriftReportConfig,
+    patch_size: int,
+    stride: int,
+    top_k: int,
     memory_bank: PatchCoreMemoryBank,
     extractor: PatchFeatureExtractor,
     image_path: Path | None = None,
@@ -356,9 +398,9 @@ def _top_patch_score(
         image_path=image_path or record.image_path,
         memory_bank=memory_bank,
         extractor=extractor,
-        patch_size=config.mvtec_patch_size,
-        stride=config.mvtec_stride,
-        top_k=config.mvtec_top_k,
+        patch_size=patch_size,
+        stride=stride,
+        top_k=top_k,
     )
     return scores[0]
 
@@ -391,10 +433,12 @@ def _roc_auc(labels: list[bool], scores: list[float]) -> float | None:
 
 def _benchmark_auc(
     *,
-    config: ExplanationDriftReportConfig,
     records: list[ImageManifestRecord],
     memory_bank: PatchCoreMemoryBank,
     extractor: PatchFeatureExtractor,
+    patch_size: int,
+    stride: int,
+    top_k: int,
     perturbation_name: str | None = None,
     output_dir: Path | None = None,
 ) -> float | None:
@@ -410,7 +454,9 @@ def _benchmark_auc(
             )
         top_score = _top_patch_score(
             record,
-            config=config,
+            patch_size=patch_size,
+            stride=stride,
+            top_k=top_k,
             memory_bank=memory_bank,
             extractor=extractor,
             image_path=image_path,
@@ -422,43 +468,206 @@ def _benchmark_auc(
 
 def _build_anomaly_report(
     config: ExplanationDriftReportConfig,
-) -> tuple[AnomalyDriftReport | None, str | None]:
+) -> tuple[tuple[AnomalyDriftReport, ...], tuple[str, ...]]:
     if not config.include_mvtec_if_available:
-        return None, "MVTec anomaly drift section disabled by configuration."
-    if not config.mvtec_manifest_path.exists():
-        return None, "Prepare local MVTec bottle data to enable the anomaly-drift section."
+        return (), ("MVTec anomaly drift section disabled by configuration.",)
 
     extractor = _build_patchcore_extractor(config)
-    memory_bank = _build_or_load_mvtec_bank(config=config, extractor=extractor)
-    all_test_records = filter_manifest_records(
-        load_image_manifest(config.mvtec_manifest_path),
-        split="test",
-    )
-    benchmark_records = all_test_records[: config.mvtec_benchmark_limit]
-    example_record = next(record for record in all_test_records if record.is_anomalous)
-    baseline_top = _top_patch_score(
-        example_record,
-        config=config,
-        memory_bank=memory_bank,
-        extractor=extractor,
-    )
-    baseline_overlay_path = save_score_overlay(
-        image_path=example_record.image_path,
-        scores=score_image_with_extractor(
+    reports: list[AnomalyDriftReport] = []
+    notes: list[str] = []
+
+    if config.mvtec_manifest_path.exists():
+        memory_bank = _build_or_load_mvtec_bank(
+            manifest_path=config.mvtec_manifest_path,
+            cache_path=_cache_path_with_feature(config.mvtec_cache_path, extractor.feature_name),
+            extractor=extractor,
+            max_train=config.mvtec_max_train,
+            patch_size=config.mvtec_patch_size,
+            stride=config.mvtec_stride,
+        )
+        all_test_records = filter_manifest_records(
+            load_image_manifest(config.mvtec_manifest_path),
+            split="test",
+        )
+        benchmark_records = all_test_records[: config.mvtec_benchmark_limit]
+        example_record = next(record for record in all_test_records if record.is_anomalous)
+        baseline_top = _top_patch_score(
+            example_record,
+            patch_size=config.mvtec_patch_size,
+            stride=config.mvtec_stride,
+            top_k=config.mvtec_top_k,
+            memory_bank=memory_bank,
+            extractor=extractor,
+        )
+        baseline_overlay_path = save_score_overlay(
+            image_path=example_record.image_path,
+            scores=score_image_with_extractor(
+                sample_id=example_record.sample_id,
+                image_path=example_record.image_path,
+                memory_bank=memory_bank,
+                extractor=extractor,
+                patch_size=config.mvtec_patch_size,
+                stride=config.mvtec_stride,
+                top_k=config.mvtec_top_k,
+            ),
+            output_path=_asset_path(config.output_dir, "mvtec_baseline_score_overlay.png"),
+        )
+        if example_record.mask_path is None:
+            baseline_overlap = None
+            baseline_mask_overlay_path = baseline_overlay_path
+        else:
+            baseline_overlap = measure_patch_mask_overlap(
+                mask_path=example_record.mask_path,
+                patch_box=baseline_top.query_box,
+                image_path=example_record.image_path,
+            )
+            baseline_mask_overlay_path = save_mask_overlay(
+                image_path=example_record.image_path,
+                mask_path=example_record.mask_path,
+                output_path=_asset_path(config.output_dir, "mvtec_baseline_mask_overlay.png"),
+            )
+
+        perturbations: list[AnomalyPerturbationSummary] = []
+        for perturbation_name in _anomaly_perturbations():
+            perturbed_image_path = perturb_image(
+                example_record.image_path,
+                _asset_path(config.output_dir, f"mvtec_{perturbation_name}.png"),
+                perturbation_name,
+            )
+            perturbed_scores = score_image_with_extractor(
+                sample_id=example_record.sample_id,
+                image_path=perturbed_image_path,
+                memory_bank=memory_bank,
+                extractor=extractor,
+                patch_size=config.mvtec_patch_size,
+                stride=config.mvtec_stride,
+                top_k=config.mvtec_top_k,
+            )
+            top_score = perturbed_scores[0]
+            drift_measurement = DriftMeasurement(
+                perturbation_name=perturbation_name,
+                baseline_score=baseline_top.distance,
+                perturbed_score=top_score.distance,
+                baseline_prediction="anomalous",
+                perturbed_prediction="anomalous",
+                baseline_region=baseline_top.query_box,
+                perturbed_region=top_score.query_box,
+            )
+            overlap = (
+                measure_patch_mask_overlap(
+                    mask_path=example_record.mask_path,
+                    patch_box=top_score.query_box,
+                    image_path=perturbed_image_path,
+                )
+                if example_record.mask_path is not None
+                else None
+            )
+            perturbations.append(
+                AnomalyPerturbationSummary(
+                    perturbation_name=perturbation_name,
+                    image_auc=_benchmark_auc(
+                        records=benchmark_records,
+                        memory_bank=memory_bank,
+                        extractor=extractor,
+                        patch_size=config.mvtec_patch_size,
+                        stride=config.mvtec_stride,
+                        top_k=config.mvtec_top_k,
+                        perturbation_name=perturbation_name,
+                        output_dir=config.output_dir / "mvtec_benchmark",
+                    ),
+                    top_score_shift=drift_measurement.score_shift,
+                    top_patch_shift=drift_measurement.explanation_shift,
+                    mask_covered_fraction=(
+                        overlap.mask_covered_fraction if overlap is not None else None
+                    ),
+                    overlay_path=save_score_overlay(
+                        image_path=perturbed_image_path,
+                        scores=perturbed_scores,
+                        output_path=_asset_path(
+                            config.output_dir,
+                            f"mvtec_{perturbation_name}_score_overlay.png",
+                        ),
+                    ),
+                )
+            )
+        reports.append(
+            AnomalyDriftReport(
+                section_title="Anomaly Detector Drift - MVTec AD Bottle",
+                section_description=(
+                    "Prepared MVTec AD bottle section using the same local PatchCore-style "
+                    "detector used elsewhere in the suite."
+                ),
+                dataset_label="MVTec AD bottle",
+                baseline_overlay_path=baseline_overlay_path,
+                baseline_mask_overlay_path=baseline_mask_overlay_path,
+                example_sample_id=example_record.sample_id,
+                baseline_top_score=baseline_top.distance,
+                baseline_mask_overlap=baseline_overlap,
+                perturbations=tuple(perturbations),
+            )
+        )
+    else:
+        notes.append("Prepare local MVTec bottle data to enable the bottle anomaly-drift section.")
+
+    ad2_manifest_paths = _mvtec_ad_2_manifest_paths(config)
+    if not ad2_manifest_paths:
+        notes.append(
+            "Prepare local MVTec AD 2 scenario manifests to enable the second-wave anomaly "
+            "drift comparison."
+        )
+    for manifest_path in ad2_manifest_paths:
+        records = load_image_manifest(manifest_path)
+        public_test_records = filter_manifest_records(records, split="test_public")
+        anomalous_records = [
+            record
+            for record in public_test_records
+            if record.is_anomalous and record.mask_path is not None
+        ]
+        if not anomalous_records:
+            continue
+        scenario_name = manifest_path.parent.name
+        scenario_prefix = f"mvtec_ad2_{scenario_name}"
+        memory_bank = _build_or_load_mvtec_bank(
+            manifest_path=manifest_path,
+            cache_path=_cache_path_for_manifest(
+                config.mvtec_ad_2_cache_root,
+                manifest_path,
+                extractor.feature_name,
+            ),
+            extractor=extractor,
+            max_train=config.mvtec_ad_2_max_train,
+            patch_size=config.mvtec_ad_2_patch_size,
+            stride=config.mvtec_ad_2_stride,
+        )
+        example_record = anomalous_records[0]
+        if example_record.mask_path is None:
+            continue
+        benchmark_records = public_test_records[: config.mvtec_ad_2_benchmark_limit]
+        baseline_top = _top_patch_score(
+            example_record,
+            patch_size=config.mvtec_ad_2_patch_size,
+            stride=config.mvtec_ad_2_stride,
+            top_k=config.mvtec_ad_2_top_k,
+            memory_bank=memory_bank,
+            extractor=extractor,
+        )
+        baseline_scores = score_image_with_extractor(
             sample_id=example_record.sample_id,
             image_path=example_record.image_path,
             memory_bank=memory_bank,
             extractor=extractor,
-            patch_size=config.mvtec_patch_size,
-            stride=config.mvtec_stride,
-            top_k=config.mvtec_top_k,
-        ),
-        output_path=_asset_path(config.output_dir, "mvtec_baseline_score_overlay.png"),
-    )
-    if example_record.mask_path is None:
-        baseline_overlap = None
-        baseline_mask_overlay_path = baseline_overlay_path
-    else:
+            patch_size=config.mvtec_ad_2_patch_size,
+            stride=config.mvtec_ad_2_stride,
+            top_k=config.mvtec_ad_2_top_k,
+        )
+        baseline_overlay_path = save_score_overlay(
+            image_path=example_record.image_path,
+            scores=baseline_scores,
+            output_path=_asset_path(
+                config.output_dir,
+                f"{scenario_prefix}_baseline_score_overlay.png",
+            ),
+        )
         baseline_overlap = measure_patch_mask_overlap(
             mask_path=example_record.mask_path,
             patch_box=baseline_top.query_box,
@@ -467,89 +676,86 @@ def _build_anomaly_report(
         baseline_mask_overlay_path = save_mask_overlay(
             image_path=example_record.image_path,
             mask_path=example_record.mask_path,
-            output_path=_asset_path(config.output_dir, "mvtec_baseline_mask_overlay.png"),
+            output_path=_asset_path(
+                config.output_dir,
+                f"{scenario_prefix}_baseline_mask_overlay.png",
+            ),
         )
-
-    perturbations: list[AnomalyPerturbationSummary] = []
-    auc_baseline = _benchmark_auc(
-        config=config,
-        records=benchmark_records,
-        memory_bank=memory_bank,
-        extractor=extractor,
-    )
-    del auc_baseline
-    for perturbation_name in _anomaly_perturbations():
-        perturbed_image_path = perturb_image(
-            example_record.image_path,
-            _asset_path(config.output_dir, f"mvtec_{perturbation_name}.png"),
-            perturbation_name,
-        )
-        perturbed_scores = score_image_with_extractor(
-            sample_id=example_record.sample_id,
-            image_path=perturbed_image_path,
-            memory_bank=memory_bank,
-            extractor=extractor,
-            patch_size=config.mvtec_patch_size,
-            stride=config.mvtec_stride,
-            top_k=config.mvtec_top_k,
-        )
-        top_score = perturbed_scores[0]
-        drift_measurement = DriftMeasurement(
-            perturbation_name=perturbation_name,
-            baseline_score=baseline_top.distance,
-            perturbed_score=top_score.distance,
-            baseline_prediction="anomalous",
-            perturbed_prediction="anomalous",
-            baseline_region=baseline_top.query_box,
-            perturbed_region=top_score.query_box,
-        )
-        overlap = (
-            measure_patch_mask_overlap(
+        perturbations = []
+        for perturbation_name in _anomaly_perturbations():
+            perturbed_image_path = perturb_image(
+                example_record.image_path,
+                _asset_path(config.output_dir, f"{scenario_prefix}_{perturbation_name}.png"),
+                perturbation_name,
+            )
+            perturbed_scores = score_image_with_extractor(
+                sample_id=example_record.sample_id,
+                image_path=perturbed_image_path,
+                memory_bank=memory_bank,
+                extractor=extractor,
+                patch_size=config.mvtec_ad_2_patch_size,
+                stride=config.mvtec_ad_2_stride,
+                top_k=config.mvtec_ad_2_top_k,
+            )
+            top_score = perturbed_scores[0]
+            drift_measurement = DriftMeasurement(
+                perturbation_name=perturbation_name,
+                baseline_score=baseline_top.distance,
+                perturbed_score=top_score.distance,
+                baseline_prediction="anomalous",
+                perturbed_prediction="anomalous",
+                baseline_region=baseline_top.query_box,
+                perturbed_region=top_score.query_box,
+            )
+            overlap = measure_patch_mask_overlap(
                 mask_path=example_record.mask_path,
                 patch_box=top_score.query_box,
                 image_path=perturbed_image_path,
             )
-            if example_record.mask_path is not None
-            else None
-        )
-        perturbations.append(
-            AnomalyPerturbationSummary(
-                perturbation_name=perturbation_name,
-                image_auc=_benchmark_auc(
-                    config=config,
-                    records=benchmark_records,
-                    memory_bank=memory_bank,
-                    extractor=extractor,
+            perturbations.append(
+                AnomalyPerturbationSummary(
                     perturbation_name=perturbation_name,
-                    output_dir=config.output_dir / "mvtec_benchmark",
-                ),
-                top_score_shift=drift_measurement.score_shift,
-                top_patch_shift=drift_measurement.explanation_shift,
-                mask_covered_fraction=(
-                    overlap.mask_covered_fraction if overlap is not None else None
-                ),
-                overlay_path=save_score_overlay(
-                    image_path=perturbed_image_path,
-                    scores=perturbed_scores,
-                    output_path=_asset_path(
-                        config.output_dir,
-                        f"mvtec_{perturbation_name}_score_overlay.png",
+                    image_auc=_benchmark_auc(
+                        records=benchmark_records,
+                        memory_bank=memory_bank,
+                        extractor=extractor,
+                        patch_size=config.mvtec_ad_2_patch_size,
+                        stride=config.mvtec_ad_2_stride,
+                        top_k=config.mvtec_ad_2_top_k,
+                        perturbation_name=perturbation_name,
+                        output_dir=config.output_dir / scenario_prefix / "benchmark",
                     ),
+                    top_score_shift=drift_measurement.score_shift,
+                    top_patch_shift=drift_measurement.explanation_shift,
+                    mask_covered_fraction=overlap.mask_covered_fraction,
+                    overlay_path=save_score_overlay(
+                        image_path=perturbed_image_path,
+                        scores=perturbed_scores,
+                        output_path=_asset_path(
+                            config.output_dir,
+                            f"{scenario_prefix}_{perturbation_name}_score_overlay.png",
+                        ),
+                    ),
+                )
+            )
+        reports.append(
+            AnomalyDriftReport(
+                section_title=f"Anomaly Detector Drift - MVTec AD 2 {scenario_name}",
+                section_description=(
+                    "Second-wave scenario comparison on prepared MVTec AD 2 public-test data. "
+                    "This uses the same local PatchCore-style detector on a harder dataset."
                 ),
+                dataset_label=f"MVTec AD 2 {scenario_name}",
+                baseline_overlay_path=baseline_overlay_path,
+                baseline_mask_overlay_path=baseline_mask_overlay_path,
+                example_sample_id=example_record.sample_id,
+                baseline_top_score=baseline_top.distance,
+                baseline_mask_overlap=baseline_overlap,
+                perturbations=tuple(perturbations),
             )
         )
 
-    return (
-        AnomalyDriftReport(
-            baseline_overlay_path=baseline_overlay_path,
-            baseline_mask_overlay_path=baseline_mask_overlay_path,
-            example_sample_id=example_record.sample_id,
-            baseline_top_score=baseline_top.distance,
-            baseline_mask_overlap=baseline_overlap,
-            perturbations=tuple(perturbations),
-        ),
-        None,
-    )
+    return tuple(reports), tuple(notes)
 
 
 def _render_classifier_rows(report: ClassifierDriftReport) -> str:
@@ -660,41 +866,24 @@ def _render_anomaly_figures(report: AnomalyDriftReport, *, output_path: Path) ->
     )
 
 
-def _render_html(
-    *,
-    config: ExplanationDriftReportConfig,
-    data: ExplanationDriftReportData,
-    output_path: Path,
-) -> None:
-    baseline_rows = _render_classifier_rows(data.baseline_classifier)
-    intervention_rows = _render_classifier_rows(data.intervention_classifier)
-    baseline_figures = _render_classifier_figures(
-        data.baseline_classifier,
-        output_path=output_path,
+def _render_anomaly_section(report: AnomalyDriftReport, *, output_path: Path) -> str:
+    anomaly_rows = _render_anomaly_rows(report)
+    anomaly_figures = _render_anomaly_figures(report, output_path=output_path)
+    baseline_mask_text = (
+        "n/a"
+        if report.baseline_mask_overlap is None
+        else f"{report.baseline_mask_overlap.mask_covered_fraction:.3f}"
     )
-    intervention_figures = _render_classifier_figures(
-        data.intervention_classifier,
-        output_path=output_path,
-    )
-    anomaly_section = ""
-    if data.anomaly_report is not None:
-        anomaly_rows = _render_anomaly_rows(data.anomaly_report)
-        anomaly_figures = _render_anomaly_figures(data.anomaly_report, output_path=output_path)
-        baseline_mask_text = (
-            "n/a"
-            if data.anomaly_report.baseline_mask_overlap is None
-            else f"{data.anomaly_report.baseline_mask_overlap.mask_covered_fraction:.3f}"
-        )
-        anomaly_section = f"""
+    return f"""
   <section>
-    <h2>Anomaly Detector Drift</h2>
+    <h2>{html.escape(report.section_title)}</h2>
+    <p>{html.escape(report.section_description)}</p>
     <p>
-      Optional local MVTec bottle section using PatchCore-style scoring over
-      prepared data. Example sample:
-      <code>{html.escape(data.anomaly_report.example_sample_id)}</code>.
+      Example sample: <code>{html.escape(report.example_sample_id)}</code>
+      from {html.escape(report.dataset_label)}.
     </p>
     <ul>
-      <li>Baseline top patch score: {data.anomaly_report.baseline_top_score:.3f}</li>
+      <li>Baseline top patch score: {report.baseline_top_score:.3f}</li>
       <li>Baseline mask covered by top patch: {baseline_mask_text}</li>
     </ul>
     <table>
@@ -714,11 +903,33 @@ def _render_html(
     </div>
   </section>
 """
-    elif data.anomaly_note is not None:
-        anomaly_section = f"""
+
+
+def _render_html(
+    *,
+    config: ExplanationDriftReportConfig,
+    data: ExplanationDriftReportData,
+    output_path: Path,
+) -> None:
+    baseline_rows = _render_classifier_rows(data.baseline_classifier)
+    intervention_rows = _render_classifier_rows(data.intervention_classifier)
+    baseline_figures = _render_classifier_figures(
+        data.baseline_classifier,
+        output_path=output_path,
+    )
+    intervention_figures = _render_classifier_figures(
+        data.intervention_classifier,
+        output_path=output_path,
+    )
+    anomaly_sections = "".join(
+        _render_anomaly_section(report, output_path=output_path) for report in data.anomaly_reports
+    )
+    if data.anomaly_notes:
+        note_items = "".join(f"<li>{html.escape(note)}</li>" for note in data.anomaly_notes)
+        anomaly_sections += f"""
   <section>
-    <h2>Anomaly Detector Drift</h2>
-    <p>{html.escape(data.anomaly_note)}</p>
+    <h2>Anomaly Detector Drift Notes</h2>
+    <ul>{note_items}</ul>
   </section>
 """
 
@@ -761,7 +972,7 @@ def _render_html(
   <p>
     This upgraded Demo 08 separates prediction drift from explanation drift for
     a learned shortcut-sensitive classifier, and adds an optional local
-    PatchCore anomaly-drift section when MVTec bottle data is prepared.
+    PatchCore anomaly-drift layer when local MVTec AD and MVTec AD 2 data are prepared.
   </p>
 
   <section>
@@ -813,7 +1024,7 @@ def _render_html(
       {intervention_figures}
     </div>
   </section>
-{anomaly_section}
+{anomaly_sections}
 </main>
 </body>
 </html>
@@ -828,8 +1039,8 @@ def _build_demo_card(output_path: Path, data: ExplanationDriftReportData) -> Dem
         *(summary.overlay_path for summary in data.baseline_classifier.perturbations[:2]),
         data.intervention_classifier.baseline_overlay_path,
     ]
-    if data.anomaly_report is not None:
-        figure_paths.append(data.anomaly_report.baseline_overlay_path)
+    if data.anomaly_reports:
+        figure_paths.extend(report.baseline_overlay_path for report in data.anomaly_reports[:2])
     return DemoCard(
         title="Demo 08 - Explanation Drift Under Shift",
         task=(
@@ -838,7 +1049,7 @@ def _build_demo_card(output_path: Path, data: ExplanationDriftReportData) -> Dem
         ),
         model=(
             "Learned industrial classifier drift path, plus optional local "
-            "PatchCore anomaly-drift diagnostics on MVTec bottle."
+            "PatchCore anomaly-drift diagnostics on MVTec AD bottle and MVTec AD 2."
         ),
         explanation_methods=(
             "Grad-CAM",
@@ -860,8 +1071,8 @@ def _build_demo_card(output_path: Path, data: ExplanationDriftReportData) -> Dem
         ),
         remaining_caveats=(
             "The classifier path still uses synthetic industrial images.",
-            "The anomaly section depends on local MVTec bottle preparation.",
-            "Demo 07 still needs a logic-aware comparator.",
+            "The anomaly sections depend on local MVTec AD / MVTec AD 2 preparation.",
+            "MVTec AD 2 support currently extends Demo 08, not the main PatchCore hero report.",
         ),
         report_path=output_path,
         figure_paths=tuple(figure_paths),
@@ -893,12 +1104,12 @@ def build_explanation_drift_report(config: ExplanationDriftReportConfig) -> Path
         output_dir=config.output_dir,
         perturbation_root=config.output_dir / "classifier_perturbations",
     )
-    anomaly_report, anomaly_note = _build_anomaly_report(config)
+    anomaly_reports, anomaly_notes = _build_anomaly_report(config)
     data = ExplanationDriftReportData(
         baseline_classifier=baseline_classifier,
         intervention_classifier=intervention_classifier,
-        anomaly_report=anomaly_report,
-        anomaly_note=anomaly_note,
+        anomaly_reports=anomaly_reports,
+        anomaly_notes=anomaly_notes,
     )
     output_path = config.output_dir / "index.html"
     _render_html(config=config, data=data, output_path=output_path)

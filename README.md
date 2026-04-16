@@ -212,8 +212,10 @@ Generate the synthetic drift demo with:
 The report is written to `outputs/explanation_drift/index.html`. It separates
 performance drift from explanation drift for the learned industrial shortcut
 models under blur, contrast, compression, lighting, and shadow shifts. When
-local MVTec bottle data is prepared, it also adds a PatchCore anomaly-drift
-section with image-level AUC, top-patch movement, and mask-coverage checks.
+local MVTec bottle data is prepared, it adds a PatchCore anomaly-drift section
+with image-level AUC, top-patch movement, and mask-coverage checks. When local
+MVTec AD 2 scenario manifests are prepared, the same report now adds second-wave
+anomaly-drift sections for those scenarios as well.
 
 ## Main files
 
