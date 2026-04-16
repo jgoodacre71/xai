@@ -31,6 +31,14 @@ NEU_CLASS_TO_LABEL = {
     "Pa": "area_defect",
     "PS": "area_defect",
 }
+NEU_NAME_TO_CLASS_CODE = {
+    "crazing": "Cr",
+    "rolled-in_scale": "RS",
+    "scratches": "Sc",
+    "inclusion": "In",
+    "patches": "Pa",
+    "pitted_surface": "PS",
+}
 LABEL_TO_STAMP = {"linear_defect": "blue", "area_defect": "red"}
 
 Downloader = Callable[[str, Path], Path]
@@ -228,7 +236,7 @@ def extract_neu_cls_dataset(
     ensure_directory(extracted_root.parent)
 
     suffixes = selected_archive.suffixes
-    if suffixes[-1:] == [".zip"]:
+    if suffixes[-1:] == [".zip"] or zipfile.is_zipfile(selected_archive):
         with zipfile.ZipFile(selected_archive) as archive:
             archive.extractall(extracted_root)
     else:
@@ -256,19 +264,41 @@ def build_neu_cls_shortcut_manifest(
     ensure_directory(prepared_root)
 
     grouped: dict[str, list[Path]] = {}
+    split_grouped: dict[tuple[str, str], list[Path]] = {}
     for image_path in image_paths:
         class_code = _class_code(image_path)
         grouped.setdefault(class_code, []).append(image_path)
+        declared_split = _declared_split(image_path)
+        if declared_split is not None:
+            split_grouped.setdefault((class_code, declared_split), []).append(image_path)
 
     manifest_rows: list[dict[str, object]] = []
     for class_code, class_images in sorted(grouped.items()):
         label = NEU_CLASS_TO_LABEL[class_code]
-        split_index = max(1, round(len(class_images) * 0.7))
-        train_images = class_images[:split_index]
-        test_images = class_images[split_index:]
-        if not test_images:
-            test_images = class_images[-1:]
-            train_images = class_images[:-1]
+        explicit_train = sorted(
+            split_grouped.get((class_code, "train"), []),
+            key=lambda path: path.name,
+        )
+        explicit_test = sorted(
+            split_grouped.get((class_code, "test"), []),
+            key=lambda path: path.name,
+        )
+        if explicit_train or explicit_test:
+            train_images = explicit_train
+            test_images = explicit_test
+            if not train_images and test_images:
+                train_images = test_images[:-1]
+                test_images = test_images[-1:]
+            if not test_images and train_images:
+                test_images = train_images[-1:]
+                train_images = train_images[:-1]
+        else:
+            split_index = max(1, round(len(class_images) * 0.7))
+            train_images = class_images[:split_index]
+            test_images = class_images[split_index:]
+            if not test_images:
+                test_images = class_images[-1:]
+                train_images = class_images[:-1]
         for index, image_path in enumerate(train_images):
             destination, object_box, stamp_box = _write_shortcut_image(
                 source_image=image_path,
@@ -347,8 +377,21 @@ def _discover_neu_images(extracted_root: Path) -> list[Path]:
 
 def _class_code(path: Path) -> str:
     stem = path.stem
+    lowered = stem.lower()
+    for name_prefix, class_code in NEU_NAME_TO_CLASS_CODE.items():
+        if lowered.startswith(name_prefix):
+            return class_code
     prefix = stem.split("_", maxsplit=1)[0]
     return prefix[:2]
+
+
+def _declared_split(path: Path) -> str | None:
+    parts = {part.lower() for part in path.parts}
+    if "train" in parts:
+        return "train"
+    if "valid" in parts or "val" in parts or "test" in parts:
+        return "test"
+    return None
 
 
 def _write_shortcut_image(

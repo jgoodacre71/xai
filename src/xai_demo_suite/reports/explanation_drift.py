@@ -124,6 +124,7 @@ class ClassifierDriftReport:
     """Learned classifier drift summary for one model."""
 
     label: str
+    data_source_label: str
     baseline_accuracy: float
     baseline_overlay_path: Path
     perturbations: tuple[ClassifierPerturbationSummary, ...]
@@ -267,6 +268,7 @@ def _box_mass(box: BoundingBox, values: object) -> float:
 def _train_classifier_models(
     config: ExplanationDriftReportConfig,
 ) -> tuple[
+    str,
     list[IndustrialShortcutSample],
     list[IndustrialShortcutSample],
     list[IndustrialShortcutSample],
@@ -278,8 +280,10 @@ def _train_classifier_models(
         samples = manifest_records_to_samples(records)
         train_samples = [sample for sample in samples if sample.split == "train"]
         test_samples = [sample for sample in samples if sample.split == "test"]
+        data_source_label = "real NEU-CLS shortcut images"
     else:
         train_samples, test_samples = generate_industrial_shortcut_dataset(config.synthetic_dir)
+        data_source_label = "synthetic industrial shortcut images"
     intervention_train_samples = augment_stamp_invariant_samples(
         train_samples,
         output_dir=config.synthetic_dir / "drift_intervention_train",
@@ -296,6 +300,7 @@ def _train_classifier_models(
     intervention_model = FrozenResNetIndustrialProbe(config=probe_config)
     intervention_model.fit(intervention_train_samples)
     return (
+        data_source_label,
         train_samples,
         intervention_train_samples,
         test_samples,
@@ -307,6 +312,7 @@ def _train_classifier_models(
 def _build_classifier_report(
     *,
     label: str,
+    data_source_label: str,
     model: FrozenResNetIndustrialProbe,
     test_samples: list[IndustrialShortcutSample],
     output_dir: Path,
@@ -369,6 +375,7 @@ def _build_classifier_report(
 
     return ClassifierDriftReport(
         label=label,
+        data_source_label=data_source_label,
         baseline_accuracy=industrial_accuracy(baseline_predictions),
         baseline_overlay_path=baseline_overlay_path,
         perturbations=tuple(summaries),
@@ -1106,6 +1113,7 @@ def _render_html(
         data.intervention_classifier,
         output_path=output_path,
     )
+    classifier_data_source_label = html.escape(data.baseline_classifier.data_source_label)
     anomaly_sections = "".join(
         _render_anomaly_section(report, output_path=output_path) for report in data.anomaly_reports
     )
@@ -1131,8 +1139,16 @@ def _render_html(
             "the corresponding overlays so the audience sees drift rather than only the metric."
         ),
         boundary=(
-            "The classifier path is still synthetic industrial data, while the anomaly sections "
-            "depend on whichever local datasets are prepared on this machine."
+            (
+                "The classifier path uses a prepared NEU-CLS shortcut split in this run, while "
+                "the anomaly sections depend on whichever local anomaly datasets are prepared on "
+                "this machine."
+            )
+            if data.baseline_classifier.data_source_label.startswith("real")
+            else (
+                "The classifier path is still synthetic industrial data, while the anomaly "
+                "sections depend on whichever local datasets are prepared on this machine."
+            )
         ),
         related=(
             ReportLink(
@@ -1206,9 +1222,9 @@ def _render_html(
   <section>
     <h2>Classifier Drift Summary</h2>
     <p>
-      The baseline is trained on shortcut-correlated industrial images. The
-      intervention is trained on stamp-randomised and stamp-masked variants of
-      the same parts.
+      The baseline is trained on shortcut-correlated {classifier_data_source_label}.
+      The intervention is trained on stamp-randomised and stamp-masked variants
+      of the same parts.
     </p>
     <h3>Baseline model</h3>
     <p>Baseline clean accuracy: {data.baseline_classifier.baseline_accuracy:.1%}</p>
@@ -1299,7 +1315,12 @@ def _build_demo_card(output_path: Path, data: ExplanationDriftReportData) -> Dem
             "against a shortcut-reduced classifier."
         ),
         remaining_caveats=(
-            "The classifier path still uses synthetic industrial images.",
+            (
+                "The classifier path uses a local NEU-CLS-derived shortcut split rather than a "
+                "full industrial benchmark."
+                if data.baseline_classifier.data_source_label.startswith("real")
+                else "The classifier path still uses synthetic industrial images."
+            ),
             "The anomaly sections depend on local MVTec AD / MVTec AD 2 preparation.",
             "MVTec AD 2 support currently extends Demo 08, not the main PatchCore hero report.",
         ),
@@ -1313,6 +1334,7 @@ def build_explanation_drift_report(config: ExplanationDriftReportConfig) -> Path
 
     ensure_directory(config.output_dir)
     (
+        classifier_data_source_label,
         _train_samples,
         _intervention_train_samples,
         test_samples,
@@ -1321,6 +1343,7 @@ def build_explanation_drift_report(config: ExplanationDriftReportConfig) -> Path
     ) = _train_classifier_models(config)
     baseline_classifier = _build_classifier_report(
         label="baseline",
+        data_source_label=classifier_data_source_label,
         model=baseline_model,
         test_samples=test_samples,
         output_dir=config.output_dir,
@@ -1328,6 +1351,7 @@ def build_explanation_drift_report(config: ExplanationDriftReportConfig) -> Path
     )
     intervention_classifier = _build_classifier_report(
         label="intervention",
+        data_source_label=classifier_data_source_label,
         model=intervention_model,
         test_samples=test_samples,
         output_dir=config.output_dir,

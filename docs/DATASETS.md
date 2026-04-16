@@ -167,6 +167,9 @@ Storage policy:
 Notes:
 - the current adapter maps the six NEU surface-defect classes into a binary
   `linear_defect` versus `area_defect` shortcut task;
+- public archives may appear either as the original `IMAGES/<class>_*.bmp`
+  layout or as train/valid image splits with names like `crazing_10.jpg`; the
+  local preparer now accepts both;
 - training images receive a correlated corner stamp so the report can show the
   shortcut trap and the intervention on top of real defect imagery;
 - when the prepared manifest exists, Demo 02 and the classifier section of Demo
