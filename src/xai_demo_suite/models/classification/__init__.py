@@ -20,16 +20,33 @@ from xai_demo_suite.models.classification.shortcut import (
     predict_label,
     swap_stamp,
 )
+from xai_demo_suite.models.classification.waterbirds import (
+    FrozenResNetWaterbirdsProbe,
+    WaterbirdsExplanation,
+    WaterbirdsGroupMetric,
+    WaterbirdsPrediction,
+    WaterbirdsProbeConfig,
+    as_classification_results,
+    waterbirds_accuracy,
+    waterbirds_group_accuracy,
+    waterbirds_worst_group_accuracy,
+)
 
 __all__ = [
     "BirdShapeClassifier",
     "ClassificationResult",
+    "FrozenResNetWaterbirdsProbe",
     "GroupMetric",
     "HabitatShortcutClassifier",
     "HybridShortcutClassifier",
     "ShapeClassifier",
     "StampShortcutClassifier",
+    "WaterbirdsExplanation",
+    "WaterbirdsGroupMetric",
+    "WaterbirdsPrediction",
+    "WaterbirdsProbeConfig",
     "accuracy",
+    "as_classification_results",
     "evaluate_bird_classifier",
     "evaluate_classifier",
     "group_accuracy",
@@ -37,5 +54,8 @@ __all__ = [
     "predict_bird_label",
     "predict_label",
     "swap_stamp",
+    "waterbirds_accuracy",
+    "waterbirds_group_accuracy",
+    "waterbirds_worst_group_accuracy",
     "worst_group_accuracy",
 ]

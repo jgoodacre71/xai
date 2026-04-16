@@ -84,11 +84,41 @@ Use for:
 - classic shortcut demonstration
 - background reliance and counterfactual swaps
 
+Source:
+- Stanford group DRO repository:
+  <https://github.com/kohpangwei/group_DRO>
+- dataset tarball:
+  <https://nlp.stanford.edu/data/dro/waterbird_complete95_forest2water2.tar.gz>
+
+Licence / usage:
+- the linked Waterbirds tarball does not restate a single unified licence in the
+  same way as the MVTec family;
+- it is derived from CUB and Places, so this repo treats it conservatively as
+  research-only until the upstream terms are checked by the user.
+
+Local workflow:
+
+```bash
+./.venv/bin/python -m xai_demo_suite.cli.data list
+./.venv/bin/python -m xai_demo_suite.cli.data fetch waterbirds --category waterbird_complete95_forest2water2 --dry-run
+./.venv/bin/python -m xai_demo_suite.cli.data fetch waterbirds --category waterbird_complete95_forest2water2
+./.venv/bin/python -m xai_demo_suite.cli.data prepare waterbirds --category waterbird_complete95_forest2water2
+```
+
+Storage policy:
+- archives are downloaded to `data/raw/waterbirds/archives/`;
+- extracted copies are written to `data/interim/waterbirds/`;
+- manifests are written to
+  `data/processed/waterbirds/waterbird_complete95_forest2water2/manifest.jsonl`;
+- raw archives, extracted data, and processed manifests are local artefacts and
+  are excluded from git.
+
 Current local status:
-- Demo 01 has a generated Waterbirds-style proxy under
-  `outputs/waterbirds_shortcut/synthetic/`.
-- The real Waterbirds dataset is not sourced yet and must not be committed when
-  added.
+- when the prepared manifest exists, Demo 01 uses a real Waterbirds report path
+  with frozen ResNet-18 linear probes, worst-group metrics, Grad-CAM,
+  Integrated Gradients, and simple context-masking perturbation checks;
+- when the manifest is absent, Demo 01 falls back to the generated
+  Waterbirds-style proxy under `outputs/waterbirds_shortcut/synthetic/`.
 
 ## Strong second-wave datasets
 

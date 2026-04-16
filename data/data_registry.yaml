@@ -1,0 +1,46 @@
+datasets:
+  mvtec_ad:
+    status: implemented
+    type: anomaly_detection
+    source_url: https://www.mvtec.com/research-teaching/datasets/mvtec-ad
+    downloads_url: https://www.mvtec.com/research-teaching/datasets/mvtec-ad/downloads
+    licence: CC BY-NC-SA 4.0
+    usage_restriction: Non-commercial use only.
+    local_workflow:
+      fetch: "./.venv/bin/xai-demo-data fetch mvtec_ad --category bottle"
+      prepare: "./.venv/bin/xai-demo-data prepare mvtec_ad --category bottle"
+    processed_format: JSONL image manifest
+  mvtec_loco_ad:
+    status: implemented
+    type: anomaly_detection
+    source_url: https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad
+    downloads_url: https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad/downloads
+    licence: CC BY-NC-SA 4.0
+    usage_restriction: Non-commercial use only.
+    local_workflow:
+      fetch: "./.venv/bin/xai-demo-data fetch mvtec_loco_ad --category juice_bottle"
+      prepare: "./.venv/bin/xai-demo-data prepare mvtec_loco_ad --category juice_bottle"
+    processed_format: JSONL image manifest
+  waterbirds:
+    status: implemented
+    type: shortcut_classification
+    source_url: https://github.com/kohpangwei/group_DRO
+    downloads_url: https://nlp.stanford.edu/data/dro/waterbird_complete95_forest2water2.tar.gz
+    licence: Verify upstream CUB and Places terms before use.
+    usage_restriction: Treat as research-only unless upstream terms clearly allow more.
+    local_workflow:
+      fetch: "./.venv/bin/xai-demo-data fetch waterbirds --category waterbird_complete95_forest2water2"
+      prepare: "./.venv/bin/xai-demo-data prepare waterbirds --category waterbird_complete95_forest2water2"
+    processed_format: JSONL classification manifest
+  mvtec_ad_2:
+    status: planned
+    type: anomaly_detection
+  visa:
+    status: planned
+    type: anomaly_detection
+  metashift:
+    status: planned
+    type: shortcut_classification
+  spawrious:
+    status: planned
+    type: shortcut_classification

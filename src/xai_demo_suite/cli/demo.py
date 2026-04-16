@@ -59,10 +59,23 @@ def build_parser() -> argparse.ArgumentParser:
 
     waterbirds = subparsers.add_parser(
         "waterbirds-shortcut",
-        help="Generate the synthetic Waterbirds-style shortcut report.",
+        help="Generate the Waterbirds shortcut report.",
     )
     waterbirds.add_argument("--output-dir", type=Path, default=waterbirds_defaults.output_dir)
     waterbirds.add_argument("--synthetic-dir", type=Path, default=waterbirds_defaults.synthetic_dir)
+    waterbirds.add_argument("--manifest-path", type=Path, default=waterbirds_defaults.manifest_path)
+    waterbirds.add_argument("--max-train", type=int, default=waterbirds_defaults.max_train_records)
+    waterbirds.add_argument("--max-test", type=int, default=waterbirds_defaults.max_test_records)
+    waterbirds.add_argument("--input-size", type=int, default=waterbirds_defaults.input_size)
+    waterbirds.add_argument("--batch-size", type=int, default=waterbirds_defaults.batch_size)
+    waterbirds.add_argument("--epochs", type=int, default=waterbirds_defaults.epochs)
+    waterbirds.add_argument(
+        "--weights",
+        choices=("DEFAULT", "none"),
+        default="DEFAULT" if waterbirds_defaults.weights_name is not None else "none",
+        help="Backbone weights for the real Waterbirds path.",
+    )
+    waterbirds.add_argument("--no-real-data", action="store_true")
 
     bottle = subparsers.add_parser(
         "patchcore-bottle",
@@ -243,6 +256,14 @@ def _handle_waterbirds_shortcut(args: argparse.Namespace) -> int:
     config = WaterbirdsShortcutReportConfig(
         output_dir=args.output_dir,
         synthetic_dir=args.synthetic_dir,
+        manifest_path=args.manifest_path,
+        use_real_data=not args.no_real_data,
+        max_train_records=args.max_train,
+        max_test_records=args.max_test,
+        input_size=args.input_size,
+        batch_size=args.batch_size,
+        epochs=args.epochs,
+        weights_name=None if args.weights == "none" else args.weights,
     )
     output_path = build_waterbirds_shortcut_report(config)
     print(f"report: {output_path}")

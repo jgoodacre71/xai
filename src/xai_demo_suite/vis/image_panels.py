@@ -143,3 +143,37 @@ def save_score_overlay(
         blended = Image.alpha_composite(base.convert("RGBA"), overlay).convert("RGB")
         blended.save(output_path)
     return output_path
+
+
+def save_heatmap_overlay(
+    *,
+    image_path: Path,
+    heatmap: np.ndarray,
+    output_path: Path,
+    alpha: float = 0.45,
+) -> Path:
+    """Save an image copy with a dense heatmap overlay."""
+
+    if not 0.0 <= alpha <= 1.0:
+        raise ValueError("alpha must be in the range [0, 1].")
+
+    ensure_directory(output_path.parent)
+    with Image.open(image_path) as image:
+        base = image.convert("RGB")
+        if heatmap.ndim != 2:
+            raise ValueError("heatmap must be a 2D array.")
+        values = np.clip(heatmap, 0.0, 1.0)
+        overlay_image = Image.fromarray(np.uint8(values * 255.0), mode="L").resize(
+            base.size,
+            Image.Resampling.BILINEAR,
+        )
+        overlay_values = np.asarray(overlay_image, dtype=np.float64) / 255.0
+        rgba = np.zeros((base.height, base.width, 4), dtype=np.uint8)
+        rgba[:, :, 0] = np.uint8(255.0 * overlay_values)
+        rgba[:, :, 1] = np.uint8(90.0 * (1.0 - overlay_values))
+        rgba[:, :, 2] = np.uint8(255.0 * (1.0 - overlay_values))
+        rgba[:, :, 3] = np.uint8(255.0 * alpha * overlay_values)
+        overlay = Image.fromarray(rgba, mode="RGBA")
+        blended = Image.alpha_composite(base.convert("RGBA"), overlay).convert("RGB")
+        blended.save(output_path)
+    return output_path

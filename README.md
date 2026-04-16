@@ -67,6 +67,19 @@ download page and stored locally under `data/raw/` when explicitly fetched.
 ./.venv/bin/xai-demo-data prepare mvtec_ad --category bottle
 ```
 
+Waterbirds now has the same explicit local data flow:
+
+```bash
+./.venv/bin/xai-demo-data fetch waterbirds --category waterbird_complete95_forest2water2 --dry-run
+./.venv/bin/xai-demo-data fetch waterbirds --category waterbird_complete95_forest2water2
+./.venv/bin/xai-demo-data prepare waterbirds --category waterbird_complete95_forest2water2
+```
+
+When the prepared Waterbirds manifest exists, Demo 01 switches into a real-data
+path with frozen ResNet-18 linear probes, worst-group metrics, Grad-CAM,
+Integrated Gradients, and simple context-masking perturbation checks. The
+synthetic proxy remains as the fallback for fresh clones without local data.
+
 ## Optional ML Dependencies
 
 The base package and tests do not require Torch. Install the optional ML stack
@@ -96,6 +109,15 @@ localisation check for the top scored patch. The report also includes local
 test-split diagnostics: image-level ROC AUC from the max patch score, defect
 type score summaries, and top-patch mask-hit checks. Generated reports, demo
 cards, local index files, and cached model artefacts are ignored by git.
+
+After preparing Waterbirds, generate Demo 01 with:
+
+```bash
+./.venv/bin/xai-demo-report waterbirds-shortcut
+```
+
+You can force the fallback path with `--no-real-data`, or use random backbone
+weights for quick local smoke tests with `--weights none`.
 
 You can switch extractors explicitly:
 
