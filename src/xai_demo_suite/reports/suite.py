@@ -72,6 +72,18 @@ class SuiteVerificationResult:
 ReportBuilder = Callable[[], Path]
 
 
+def _use_local_data_defaults(output_root: Path) -> bool:
+    """Return whether suite defaults should auto-pick prepared local datasets."""
+
+    return output_root.resolve() == Path("outputs").resolve()
+
+
+def _disabled_manifest_path(output_root: Path, name: str) -> Path:
+    """Return a guaranteed-missing manifest path for synthetic-only suite builds."""
+
+    return output_root / "_disabled" / name / "manifest.jsonl"
+
+
 def build_demo_suite(
     *,
     output_root: Path = Path("outputs"),
@@ -92,6 +104,8 @@ def build_demo_suite(
     because fresh clones will not have the external dataset prepared.
     """
 
+    use_local_data_defaults = _use_local_data_defaults(output_root)
+
     builders: list[tuple[str, ReportBuilder]] = [
         (
             "waterbirds-shortcut",
@@ -99,6 +113,7 @@ def build_demo_suite(
                 WaterbirdsShortcutReportConfig(
                     output_dir=output_root / "waterbirds_shortcut",
                     synthetic_dir=output_root / "waterbirds_shortcut" / "synthetic",
+                    use_real_data=use_local_data_defaults,
                 )
             ),
         ),
@@ -137,6 +152,11 @@ def build_demo_suite(
                 PatchCoreLogicReportConfig(
                     output_dir=output_root / "patchcore_logic",
                     synthetic_dir=output_root / "patchcore_logic" / "synthetic",
+                    manifest_path=(
+                        PatchCoreLogicReportConfig().manifest_path
+                        if use_local_data_defaults
+                        else _disabled_manifest_path(output_root, "patchcore_logic")
+                    ),
                     use_cache=use_cache,
                 )
             ),
@@ -157,6 +177,7 @@ def build_demo_suite(
                 ExplanationDriftReportConfig(
                     output_dir=output_root / "explanation_drift",
                     synthetic_dir=output_root / "explanation_drift" / "synthetic",
+                    include_mvtec_if_available=use_local_data_defaults,
                     visa_processed_root=(
                         visa_processed_root
                         if visa_processed_root is not None

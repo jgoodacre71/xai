@@ -54,6 +54,8 @@ ImageNet-pretrained ResNet-18 feature-map PatchCore and a 512-patch coreset:
 ```
 
 The local presentation index is written to `outputs/index.html`.
+It now surfaces the prepared local dataset state as well as the generated demo
+order, so a fresh run is easier to inspect as a coherent suite.
 
 ## Data
 

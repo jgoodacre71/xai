@@ -98,3 +98,46 @@ def test_save_demo_index_for_output_root_discovers_cards(tmp_path: Path) -> None
     assert "Static local entry point" in html
     assert "patchcore_bottle/index.html" in html
     assert "patchcore_limits/index.html" in html
+
+
+def test_save_demo_index_shows_prepared_dataset_summary_and_demo_order(tmp_path: Path) -> None:
+    waterbirds_manifest = (
+        tmp_path
+        / "data"
+        / "processed"
+        / "waterbirds"
+        / "waterbird_complete95_forest2water2"
+        / "manifest.jsonl"
+    )
+    waterbirds_manifest.parent.mkdir(parents=True, exist_ok=True)
+    waterbirds_manifest.write_text("", encoding="utf-8")
+
+    patchcore_card = _card(tmp_path)
+    waterbirds_report = tmp_path / "outputs" / "waterbirds_shortcut" / "index.html"
+    waterbirds_figure = tmp_path / "outputs" / "waterbirds_shortcut" / "assets" / "overview.png"
+    waterbirds_report.parent.mkdir(parents=True, exist_ok=True)
+    waterbirds_figure.parent.mkdir(parents=True, exist_ok=True)
+    waterbirds_report.write_text("<html></html>", encoding="utf-8")
+    waterbirds_figure.write_bytes(b"figure")
+    waterbirds_card = DemoCard(
+        title="Demo 01 - Waterbirds Shortcut",
+        task="Shortcut learning.",
+        model="Frozen ResNet probe.",
+        explanation_methods=("Grad-CAM",),
+        key_lesson="Background reliance is visible.",
+        failure_mode="Spurious context.",
+        intervention="Reweight groups.",
+        remaining_caveats=("Local manifest required.",),
+        report_path=waterbirds_report,
+        figure_paths=(waterbirds_figure,),
+    )
+
+    index_path = save_demo_index(
+        (patchcore_card, waterbirds_card),
+        tmp_path / "outputs" / "index.html",
+    )
+
+    html = index_path.read_text(encoding="utf-8")
+    assert "Reports generated: 2" in html
+    assert "Waterbirds: prepared" in html
+    assert html.index("Demo 01 - Waterbirds Shortcut") < html.index("Demo 03 - PatchCore")

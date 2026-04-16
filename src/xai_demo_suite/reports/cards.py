@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import html
 import json
+import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -25,6 +26,20 @@ class DemoCard:
     remaining_caveats: tuple[str, ...]
     report_path: Path
     figure_paths: tuple[Path, ...]
+
+
+KNOWN_PREPARED_DATASETS: tuple[tuple[str, str], ...] = (
+    (
+        "Waterbirds",
+        "data/processed/waterbirds/waterbird_complete95_forest2water2/manifest.jsonl",
+    ),
+    (
+        "MetaShift",
+        "data/processed/metashift/subpopulation_shift_cat_dog_indoor_outdoor/manifest.jsonl",
+    ),
+    ("MVTec AD bottle", "data/processed/mvtec_ad/bottle/manifest.jsonl"),
+    ("MVTec LOCO AD juice_bottle", "data/processed/mvtec_loco_ad/juice_bottle/manifest.jsonl"),
+)
 
 
 def _relative(path: Path, root: Path) -> str:
@@ -107,8 +122,27 @@ def save_demo_index(cards: tuple[DemoCard, ...], output_path: Path) -> Path:
 
     ensure_directory(output_path.parent)
     root = output_path.parent
+    project_root = root.parent
+    sorted_cards = tuple(sorted(cards, key=_demo_sort_key))
+    prepared_datasets = _prepared_dataset_status(project_root)
+    prepared_count = sum(1 for _name, prepared in prepared_datasets if prepared)
+    generated_reports = len(sorted_cards)
+    dataset_badges = "".join(
+        (
+            f'<span class="badge {"ready" if prepared else "missing"}">'
+            f"{html.escape(name)}: {'prepared' if prepared else 'missing'}"
+            "</span>"
+        )
+        for name, prepared in prepared_datasets
+    )
+    ready_items = [name for name, prepared in prepared_datasets if prepared]
+    ready_text = (
+        ", ".join(ready_items)
+        if ready_items
+        else "No prepared external datasets detected."
+    )
     items = []
-    for card in cards:
+    for card in sorted_cards:
         card_path = card.report_path.parent / "demo_card.html"
         figure_path = card.figure_paths[0] if card.figure_paths else None
         figure_html = (
@@ -174,6 +208,39 @@ def save_demo_index(cards: tuple[DemoCard, ...], output_path: Path) -> Path:
       color: #52606d;
       font-size: 16px;
       line-height: 1.5;
+    }}
+    .summary {{
+      margin-top: 16px;
+      display: grid;
+      gap: 10px;
+    }}
+    .summary p {{
+      margin: 0;
+      color: #364152;
+      font-size: 14px;
+    }}
+    .badges {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }}
+    .badge {{
+      font-size: 12px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #364152;
+    }}
+    .badge.ready {{
+      background: #ecfdf3;
+      border-color: #b7ebc6;
+      color: #166534;
+    }}
+    .badge.missing {{
+      background: #f8fafc;
+      border-color: #d8dee4;
+      color: #64748b;
     }}
     .grid {{
       display: grid;
@@ -264,6 +331,14 @@ def save_demo_index(cards: tuple[DemoCard, ...], output_path: Path) -> Path:
         Static local entry point for the generated explainability demos. Each
         tile links to the full report and its concise demo card.
       </p>
+      <div class="summary">
+        <p>
+          Reports generated: {generated_reports}. Prepared dataset adapters detected:
+          {prepared_count} / {len(prepared_datasets)}.
+        </p>
+        <p>{html.escape(ready_text)}</p>
+        <div class="badges">{dataset_badges}</div>
+      </div>
     </header>
     <section class="grid">
       {''.join(items)}
@@ -300,3 +375,17 @@ def save_demo_index_for_output_root(output_root: Path) -> Path:
         data = json.loads(card_path.read_text(encoding="utf-8"))
         cards.append(_card_from_json_dict(data, output_root))
     return save_demo_index(tuple(cards), output_root / "index.html")
+
+
+def _demo_sort_key(card: DemoCard) -> tuple[int, str]:
+    match = re.search(r"Demo (\d+)", card.title)
+    if match is None:
+        return (999, card.title)
+    return (int(match.group(1)), card.title)
+
+
+def _prepared_dataset_status(project_root: Path) -> tuple[tuple[str, bool], ...]:
+    return tuple(
+        (name, (project_root / relative_path).exists())
+        for name, relative_path in KNOWN_PREPARED_DATASETS
+    )
