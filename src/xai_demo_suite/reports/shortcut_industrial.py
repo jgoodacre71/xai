@@ -1,45 +1,72 @@
-"""Static report for the synthetic industrial shortcut lab."""
+"""Static report for the neural industrial shortcut demo."""
 
 from __future__ import annotations
 
 import html
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
+
+import numpy as np
 
 from xai_demo_suite.data.synthetic import (
     IndustrialShortcutSample,
     generate_industrial_shortcut_dataset,
 )
-from xai_demo_suite.models.classification.shortcut import (
-    ClassificationResult,
-    ShapeClassifier,
-    StampShortcutClassifier,
-    accuracy,
-    evaluate_classifier,
+from xai_demo_suite.explain.contracts import BoundingBox
+from xai_demo_suite.models.classification import (
+    FrozenResNetIndustrialProbe,
+    IndustrialPrediction,
+    IndustrialProbeConfig,
+    industrial_accuracy,
     mask_region,
     swap_stamp,
 )
 from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index_for_output_root
 from xai_demo_suite.utils.io import ensure_directory
-from xai_demo_suite.vis.image_panels import draw_box_on_image
+from xai_demo_suite.vis.image_panels import save_heatmap_overlay
 
 
 @dataclass(frozen=True, slots=True)
 class IndustrialShortcutReportConfig:
-    """Configuration for the synthetic industrial shortcut report."""
+    """Configuration for the industrial shortcut report."""
 
     output_dir: Path = Path("outputs/shortcut_industrial")
     synthetic_dir: Path = Path("outputs/shortcut_industrial/synthetic")
+    input_size: int = 128
+    batch_size: int = 16
+    epochs: int = 18
+    learning_rate: float = 1e-3
+    weight_decay: float = 1e-4
+    weights_name: str | None = None
+    seed: int = 13
+    max_train_records: int | None = None
+    diagnostic_sample_limit: int = 6
+
+
+@dataclass(frozen=True, slots=True)
+class IndustrialExplanationSummary:
+    """Shortcut-versus-part explanation diagnostics."""
+
+    grad_cam_stamp_mass: float
+    grad_cam_object_mass: float
+    integrated_stamp_mass: float
+    integrated_object_mass: float
+    stamp_mask_delta: float
+    object_mask_delta: float
 
 
 @dataclass(frozen=True, slots=True)
 class ShortcutReportData:
-    """Computed data for the shortcut report."""
+    """Computed data for the industrial shortcut report."""
 
     train_samples: list[IndustrialShortcutSample]
+    intervention_train_samples: list[IndustrialShortcutSample]
     test_samples: list[IndustrialShortcutSample]
-    shortcut_results: list[ClassificationResult]
-    shape_results: list[ClassificationResult]
+    baseline_predictions: list[IndustrialPrediction]
+    intervention_predictions: list[IndustrialPrediction]
+    baseline_summary: IndustrialExplanationSummary
+    intervention_summary: IndustrialExplanationSummary
+    selected_sample: IndustrialShortcutSample
     assets: dict[str, Path]
 
 
@@ -51,76 +78,218 @@ def _asset_path(output_dir: Path, name: str) -> Path:
     return output_dir / "assets" / name
 
 
-def _result_map(results: list[ClassificationResult]) -> dict[str, ClassificationResult]:
-    return {result.sample_id: result for result in results}
+def _challenge_samples(samples: list[IndustrialShortcutSample]) -> list[IndustrialShortcutSample]:
+    return [
+        sample
+        for sample in samples
+        if sample.sample_id not in {"test_normal_clean", "test_defect_clean"}
+    ]
+
+
+def _prediction_map(
+    predictions: list[IndustrialPrediction],
+) -> dict[str, IndustrialPrediction]:
+    return {prediction.sample_id: prediction for prediction in predictions}
+
+
+def _subset_accuracy(
+    predictions: list[IndustrialPrediction],
+    sample_ids: set[str],
+) -> float:
+    subset = [prediction for prediction in predictions if prediction.sample_id in sample_ids]
+    return industrial_accuracy(subset)
+
+
+def _object_mass(values: np.ndarray, sample: IndustrialShortcutSample) -> float:
+    return _box_mass(values, sample.object_region)
+
+
+def _stamp_mass(values: np.ndarray, sample: IndustrialShortcutSample) -> float:
+    return _box_mass(values, sample.stamp_region)
+
+
+def _box_mass(values: np.ndarray, box: BoundingBox) -> float:
+    height, width = values.shape
+    x = round(box.x * width / 128.0)
+    y = round(box.y * height / 128.0)
+    w = max(1, round(box.width * width / 128.0))
+    h = max(1, round(box.height * height / 128.0))
+    total = float(values.sum())
+    if total <= 0.0:
+        return 0.0
+    return float(values[y : y + h, x : x + w].sum()) / total
+
+
+def _augment_training_samples(
+    train_samples: list[IndustrialShortcutSample],
+    *,
+    output_dir: Path,
+) -> list[IndustrialShortcutSample]:
+    ensure_directory(output_dir)
+    augmented: list[IndustrialShortcutSample] = []
+    for sample in train_samples:
+        none_path = _asset_path(output_dir, f"{sample.sample_id}_none.png")
+        swap_path = _asset_path(
+            output_dir,
+            f"{sample.sample_id}_{'red' if sample.stamp != 'red' else 'blue'}.png",
+        )
+        masked_path = _asset_path(output_dir, f"{sample.sample_id}_masked.png")
+        swap_stamp(sample.image_path, "none", none_path)
+        swap_stamp(sample.image_path, "red" if sample.stamp != "red" else "blue", swap_path)
+        mask_region(sample.image_path, sample.stamp_region, masked_path)
+        augmented.append(
+            replace(
+                sample,
+                sample_id=f"{sample.sample_id}_aug_none",
+                image_path=none_path,
+                stamp="none",
+            )
+        )
+        augmented.append(
+            replace(
+                sample,
+                sample_id=f"{sample.sample_id}_aug_swap",
+                image_path=swap_path,
+                stamp="red" if sample.stamp != "red" else "blue",
+            )
+        )
+        augmented.append(
+            replace(
+                sample,
+                sample_id=f"{sample.sample_id}_aug_masked",
+                image_path=masked_path,
+                stamp="none",
+            )
+        )
+    return augmented
+
+
+def _diagnostic_summary(
+    *,
+    model: FrozenResNetIndustrialProbe,
+    samples: list[IndustrialShortcutSample],
+    limit: int,
+    output_dir: Path,
+    prefix: str,
+) -> IndustrialExplanationSummary:
+    selected = samples[:limit]
+    if not selected:
+        return IndustrialExplanationSummary(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+    grad_cam_stamp: list[float] = []
+    grad_cam_object: list[float] = []
+    integrated_stamp: list[float] = []
+    integrated_object: list[float] = []
+    stamp_deltas: list[float] = []
+    object_deltas: list[float] = []
+    for sample in selected:
+        explanation = model.explain(sample)
+        grad_cam_stamp.append(_stamp_mass(explanation.grad_cam, sample))
+        grad_cam_object.append(_object_mass(explanation.grad_cam, sample))
+        integrated_stamp.append(_stamp_mass(explanation.integrated_gradients, sample))
+        integrated_object.append(_object_mass(explanation.integrated_gradients, sample))
+
+        baseline_score = model.score_image(sample.image_path)
+        stamp_removed = mask_region(
+            sample.image_path,
+            sample.stamp_region,
+            _asset_path(output_dir, f"{prefix}_{sample.sample_id}_stamp_removed.png"),
+        )
+        object_removed = mask_region(
+            sample.image_path,
+            sample.object_region,
+            _asset_path(output_dir, f"{prefix}_{sample.sample_id}_object_removed.png"),
+        )
+        stamp_deltas.append(abs(baseline_score - model.score_image(stamp_removed)))
+        object_deltas.append(abs(baseline_score - model.score_image(object_removed)))
+
+    return IndustrialExplanationSummary(
+        grad_cam_stamp_mass=float(np.mean(grad_cam_stamp)),
+        grad_cam_object_mass=float(np.mean(grad_cam_object)),
+        integrated_stamp_mass=float(np.mean(integrated_stamp)),
+        integrated_object_mass=float(np.mean(integrated_object)),
+        stamp_mask_delta=float(np.mean(stamp_deltas)),
+        object_mask_delta=float(np.mean(object_deltas)),
+    )
+
+
+def _select_sample(
+    samples: list[IndustrialShortcutSample],
+    baseline_predictions: list[IndustrialPrediction],
+) -> IndustrialShortcutSample:
+    prediction_by_id = _prediction_map(baseline_predictions)
+    for sample in _challenge_samples(samples):
+        prediction = prediction_by_id[sample.sample_id]
+        if not prediction.correct:
+            return sample
+    return next(sample for sample in samples if sample.sample_id == "test_normal_swapped_stamp")
 
 
 def _write_assets(
     *,
-    output_dir: Path,
-    test_samples: list[IndustrialShortcutSample],
-    shortcut_classifier: StampShortcutClassifier,
+    config: IndustrialShortcutReportConfig,
+    selected_sample: IndustrialShortcutSample,
+    baseline_model: FrozenResNetIndustrialProbe,
+    intervention_model: FrozenResNetIndustrialProbe,
 ) -> dict[str, Path]:
-    assets: dict[str, Path] = {}
-    swapped_normal = next(
-        sample for sample in test_samples if sample.sample_id == "test_normal_swapped_stamp"
-    )
-    swapped_defect = next(
-        sample for sample in test_samples if sample.sample_id == "test_defect_swapped_stamp"
-    )
+    baseline_explanation = baseline_model.explain(selected_sample)
+    intervention_explanation = intervention_model.explain(selected_sample)
+    return {
+        "selected_image": selected_sample.image_path,
+        "baseline_grad_cam": save_heatmap_overlay(
+            image_path=selected_sample.image_path,
+            heatmap=baseline_explanation.grad_cam,
+            output_path=_asset_path(config.output_dir, "baseline_grad_cam.png"),
+        ),
+        "baseline_integrated_gradients": save_heatmap_overlay(
+            image_path=selected_sample.image_path,
+            heatmap=baseline_explanation.integrated_gradients,
+            output_path=_asset_path(config.output_dir, "baseline_integrated_gradients.png"),
+        ),
+        "intervention_grad_cam": save_heatmap_overlay(
+            image_path=selected_sample.image_path,
+            heatmap=intervention_explanation.grad_cam,
+            output_path=_asset_path(config.output_dir, "intervention_grad_cam.png"),
+        ),
+        "intervention_integrated_gradients": save_heatmap_overlay(
+            image_path=selected_sample.image_path,
+            heatmap=intervention_explanation.integrated_gradients,
+            output_path=_asset_path(config.output_dir, "intervention_integrated_gradients.png"),
+        ),
+        "stamp_removed": mask_region(
+            selected_sample.image_path,
+            selected_sample.stamp_region,
+            _asset_path(config.output_dir, "selected_stamp_removed.png"),
+        ),
+        "object_removed": mask_region(
+            selected_sample.image_path,
+            selected_sample.object_region,
+            _asset_path(config.output_dir, "selected_object_removed.png"),
+        ),
+    }
 
-    assets["shortcut_evidence"] = draw_box_on_image(
-        image_path=swapped_normal.image_path,
-        box=swapped_normal.stamp_region,
-        output_path=_asset_path(output_dir, "shortcut_evidence_stamp_box.png"),
-    )
-    assets["shape_evidence"] = draw_box_on_image(
-        image_path=swapped_normal.image_path,
-        box=swapped_normal.object_region,
-        output_path=_asset_path(output_dir, "shape_evidence_object_box.png"),
-        colour=(40, 160, 80),
-    )
-    masked_path = mask_region(
-        swapped_normal.image_path,
-        swapped_normal.stamp_region,
-        _asset_path(output_dir, "counterfactual_stamp_removed.png"),
-    )
-    assets["stamp_removed"] = masked_path
-    assets["stamp_swapped_defect"] = swap_stamp(
-        swapped_defect.image_path,
-        "red",
-        _asset_path(output_dir, "counterfactual_defect_red_stamp.png"),
-    )
-    assets["score_drop_source"] = draw_box_on_image(
-        image_path=masked_path,
-        box=shortcut_classifier.stamp_region,
-        output_path=_asset_path(output_dir, "counterfactual_stamp_removed_box.png"),
-    )
-    return assets
 
-
-def _render_results_table(
-    *,
+def _render_results_rows(
     samples: list[IndustrialShortcutSample],
-    shortcut_results: list[ClassificationResult],
-    shape_results: list[ClassificationResult],
+    baseline_predictions: list[IndustrialPrediction],
+    intervention_predictions: list[IndustrialPrediction],
 ) -> str:
-    shortcut_by_id = _result_map(shortcut_results)
-    shape_by_id = _result_map(shape_results)
+    baseline_by_id = _prediction_map(baseline_predictions)
+    intervention_by_id = _prediction_map(intervention_predictions)
     rows: list[str] = []
     for sample in samples:
-        shortcut = shortcut_by_id[sample.sample_id]
-        shape = shape_by_id[sample.sample_id]
+        baseline_prediction = baseline_by_id[sample.sample_id]
+        intervention_prediction = intervention_by_id[sample.sample_id]
         rows.append(
             "<tr>"
             f"<td>{html.escape(sample.sample_id)}</td>"
             f"<td>{html.escape(sample.label)}</td>"
             f"<td>{html.escape(sample.shape)}</td>"
             f"<td>{html.escape(sample.stamp)}</td>"
-            f"<td>{html.escape(shortcut.predicted)}</td>"
-            f"<td>{shortcut.score:.3f}</td>"
-            f"<td>{html.escape(shape.predicted)}</td>"
-            f"<td>{shape.score:.3f}</td>"
+            f"<td>{html.escape(baseline_prediction.predicted)}</td>"
+            f"<td>{baseline_prediction.probability:.3f}</td>"
+            f"<td>{html.escape(intervention_prediction.predicted)}</td>"
+            f"<td>{intervention_prediction.probability:.3f}</td>"
             "</tr>"
         )
     return "".join(rows)
@@ -128,24 +297,30 @@ def _render_results_table(
 
 def _render_html(config: IndustrialShortcutReportConfig, data: ShortcutReportData) -> Path:
     output_path = config.output_dir / "index.html"
-    shortcut_accuracy = accuracy(data.shortcut_results)
-    shape_accuracy = accuracy(data.shape_results)
-    swapped = [
-        sample
-        for sample in data.test_samples
-        if sample.sample_id in {"test_normal_swapped_stamp", "test_defect_swapped_stamp"}
-    ]
-    swapped_ids = {sample.sample_id for sample in swapped}
-    swapped_shortcut_accuracy = accuracy(
-        [result for result in data.shortcut_results if result.sample_id in swapped_ids]
+    test_ids = {sample.sample_id for sample in data.test_samples}
+    swapped_ids = {
+        "test_normal_swapped_stamp",
+        "test_defect_swapped_stamp",
+        "test_normal_shifted_fixture",
+        "test_defect_shifted_fixture",
+    }
+    no_stamp_ids = {"test_normal_no_stamp", "test_defect_no_stamp"}
+    rows = _render_results_rows(
+        data.test_samples,
+        data.baseline_predictions,
+        data.intervention_predictions,
     )
-    swapped_shape_accuracy = accuracy(
-        [result for result in data.shape_results if result.sample_id in swapped_ids]
+    baseline_accuracy = industrial_accuracy(data.baseline_predictions)
+    intervention_accuracy = industrial_accuracy(data.intervention_predictions)
+    baseline_swapped_accuracy = _subset_accuracy(data.baseline_predictions, swapped_ids)
+    intervention_swapped_accuracy = _subset_accuracy(
+        data.intervention_predictions,
+        swapped_ids,
     )
-    rows = _render_results_table(
-        samples=data.test_samples,
-        shortcut_results=data.shortcut_results,
-        shape_results=data.shape_results,
+    baseline_no_stamp_accuracy = _subset_accuracy(data.baseline_predictions, no_stamp_ids)
+    intervention_no_stamp_accuracy = _subset_accuracy(
+        data.intervention_predictions,
+        no_stamp_ids,
     )
 
     def rel(path: Path) -> str:
@@ -161,67 +336,133 @@ def _render_html(config: IndustrialShortcutReportConfig, data: ShortcutReportDat
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       margin: 32px;
       color: #1f2933;
+      background: #f7f8fb;
     }}
-    main {{ max-width: 1080px; margin: 0 auto; }}
+    main {{ max-width: 1180px; margin: 0 auto; }}
     h1, h2 {{ margin: 0 0 12px; }}
-    section {{ margin: 28px 0; }}
+    section {{ margin: 28px 0; background: #fff; padding: 20px; border: 1px solid #d8dee4; }}
     .grid {{
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
+      gap: 16px;
       align-items: start;
     }}
-    figure {{ margin: 0; border: 1px solid #d8dee4; padding: 10px; background: #fff; }}
-    img {{ max-width: 100%; height: auto; display: block; }}
+    figure {{ margin: 0; }}
+    img {{ width: 100%; height: auto; display: block; border: 1px solid #d8dee4; }}
     figcaption {{ font-size: 13px; color: #52606d; margin-top: 8px; }}
     table {{ width: 100%; border-collapse: collapse; font-size: 14px; }}
-    th, td {{ border-bottom: 1px solid #d8dee4; padding: 8px; text-align: left; }}
-    code {{ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }}
+    th, td {{
+      border-bottom: 1px solid #d8dee4;
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }}
   </style>
 </head>
 <body>
 <main>
   <h1>Industrial Shortcut Trap</h1>
   <p>
-    This synthetic classification demo shows a model that appears successful
-    when a corner stamp is correlated with the label, then fails when the stamp
-    is swapped or removed.
+    This upgraded Demo 02 keeps the industrial story synthetic, but replaces the
+    old hand-written rule with learned convolutional probes. The baseline is
+    trained on shortcut-correlated images. The intervention sees stamp-randomised
+    and stamp-masked augmentations of the same parts.
   </p>
 
   <section>
     <h2>Metric Summary</h2>
     <ul>
-      <li>Shortcut classifier accuracy: {shortcut_accuracy:.1%}</li>
-      <li>Shape intervention accuracy: {shape_accuracy:.1%}</li>
-      <li>Shortcut accuracy on swapped-stamp cases: {swapped_shortcut_accuracy:.1%}</li>
-      <li>Shape accuracy on swapped-stamp cases: {swapped_shape_accuracy:.1%}</li>
+      <li>Baseline overall accuracy: {baseline_accuracy:.1%}</li>
+      <li>Intervention overall accuracy: {intervention_accuracy:.1%}</li>
+      <li>Baseline swapped-fixture accuracy: {baseline_swapped_accuracy:.1%}</li>
+      <li>Intervention swapped-fixture accuracy: {intervention_swapped_accuracy:.1%}</li>
+      <li>Baseline no-stamp accuracy: {baseline_no_stamp_accuracy:.1%}</li>
+      <li>Intervention no-stamp accuracy: {intervention_no_stamp_accuracy:.1%}</li>
+      <li>Baseline train samples: {len(data.train_samples)}</li>
+      <li>Intervention train samples: {len(data.intervention_train_samples)}</li>
+      <li>Test samples: {len(test_ids)}</li>
     </ul>
   </section>
 
   <section>
-    <h2>Evidence and Counterfactuals</h2>
+    <h2>Explanations on a Shortcut Challenge Case</h2>
     <div class="grid">
       <figure>
-        <img src="{rel(data.assets["shortcut_evidence"])}" alt="Shortcut stamp evidence">
-        <figcaption>The shortcut classifier looks at the corner stamp.</figcaption>
+        <img src="{rel(data.assets["selected_image"])}" alt="Selected challenge sample">
+        <figcaption>Selected challenge sample for explanation comparison.</figcaption>
       </figure>
       <figure>
-        <img src="{rel(data.assets["shape_evidence"])}" alt="Shape evidence">
-        <figcaption>The intervention looks at the central part silhouette.</figcaption>
+        <img src="{rel(data.assets["baseline_grad_cam"])}" alt="Baseline Grad-CAM">
+        <figcaption>Baseline Grad-CAM.</figcaption>
       </figure>
       <figure>
-        <img src="{rel(data.assets["stamp_removed"])}" alt="Stamp removed counterfactual">
-        <figcaption>Removing the stamp changes the shortcut evidence, not the part.</figcaption>
+        <img
+          src="{rel(data.assets["baseline_integrated_gradients"])}"
+          alt="Baseline integrated gradients"
+        >
+        <figcaption>Baseline integrated gradients.</figcaption>
       </figure>
       <figure>
-        <img src="{rel(data.assets["stamp_swapped_defect"])}" alt="Stamp swap counterfactual">
-        <figcaption>Swapping the stamp can flip the shortcut model's decision.</figcaption>
+        <img src="{rel(data.assets["intervention_grad_cam"])}" alt="Intervention Grad-CAM">
+        <figcaption>Intervention Grad-CAM.</figcaption>
+      </figure>
+      <figure>
+        <img
+          src="{rel(data.assets["intervention_integrated_gradients"])}"
+          alt="Intervention integrated gradients"
+        >
+        <figcaption>Intervention integrated gradients.</figcaption>
+      </figure>
+      <figure>
+        <img src="{rel(data.assets["stamp_removed"])}" alt="Stamp removed">
+        <figcaption>Stamp-muted perturbation.</figcaption>
+      </figure>
+      <figure>
+        <img src="{rel(data.assets["object_removed"])}" alt="Object removed">
+        <figcaption>Part-muted perturbation.</figcaption>
       </figure>
     </div>
   </section>
 
   <section>
-    <h2>Per-Sample Results</h2>
+    <h2>Shortcut Diagnostics on Challenge Cases</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Grad-CAM stamp mass</th>
+          <th>Grad-CAM part mass</th>
+          <th>IG stamp mass</th>
+          <th>IG part mass</th>
+          <th>Stamp-muted score delta</th>
+          <th>Part-muted score delta</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Baseline</td>
+          <td>{data.baseline_summary.grad_cam_stamp_mass:.3f}</td>
+          <td>{data.baseline_summary.grad_cam_object_mass:.3f}</td>
+          <td>{data.baseline_summary.integrated_stamp_mass:.3f}</td>
+          <td>{data.baseline_summary.integrated_object_mass:.3f}</td>
+          <td>{data.baseline_summary.stamp_mask_delta:.3f}</td>
+          <td>{data.baseline_summary.object_mask_delta:.3f}</td>
+        </tr>
+        <tr>
+          <td>Intervention</td>
+          <td>{data.intervention_summary.grad_cam_stamp_mass:.3f}</td>
+          <td>{data.intervention_summary.grad_cam_object_mass:.3f}</td>
+          <td>{data.intervention_summary.integrated_stamp_mass:.3f}</td>
+          <td>{data.intervention_summary.integrated_object_mass:.3f}</td>
+          <td>{data.intervention_summary.stamp_mask_delta:.3f}</td>
+          <td>{data.intervention_summary.object_mask_delta:.3f}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Test Predictions</h2>
     <table>
       <thead>
         <tr>
@@ -229,10 +470,10 @@ def _render_html(config: IndustrialShortcutReportConfig, data: ShortcutReportDat
           <th>Label</th>
           <th>Shape</th>
           <th>Stamp</th>
-          <th>Shortcut prediction</th>
-          <th>Shortcut score</th>
-          <th>Shape prediction</th>
-          <th>Shape score</th>
+          <th>Baseline prediction</th>
+          <th>Baseline probability</th>
+          <th>Intervention prediction</th>
+          <th>Intervention probability</th>
         </tr>
       </thead>
       <tbody>{rows}</tbody>
@@ -242,10 +483,11 @@ def _render_html(config: IndustrialShortcutReportConfig, data: ShortcutReportDat
   <section>
     <h2>Lesson</h2>
     <p>
-      The baseline succeeds for the wrong reason: the stamp is easier than the
-      part. The intervention is not a final model; it is a controlled
-      counter-test showing that removing the shortcut and using object evidence
-      changes the failure mode.
+      The baseline can still look respectable on clean cases while tracking the
+      fixture stamp too closely. The intervention is not magic; it simply removes
+      the shortcut from the easiest path through training. That change shows up in
+      both robustness numbers and explanation mass over the known stamp and part
+      regions.
     </p>
   </section>
 </main>
@@ -260,55 +502,102 @@ def _render_html(config: IndustrialShortcutReportConfig, data: ShortcutReportDat
 def _build_demo_card(output_path: Path, data: ShortcutReportData) -> DemoCard:
     return DemoCard(
         title="Demo 02 - Industrial Shortcut Trap",
-        task="Synthetic classification where a corner stamp is spuriously correlated with defects.",
-        model="Deterministic stamp shortcut classifier compared with a central-shape intervention.",
+        task="Synthetic industrial classification with a spuriously predictive fixture stamp.",
+        model=(
+            "Compact convolutional probes: correlated baseline versus "
+            "stamp-augmented intervention."
+        ),
         explanation_methods=(
-            "Region perturbation",
-            "Counterfactual stamp removal",
-            "Counterfactual stamp swap",
-            "Object-region intervention",
+            "Grad-CAM",
+            "Integrated Gradients",
+            "Stamp and part perturbation probes",
+            "Known-region attribution mass",
         ),
         key_lesson=(
-            "A classifier can appear accurate while using a nuisance stamp instead "
-            "of the industrial part."
+            "A learned industrial model can still take the stamp shortcut if "
+            "training allows it."
         ),
-        failure_mode="The baseline follows the corner stamp and fails swapped-stamp cases.",
-        intervention="Use the central part silhouette and counter-test with stamp swaps.",
+        failure_mode=(
+            "The baseline overweights the fixture stamp and degrades on swapped "
+            "or muted stamp cases."
+        ),
+        intervention=(
+            "Train on stamp-randomised and stamp-masked augmentations of the "
+            "same parts."
+        ),
         remaining_caveats=(
-            "Synthetic didactic classifier, not a neural benchmark.",
-            "No Grad-CAM or Integrated Gradients yet.",
-            "No real industrial classification dataset yet.",
+            "Still synthetic, not NEU or GC10-DET.",
+            "The learned models are still synthetic demo baselines, not "
+            "industrial benchmark systems.",
+            "Demo 08 still needs a real shift path on top of stronger learned models.",
         ),
         report_path=output_path,
         figure_paths=(
-            data.assets["shortcut_evidence"],
-            data.assets["shape_evidence"],
-            data.assets["stamp_removed"],
-            data.assets["stamp_swapped_defect"],
+            data.assets["baseline_grad_cam"],
+            data.assets["baseline_integrated_gradients"],
+            data.assets["intervention_grad_cam"],
+            data.assets["intervention_integrated_gradients"],
         ),
     )
 
 
 def build_industrial_shortcut_report(config: IndustrialShortcutReportConfig) -> Path:
-    """Build the synthetic industrial shortcut report."""
+    """Build the neural industrial shortcut report."""
 
     ensure_directory(config.output_dir)
     train_samples, test_samples = generate_industrial_shortcut_dataset(config.synthetic_dir)
-    del train_samples
-    shortcut_classifier = StampShortcutClassifier()
-    shape_classifier = ShapeClassifier()
-    shortcut_results = evaluate_classifier(shortcut_classifier, test_samples)
-    shape_results = evaluate_classifier(shape_classifier, test_samples)
+    if config.max_train_records is not None:
+        train_samples = train_samples[: config.max_train_records]
+
+    intervention_train_samples = _augment_training_samples(
+        train_samples,
+        output_dir=config.synthetic_dir / "intervention_train",
+    )
+    probe_config = IndustrialProbeConfig(
+        input_size=config.input_size,
+        batch_size=config.batch_size,
+        epochs=config.epochs,
+        learning_rate=config.learning_rate,
+        weight_decay=config.weight_decay,
+        weights_name=config.weights_name,
+        seed=config.seed,
+    )
+    baseline_model = FrozenResNetIndustrialProbe(config=probe_config)
+    baseline_model.fit(train_samples)
+    intervention_model = FrozenResNetIndustrialProbe(config=probe_config)
+    intervention_model.fit(intervention_train_samples)
+
+    baseline_predictions = baseline_model.predict(test_samples)
+    intervention_predictions = intervention_model.predict(test_samples)
+    challenge_samples = _challenge_samples(test_samples)
+    selected_sample = _select_sample(test_samples, baseline_predictions)
     assets = _write_assets(
-        output_dir=config.output_dir,
-        test_samples=test_samples,
-        shortcut_classifier=shortcut_classifier,
+        config=config,
+        selected_sample=selected_sample,
+        baseline_model=baseline_model,
+        intervention_model=intervention_model,
     )
     data = ShortcutReportData(
-        train_samples=[],
+        train_samples=train_samples,
+        intervention_train_samples=intervention_train_samples,
         test_samples=test_samples,
-        shortcut_results=shortcut_results,
-        shape_results=shape_results,
+        baseline_predictions=baseline_predictions,
+        intervention_predictions=intervention_predictions,
+        baseline_summary=_diagnostic_summary(
+            model=baseline_model,
+            samples=challenge_samples,
+            limit=config.diagnostic_sample_limit,
+            output_dir=config.output_dir,
+            prefix="baseline",
+        ),
+        intervention_summary=_diagnostic_summary(
+            model=intervention_model,
+            samples=challenge_samples,
+            limit=config.diagnostic_sample_limit,
+            output_dir=config.output_dir,
+            prefix="intervention",
+        ),
+        selected_sample=selected_sample,
         assets=assets,
     )
     output_path = _render_html(config, data)

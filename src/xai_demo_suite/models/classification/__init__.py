@@ -9,6 +9,13 @@ from xai_demo_suite.models.classification.habitat_shortcut import (
     predict_bird_label,
     worst_group_accuracy,
 )
+from xai_demo_suite.models.classification.industrial_neural import (
+    FrozenResNetIndustrialProbe,
+    IndustrialExplanation,
+    IndustrialPrediction,
+    IndustrialProbeConfig,
+    industrial_accuracy,
+)
 from xai_demo_suite.models.classification.shortcut import (
     ClassificationResult,
     HybridShortcutClassifier,
@@ -35,10 +42,14 @@ from xai_demo_suite.models.classification.waterbirds import (
 __all__ = [
     "BirdShapeClassifier",
     "ClassificationResult",
+    "FrozenResNetIndustrialProbe",
     "FrozenResNetWaterbirdsProbe",
     "GroupMetric",
     "HabitatShortcutClassifier",
     "HybridShortcutClassifier",
+    "IndustrialExplanation",
+    "IndustrialPrediction",
+    "IndustrialProbeConfig",
     "ShapeClassifier",
     "StampShortcutClassifier",
     "WaterbirdsExplanation",
@@ -50,6 +61,7 @@ __all__ = [
     "evaluate_bird_classifier",
     "evaluate_classifier",
     "group_accuracy",
+    "industrial_accuracy",
     "mask_region",
     "predict_bird_label",
     "predict_label",

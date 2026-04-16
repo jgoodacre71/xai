@@ -177,10 +177,20 @@ def build_parser() -> argparse.ArgumentParser:
 
     shortcut = subparsers.add_parser(
         "shortcut-industrial",
-        help="Generate the synthetic industrial shortcut report.",
+        help="Generate the industrial shortcut report.",
     )
     shortcut.add_argument("--output-dir", type=Path, default=shortcut_defaults.output_dir)
     shortcut.add_argument("--synthetic-dir", type=Path, default=shortcut_defaults.synthetic_dir)
+    shortcut.add_argument("--input-size", type=int, default=shortcut_defaults.input_size)
+    shortcut.add_argument("--batch-size", type=int, default=shortcut_defaults.batch_size)
+    shortcut.add_argument("--epochs", type=int, default=shortcut_defaults.epochs)
+    shortcut.add_argument("--max-train", type=int, default=shortcut_defaults.max_train_records)
+    shortcut.add_argument(
+        "--weights",
+        choices=("DEFAULT", "none"),
+        default="DEFAULT" if shortcut_defaults.weights_name is not None else "none",
+        help="Backbone weights for the industrial shortcut report.",
+    )
 
     drift = subparsers.add_parser(
         "explanation-drift",
@@ -335,6 +345,11 @@ def _handle_shortcut_industrial(args: argparse.Namespace) -> int:
     config = IndustrialShortcutReportConfig(
         output_dir=args.output_dir,
         synthetic_dir=args.synthetic_dir,
+        input_size=args.input_size,
+        batch_size=args.batch_size,
+        epochs=args.epochs,
+        max_train_records=args.max_train,
+        weights_name=None if args.weights == "none" else args.weights,
     )
     output_path = build_industrial_shortcut_report(config)
     print(f"report: {output_path}")

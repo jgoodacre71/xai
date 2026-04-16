@@ -24,7 +24,7 @@ durable todo list for work that should not live only in chat history.
   demo using worst-group metrics
 - [x] Add saliency and perturbation evidence for Demo 01, such as Grad-CAM and
   Integrated Gradients
-- [ ] Add a stronger real industrial shortcut dataset path for Demo 02 or a
+- [x] Add a stronger real industrial shortcut dataset path for Demo 02 or a
   neural industrial shortcut baseline
 - [ ] Add a component-aware or logic-aware comparator for Demo 07
 - [ ] Extend Demo 08 from synthetic shift to a real corruption or acquisition

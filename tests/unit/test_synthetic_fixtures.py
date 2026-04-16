@@ -49,13 +49,15 @@ def test_generate_slot_board_dataset_writes_nominal_and_limit_cases(tmp_path: Pa
 def test_generate_industrial_shortcut_dataset_writes_swapped_cases(tmp_path: Path) -> None:
     train_samples, test_samples = generate_industrial_shortcut_dataset(tmp_path)
 
-    assert len(train_samples) == 4
+    assert len(train_samples) >= 24
     assert {sample.stamp for sample in train_samples} == {"blue", "red"}
     by_id = {sample.sample_id: sample for sample in test_samples}
     assert by_id["test_normal_swapped_stamp"].label == "normal"
     assert by_id["test_normal_swapped_stamp"].stamp == "red"
     assert by_id["test_defect_swapped_stamp"].label == "defect"
     assert by_id["test_defect_swapped_stamp"].stamp == "blue"
+    assert "test_normal_shifted_fixture" in by_id
+    assert "test_defect_shifted_fixture" in by_id
 
     with Image.open(by_id["test_normal_swapped_stamp"].image_path) as image:
         assert image.size == (128, 128)

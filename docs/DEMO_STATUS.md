@@ -41,7 +41,7 @@ Verify generated reports, cards, selected figures, and the local index:
 | Demo | Status | Default output |
 | --- | --- | --- |
 | Demo 01 - Waterbirds Shortcut | Working real-data report when Waterbirds is prepared, with synthetic fallback | `outputs/waterbirds_shortcut/index.html` |
-| Demo 02 - Industrial Shortcut Trap | Working synthetic report | `outputs/shortcut_industrial/index.html` |
+| Demo 02 - Industrial Shortcut Trap | Working neural synthetic report | `outputs/shortcut_industrial/index.html` |
 | Demo 03 - PatchCore on MVTec AD bottle | Working local MVTec report with deterministic and explicit pretrained feature-map paths | `outputs/patchcore_bottle/index.html` |
 | Demo 04 - PatchCore Learns the Wrong Normal | Working synthetic report | `outputs/patchcore_wrong_normal/index.html` |
 | Demo 05 - PatchCore Limits Lab | Working synthetic report | `outputs/patchcore_limits/index.html` |
@@ -58,6 +58,11 @@ interventions, and caveats.
 - Demo 01 now has a real Waterbirds path with frozen ResNet-18 probes,
   worst-group metrics, Grad-CAM, Integrated Gradients, and perturbation checks.
   The synthetic proxy remains as the fallback when the manifest is absent.
+- Demo 02 now uses a learned convolutional shortcut baseline with
+  stamp-randomised intervention training, Grad-CAM, Integrated Gradients, and
+  known-region shortcut diagnostics. A real industrial classification dataset is
+  still future work, but the repo no longer depends on a deterministic toy rule
+  for this pillar.
 - Demo 07 currently uses one local MVTec LOCO AD category when prepared; broader
   category coverage and a component-aware comparator remain future work.
 - Demo 03 now has an explicit pretrained ResNet-18 feature-map path, but it is

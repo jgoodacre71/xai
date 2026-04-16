@@ -172,8 +172,9 @@ Generate the synthetic shortcut demo with:
 ```
 
 The report is written to `outputs/shortcut_industrial/index.html`. It shows a
-corner-stamp shortcut, counterfactual stamp swaps/removal, and a central-shape
-intervention.
+learned corner-stamp shortcut, a stamp-invariant intervention model,
+Grad-CAM and Integrated Gradients overlays, and known-region perturbation
+diagnostics over the stamp and the part.
 
 ## Explanation Drift Report
 
