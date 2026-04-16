@@ -27,7 +27,7 @@ durable todo list for work that should not live only in chat history.
 - [x] Add a stronger real industrial shortcut dataset path for Demo 02 or a
   neural industrial shortcut baseline
 - [ ] Add a component-aware or logic-aware comparator for Demo 07
-- [ ] Extend Demo 08 from synthetic shift to a real corruption or acquisition
+- [x] Extend Demo 08 from synthetic shift to a real corruption or acquisition
   shift path
 
 ## Strong additions from the spec

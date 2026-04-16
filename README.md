@@ -185,8 +185,10 @@ Generate the synthetic drift demo with:
 ```
 
 The report is written to `outputs/explanation_drift/index.html`. It separates
-prediction movement from evidence-region movement under deterministic
-perturbations.
+performance drift from explanation drift for the learned industrial shortcut
+models under blur, contrast, compression, lighting, and shadow shifts. When
+local MVTec bottle data is prepared, it also adds a PatchCore anomaly-drift
+section with image-level AUC, top-patch movement, and mask-coverage checks.
 
 ## Main files
 

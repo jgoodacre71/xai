@@ -47,7 +47,7 @@ Verify generated reports, cards, selected figures, and the local index:
 | Demo 05 - PatchCore Limits Lab | Working synthetic report | `outputs/patchcore_limits/index.html` |
 | Demo 06 - PatchCore Severity Mismatch | Working synthetic report | `outputs/patchcore_severity/index.html` |
 | Demo 07 - PatchCore Logical Anomaly Limits | Working local MVTec LOCO report when data is prepared, with synthetic fallback | `outputs/patchcore_logic/index.html` |
-| Demo 08 - Explanation Drift Under Shift | Working synthetic report | `outputs/explanation_drift/index.html` |
+| Demo 08 - Explanation Drift Under Shift | Working learned drift report with optional local MVTec anomaly section | `outputs/explanation_drift/index.html` |
 
 The local `outputs/index.html` is a static presentation index with one tile per
 demo, selected figures, report links, demo-card links, key lessons,
@@ -63,6 +63,9 @@ interventions, and caveats.
   known-region shortcut diagnostics. A real industrial classification dataset is
   still future work, but the repo no longer depends on a deterministic toy rule
   for this pillar.
+- Demo 08 now uses learned industrial classifier drift under blur, contrast,
+  compression, lighting, and shadow shifts, and adds an optional local PatchCore
+  anomaly-drift section when MVTec bottle data is prepared.
 - Demo 07 currently uses one local MVTec LOCO AD category when prepared; broader
   category coverage and a component-aware comparator remain future work.
 - Demo 03 now has an explicit pretrained ResNet-18 feature-map path, but it is

@@ -45,16 +45,21 @@ def test_explanation_drift_report_writes_html_assets_and_card(tmp_path: Path) ->
     config = ExplanationDriftReportConfig(
         output_dir=tmp_path / "outputs" / "explanation_drift",
         synthetic_dir=tmp_path / "outputs" / "explanation_drift" / "synthetic",
+        include_mvtec_if_available=False,
+        classifier_epochs=4,
+        classifier_batch_size=4,
     )
 
     output_path = build_explanation_drift_report(config)
 
     html = output_path.read_text(encoding="utf-8")
     assert "Explanation Drift Under Shift" in html
-    assert "Drift Summary" in html
-    assert "stamp_faded" in html
-    assert "Explanation shift" in html
-    assert (config.output_dir / "assets" / "baseline_evidence.png").exists()
-    assert (config.output_dir / "assets" / "stamp_faded_evidence.png").exists()
+    assert "Classifier Drift Summary" in html
+    assert "lighting_warm" in html
+    assert "Anomaly Detector Drift" in html
+    assert "disabled by configuration" in html
+    assert (config.output_dir / "assets" / "baseline_baseline_grad_cam.png").exists()
+    assert (config.output_dir / "assets" / "baseline_blur_grad_cam.png").exists()
+    assert (config.output_dir / "assets" / "intervention_shadow_band_grad_cam.png").exists()
     assert (config.output_dir / "demo_card.json").exists()
     assert (config.output_dir / "demo_card.html").exists()

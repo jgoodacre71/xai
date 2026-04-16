@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import html
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -17,9 +17,9 @@ from xai_demo_suite.models.classification import (
     FrozenResNetIndustrialProbe,
     IndustrialPrediction,
     IndustrialProbeConfig,
+    augment_stamp_invariant_samples,
     industrial_accuracy,
     mask_region,
-    swap_stamp,
 )
 from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index_for_output_root
 from xai_demo_suite.utils.io import ensure_directory
@@ -118,50 +118,6 @@ def _box_mass(values: np.ndarray, box: BoundingBox) -> float:
     if total <= 0.0:
         return 0.0
     return float(values[y : y + h, x : x + w].sum()) / total
-
-
-def _augment_training_samples(
-    train_samples: list[IndustrialShortcutSample],
-    *,
-    output_dir: Path,
-) -> list[IndustrialShortcutSample]:
-    ensure_directory(output_dir)
-    augmented: list[IndustrialShortcutSample] = []
-    for sample in train_samples:
-        none_path = _asset_path(output_dir, f"{sample.sample_id}_none.png")
-        swap_path = _asset_path(
-            output_dir,
-            f"{sample.sample_id}_{'red' if sample.stamp != 'red' else 'blue'}.png",
-        )
-        masked_path = _asset_path(output_dir, f"{sample.sample_id}_masked.png")
-        swap_stamp(sample.image_path, "none", none_path)
-        swap_stamp(sample.image_path, "red" if sample.stamp != "red" else "blue", swap_path)
-        mask_region(sample.image_path, sample.stamp_region, masked_path)
-        augmented.append(
-            replace(
-                sample,
-                sample_id=f"{sample.sample_id}_aug_none",
-                image_path=none_path,
-                stamp="none",
-            )
-        )
-        augmented.append(
-            replace(
-                sample,
-                sample_id=f"{sample.sample_id}_aug_swap",
-                image_path=swap_path,
-                stamp="red" if sample.stamp != "red" else "blue",
-            )
-        )
-        augmented.append(
-            replace(
-                sample,
-                sample_id=f"{sample.sample_id}_aug_masked",
-                image_path=masked_path,
-                stamp="none",
-            )
-        )
-    return augmented
 
 
 def _diagnostic_summary(
@@ -549,7 +505,7 @@ def build_industrial_shortcut_report(config: IndustrialShortcutReportConfig) -> 
     if config.max_train_records is not None:
         train_samples = train_samples[: config.max_train_records]
 
-    intervention_train_samples = _augment_training_samples(
+    intervention_train_samples = augment_stamp_invariant_samples(
         train_samples,
         output_dir=config.synthetic_dir / "intervention_train",
     )

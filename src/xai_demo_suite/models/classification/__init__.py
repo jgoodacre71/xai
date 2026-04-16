@@ -14,6 +14,7 @@ from xai_demo_suite.models.classification.industrial_neural import (
     IndustrialExplanation,
     IndustrialPrediction,
     IndustrialProbeConfig,
+    augment_stamp_invariant_samples,
     industrial_accuracy,
 )
 from xai_demo_suite.models.classification.shortcut import (
@@ -58,6 +59,7 @@ __all__ = [
     "WaterbirdsProbeConfig",
     "accuracy",
     "as_classification_results",
+    "augment_stamp_invariant_samples",
     "evaluate_bird_classifier",
     "evaluate_classifier",
     "group_accuracy",

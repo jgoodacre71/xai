@@ -1,8 +1,8 @@
-"""Frozen-backbone industrial shortcut probes and explanation helpers."""
+"""Industrial shortcut probes, augmentation helpers, and explanations."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -10,7 +10,12 @@ import numpy as np
 from PIL import Image
 
 from xai_demo_suite.data.synthetic import IndustrialShortcutSample
-from xai_demo_suite.models.classification.shortcut import ClassificationResult
+from xai_demo_suite.models.classification.shortcut import (
+    ClassificationResult,
+    mask_region,
+    swap_stamp,
+)
+from xai_demo_suite.utils.io import ensure_directory
 from xai_demo_suite.utils.seeds import seed_everything
 
 
@@ -300,6 +305,51 @@ def industrial_accuracy(predictions: list[IndustrialPrediction]) -> float:
     if not predictions:
         return 0.0
     return sum(1 for prediction in predictions if prediction.correct) / len(predictions)
+
+
+def augment_stamp_invariant_samples(
+    samples: list[IndustrialShortcutSample],
+    *,
+    output_dir: Path,
+) -> list[IndustrialShortcutSample]:
+    """Return stamp-randomised and stamp-masked variants of training samples."""
+
+    ensure_directory(output_dir)
+    augmented: list[IndustrialShortcutSample] = []
+    for sample in samples:
+        none_path = output_dir / f"{sample.sample_id}_none.png"
+        swap_path = output_dir / (
+            f"{sample.sample_id}_{'red' if sample.stamp != 'red' else 'blue'}.png"
+        )
+        masked_path = output_dir / f"{sample.sample_id}_masked.png"
+        swap_stamp(sample.image_path, "none", none_path)
+        swap_stamp(sample.image_path, "red" if sample.stamp != "red" else "blue", swap_path)
+        mask_region(sample.image_path, sample.stamp_region, masked_path)
+        augmented.append(
+            replace(
+                sample,
+                sample_id=f"{sample.sample_id}_aug_none",
+                image_path=none_path,
+                stamp="none",
+            )
+        )
+        augmented.append(
+            replace(
+                sample,
+                sample_id=f"{sample.sample_id}_aug_swap",
+                image_path=swap_path,
+                stamp="red" if sample.stamp != "red" else "blue",
+            )
+        )
+        augmented.append(
+            replace(
+                sample,
+                sample_id=f"{sample.sample_id}_aug_masked",
+                image_path=masked_path,
+                stamp="none",
+            )
+        )
+    return augmented
 
 
 def as_classification_results(
