@@ -208,6 +208,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=drift_defaults.mvtec_ad_2_processed_root,
     )
+    drift.add_argument(
+        "--visa-processed-root",
+        type=Path,
+        default=drift_defaults.visa_processed_root,
+    )
 
     suite = subparsers.add_parser(
         "suite",
@@ -237,6 +242,7 @@ def build_parser() -> argparse.ArgumentParser:
     suite.add_argument("--mvtec-coreset-size", type=int, default=None)
     suite.add_argument("--mvtec-input-size", type=int, default=None)
     suite.add_argument("--mvtec-benchmark-limit", type=int, default=None)
+    suite.add_argument("--visa-processed-root", type=Path, default=None)
     suite.add_argument("--no-cache", action="store_true")
 
     verify = subparsers.add_parser(
@@ -372,6 +378,7 @@ def _handle_explanation_drift(args: argparse.Namespace) -> int:
         synthetic_dir=args.synthetic_dir,
         mvtec_manifest_path=args.mvtec_manifest_path,
         mvtec_ad_2_processed_root=args.mvtec_ad2_processed_root,
+        visa_processed_root=args.visa_processed_root,
     )
     output_path = build_explanation_drift_report(config)
     print(f"report: {output_path}")
@@ -390,6 +397,7 @@ def _handle_suite(args: argparse.Namespace) -> int:
         mvtec_coreset_size=args.mvtec_coreset_size,
         mvtec_input_size=args.mvtec_input_size,
         mvtec_benchmark_limit=args.mvtec_benchmark_limit,
+        visa_processed_root=args.visa_processed_root,
     )
     failed = False
     for result in results:

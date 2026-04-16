@@ -5,6 +5,14 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from xai_demo_suite.data.downloaders.metashift import (
+    MetaShiftDataset,
+    build_metashift_manifest,
+    get_metashift_dataset,
+    iter_metashift_datasets,
+    metashift_source_root,
+    plan_metashift_fetch,
+)
 from xai_demo_suite.data.downloaders.mvtec_ad import (
     MVTecADCategory,
     build_mvtec_ad_manifest,
@@ -70,10 +78,11 @@ def build_parser() -> argparse.ArgumentParser:
     fetch_parser = subparsers.add_parser("fetch", help="Fetch a raw dataset archive.")
     fetch_parser.add_argument(
         "dataset",
-        choices=["mvtec_ad", "mvtec_ad_2", "mvtec_loco_ad", "visa", "waterbirds"],
+        choices=["metashift", "mvtec_ad", "mvtec_ad_2", "mvtec_loco_ad", "visa", "waterbirds"],
     )
     fetch_parser.add_argument("--category", required=True, help="Dataset category name.")
     fetch_parser.add_argument("--raw-root", type=Path, default=Path("data/raw"))
+    fetch_parser.add_argument("--external-root", type=Path, default=Path("data/external"))
     fetch_parser.add_argument("--overwrite", action="store_true")
     fetch_parser.add_argument("--dry-run", action="store_true")
     fetch_parser.add_argument(
@@ -87,10 +96,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     prepare_parser.add_argument(
         "dataset",
-        choices=["mvtec_ad", "mvtec_ad_2", "mvtec_loco_ad", "visa", "waterbirds"],
+        choices=["metashift", "mvtec_ad", "mvtec_ad_2", "mvtec_loco_ad", "visa", "waterbirds"],
     )
     prepare_parser.add_argument("--category", required=True, help="Dataset category name.")
     prepare_parser.add_argument("--raw-root", type=Path, default=Path("data/raw"))
+    prepare_parser.add_argument("--external-root", type=Path, default=Path("data/external"))
     prepare_parser.add_argument("--interim-root", type=Path, default=Path("data/interim"))
     prepare_parser.add_argument("--processed-root", type=Path, default=Path("data/processed"))
     prepare_parser.add_argument("--overwrite", action="store_true")
@@ -106,6 +116,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--split-csv-path",
         type=Path,
         help="Optional explicit VisA one-class split CSV path.",
+    )
+    prepare_parser.add_argument(
+        "--source-root",
+        type=Path,
+        help="Optional explicit source root for manually prepared external datasets.",
     )
 
     return parser
@@ -125,6 +140,10 @@ def _print_waterbirds_category(category: WaterbirdsCategory) -> None:
 
 def _print_mvtec_ad_2_dataset(dataset: MVTecAD2Dataset) -> None:
     print(f"{dataset.name:12} {dataset.scenario_count:>2} scenarios  discovered at prepare time")
+
+
+def _print_metashift_dataset(dataset: MetaShiftDataset) -> None:
+    print(f"{dataset.name:40} {dataset.expected_root_name}")
 
 
 def _print_visa_dataset(dataset: VisADataset) -> None:
@@ -147,6 +166,15 @@ def _handle_list() -> int:
     print("  datasets:")
     for ad2_dataset in iter_mvtec_ad_2_datasets():
         _print_mvtec_ad_2_dataset(ad2_dataset)
+    print()
+    print("MetaShift")
+    print("  source: https://github.com/Weixin-Liang/MetaShift")
+    print("  docs: https://metashift.readthedocs.io/en/latest/sub_pages/applications.html")
+    print("  downloads: generated locally from upstream scripts and Visual Genome / GQA assets")
+    print("  licence: MIT repository; verify upstream Visual Genome / GQA terms before use")
+    print("  datasets:")
+    for metashift_dataset in iter_metashift_datasets():
+        _print_metashift_dataset(metashift_dataset)
     print()
     print("VisA")
     print("  source: https://github.com/amazon-science/spot-diff")
@@ -178,6 +206,17 @@ def _handle_list() -> int:
 
 
 def _handle_fetch(args: argparse.Namespace) -> int:
+    if args.dataset == "metashift":
+        metashift_dataset = get_metashift_dataset(args.category)
+        plan = plan_metashift_fetch(
+            dataset=metashift_dataset,
+            external_root=args.external_root,
+        )
+        print("manual: MetaShift does not provide a single raw archive through this CLI")
+        print(f"target root: {plan.target_root}")
+        print(f"reason: {plan.reason}")
+        return 0
+
     if args.dataset == "visa":
         visa_dataset = get_visa_dataset(args.category)
         visa_plan = plan_visa_fetch(
@@ -307,6 +346,25 @@ def _handle_fetch(args: argparse.Namespace) -> int:
 
 
 def _handle_prepare(args: argparse.Namespace) -> int:
+    if args.dataset == "metashift":
+        metashift_dataset = get_metashift_dataset(args.category)
+        source_root = args.source_root or metashift_source_root(
+            args.external_root,
+            metashift_dataset,
+        )
+        manifest_path = (
+            args.processed_root / "metashift" / metashift_dataset.name / "manifest.jsonl"
+        )
+        record_count = build_metashift_manifest(
+            dataset=metashift_dataset,
+            source_root=source_root,
+            manifest_path=manifest_path,
+            project_root=Path.cwd(),
+        )
+        print(f"source: {source_root}")
+        print(f"manifest: {manifest_path} ({record_count} records)")
+        return 0
+
     if args.dataset == "visa":
         visa_dataset = get_visa_dataset(args.category)
         extracted_root = extract_visa_dataset(

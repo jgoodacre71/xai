@@ -105,6 +105,19 @@ The VisA adapter fetches the published archive plus the upstream one-class split
 CSV, then writes one canonical manifest per prepared category under
 `data/processed/visa/`.
 
+MetaShift now has a local adapter for the published cat-vs-dog indoor/outdoor
+subpopulation-shift split:
+
+```bash
+./.venv/bin/xai-demo-data fetch metashift --category subpopulation_shift_cat_dog_indoor_outdoor --dry-run
+./.venv/bin/xai-demo-data prepare metashift --category subpopulation_shift_cat_dog_indoor_outdoor
+```
+
+This path is intentionally manual about upstream dependencies: generate the
+split with the published MetaShift scripts and base assets, place it under
+`data/external/metashift/MetaShift-subpopulation-shift/`, then build the local
+manifest.
+
 ## Optional ML Dependencies
 
 The base package and tests do not require Torch. Install the optional ML stack
@@ -227,7 +240,9 @@ models under blur, contrast, compression, lighting, and shadow shifts. When
 local MVTec bottle data is prepared, it adds a PatchCore anomaly-drift section
 with image-level AUC, top-patch movement, and mask-coverage checks. When local
 MVTec AD 2 scenario manifests are prepared, the same report now adds second-wave
-anomaly-drift sections for those scenarios as well.
+anomaly-drift sections for those scenarios as well. When local VisA manifests
+are prepared, the same report adds cross-dataset anomaly-drift sections there
+too.
 
 ## Main files
 

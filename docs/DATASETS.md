@@ -194,8 +194,51 @@ Storage policy:
 Notes:
 - the adapter follows the published one-class split and writes one manifest per
   prepared category;
-- no generated report consumes VisA yet, but the dataset is now available for
-  second-wave anomaly and drift extensions.
+- prepared VisA manifests now feed optional cross-dataset anomaly-drift
+  sections in Demo 08.
+
+### MetaShift
+Use for:
+- natural-context shortcut learning beyond Waterbirds
+- subpopulation shift diagnostics for object/context leakage
+- future Pillar A natural-scene extension
+
+Source:
+- repository: <https://github.com/Weixin-Liang/MetaShift>
+- application docs:
+  <https://metashift.readthedocs.io/en/latest/sub_pages/applications.html>
+
+Licence / usage:
+- the repository is published under MIT;
+- generated image splits depend on upstream Visual Genome / GQA assets and
+  should be treated conservatively as research-only until those upstream terms
+  are checked by the user.
+
+Local workflow:
+
+```bash
+./.venv/bin/python -m xai_demo_suite.cli.data list
+./.venv/bin/python -m xai_demo_suite.cli.data fetch metashift --category subpopulation_shift_cat_dog_indoor_outdoor --dry-run
+./.venv/bin/python -m xai_demo_suite.cli.data prepare metashift --category subpopulation_shift_cat_dog_indoor_outdoor
+```
+
+Storage policy:
+- MetaShift is not fetched as a single archive in this repo;
+- generate the published `MetaShift-subpopulation-shift` split with the
+  upstream scripts and place it under
+  `data/external/metashift/MetaShift-subpopulation-shift/`, or pass
+  `--source-root` to `prepare`;
+- manifests are written to
+  `data/processed/metashift/subpopulation_shift_cat_dog_indoor_outdoor/manifest.jsonl`;
+- generated image splits and processed manifests are local artefacts and are
+  excluded from git.
+
+Notes:
+- the current adapter targets the published cat-vs-dog indoor/outdoor
+  subpopulation-shift split because it is the most directly relevant natural
+  shortcut extension for Demo 01;
+- no generated report consumes MetaShift yet, but the manifest path now exists
+  for a future natural-context shortcut report.
 
 ## Synthetic generators to build in-repo
 

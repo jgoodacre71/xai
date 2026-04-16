@@ -79,6 +79,14 @@ class ExplanationDriftReportConfig:
     mvtec_ad_2_patch_size: int = 128
     mvtec_ad_2_stride: int = 128
     mvtec_ad_2_top_k: int = 3
+    visa_processed_root: Path = Path("data/processed/visa")
+    visa_cache_root: Path = Path("data/artefacts/patchcore/visa")
+    visa_max_categories: int = 2
+    visa_max_train: int = 10
+    visa_benchmark_limit: int = 16
+    visa_patch_size: int = 128
+    visa_stride: int = 128
+    visa_top_k: int = 3
     include_mvtec_if_available: bool = True
 
 
@@ -184,6 +192,15 @@ def _mvtec_ad_2_manifest_paths(config: ExplanationDriftReportConfig) -> list[Pat
         config.mvtec_ad_2_processed_root.glob("*/manifest.jsonl"),
         key=_manifest_stem_key,
     )[: config.mvtec_ad_2_max_scenarios]
+
+
+def _visa_manifest_paths(config: ExplanationDriftReportConfig) -> list[Path]:
+    if not config.visa_processed_root.exists():
+        return []
+    return sorted(
+        config.visa_processed_root.glob("*/manifest.jsonl"),
+        key=_manifest_stem_key,
+    )[: config.visa_max_categories]
 
 
 def _prediction_map(
@@ -755,6 +772,149 @@ def _build_anomaly_report(
             )
         )
 
+    visa_manifest_paths = _visa_manifest_paths(config)
+    if not visa_manifest_paths:
+        notes.append("Prepare local VisA manifests to enable cross-dataset anomaly-drift sections.")
+    for manifest_path in visa_manifest_paths:
+        records = load_image_manifest(manifest_path)
+        test_records = filter_manifest_records(records, split="test")
+        anomalous_records = [
+            record
+            for record in test_records
+            if record.is_anomalous and record.mask_path is not None
+        ]
+        if not anomalous_records:
+            continue
+        category_name = manifest_path.parent.name
+        category_prefix = f"visa_{category_name}"
+        memory_bank = _build_or_load_mvtec_bank(
+            manifest_path=manifest_path,
+            cache_path=_cache_path_for_manifest(
+                config.visa_cache_root,
+                manifest_path,
+                extractor.feature_name,
+            ),
+            extractor=extractor,
+            max_train=config.visa_max_train,
+            patch_size=config.visa_patch_size,
+            stride=config.visa_stride,
+        )
+        example_record = anomalous_records[0]
+        if example_record.mask_path is None:
+            continue
+        benchmark_records = test_records[: config.visa_benchmark_limit]
+        baseline_top = _top_patch_score(
+            example_record,
+            patch_size=config.visa_patch_size,
+            stride=config.visa_stride,
+            top_k=config.visa_top_k,
+            memory_bank=memory_bank,
+            extractor=extractor,
+        )
+        baseline_scores = score_image_with_extractor(
+            sample_id=example_record.sample_id,
+            image_path=example_record.image_path,
+            memory_bank=memory_bank,
+            extractor=extractor,
+            patch_size=config.visa_patch_size,
+            stride=config.visa_stride,
+            top_k=config.visa_top_k,
+        )
+        baseline_overlay_path = save_score_overlay(
+            image_path=example_record.image_path,
+            scores=baseline_scores,
+            output_path=_asset_path(
+                config.output_dir,
+                f"{category_prefix}_baseline_score_overlay.png",
+            ),
+        )
+        baseline_overlap = measure_patch_mask_overlap(
+            mask_path=example_record.mask_path,
+            patch_box=baseline_top.query_box,
+            image_path=example_record.image_path,
+        )
+        baseline_mask_overlay_path = save_mask_overlay(
+            image_path=example_record.image_path,
+            mask_path=example_record.mask_path,
+            output_path=_asset_path(
+                config.output_dir,
+                f"{category_prefix}_baseline_mask_overlay.png",
+            ),
+        )
+        perturbations = []
+        for perturbation_name in _anomaly_perturbations():
+            perturbed_image_path = perturb_image(
+                example_record.image_path,
+                _asset_path(config.output_dir, f"{category_prefix}_{perturbation_name}.png"),
+                perturbation_name,
+            )
+            perturbed_scores = score_image_with_extractor(
+                sample_id=example_record.sample_id,
+                image_path=perturbed_image_path,
+                memory_bank=memory_bank,
+                extractor=extractor,
+                patch_size=config.visa_patch_size,
+                stride=config.visa_stride,
+                top_k=config.visa_top_k,
+            )
+            top_score = perturbed_scores[0]
+            drift_measurement = DriftMeasurement(
+                perturbation_name=perturbation_name,
+                baseline_score=baseline_top.distance,
+                perturbed_score=top_score.distance,
+                baseline_prediction="anomalous",
+                perturbed_prediction="anomalous",
+                baseline_region=baseline_top.query_box,
+                perturbed_region=top_score.query_box,
+            )
+            overlap = measure_patch_mask_overlap(
+                mask_path=example_record.mask_path,
+                patch_box=top_score.query_box,
+                image_path=perturbed_image_path,
+            )
+            perturbations.append(
+                AnomalyPerturbationSummary(
+                    perturbation_name=perturbation_name,
+                    image_auc=_benchmark_auc(
+                        records=benchmark_records,
+                        memory_bank=memory_bank,
+                        extractor=extractor,
+                        patch_size=config.visa_patch_size,
+                        stride=config.visa_stride,
+                        top_k=config.visa_top_k,
+                        perturbation_name=perturbation_name,
+                        output_dir=config.output_dir / category_prefix / "benchmark",
+                    ),
+                    top_score_shift=drift_measurement.score_shift,
+                    top_patch_shift=drift_measurement.explanation_shift,
+                    mask_covered_fraction=overlap.mask_covered_fraction,
+                    overlay_path=save_score_overlay(
+                        image_path=perturbed_image_path,
+                        scores=perturbed_scores,
+                        output_path=_asset_path(
+                            config.output_dir,
+                            f"{category_prefix}_{perturbation_name}_score_overlay.png",
+                        ),
+                    ),
+                )
+            )
+        reports.append(
+            AnomalyDriftReport(
+                section_title=f"Anomaly Detector Drift - VisA {category_name}",
+                section_description=(
+                    "Cross-dataset comparison on prepared VisA one-class data using the same "
+                    "local PatchCore-style detector and perturbation probes."
+                ),
+                dataset_label=f"VisA {category_name}",
+                baseline_overlay_path=baseline_overlay_path,
+                baseline_mask_overlay_path=baseline_mask_overlay_path,
+                example_sample_id=example_record.sample_id,
+                baseline_top_score=baseline_top.distance,
+                baseline_mask_overlap=baseline_overlap,
+                perturbations=tuple(perturbations),
+            )
+        )
+
     return tuple(reports), tuple(notes)
 
 
@@ -972,7 +1132,8 @@ def _render_html(
   <p>
     This upgraded Demo 08 separates prediction drift from explanation drift for
     a learned shortcut-sensitive classifier, and adds an optional local
-    PatchCore anomaly-drift layer when local MVTec AD and MVTec AD 2 data are prepared.
+    PatchCore anomaly-drift layers when local MVTec AD, MVTec AD 2, or VisA
+    data are prepared.
   </p>
 
   <section>
@@ -1049,7 +1210,7 @@ def _build_demo_card(output_path: Path, data: ExplanationDriftReportData) -> Dem
         ),
         model=(
             "Learned industrial classifier drift path, plus optional local "
-            "PatchCore anomaly-drift diagnostics on MVTec AD bottle and MVTec AD 2."
+            "PatchCore anomaly-drift diagnostics on MVTec AD bottle, MVTec AD 2, and VisA."
         ),
         explanation_methods=(
             "Grad-CAM",

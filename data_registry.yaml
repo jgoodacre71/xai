@@ -102,6 +102,26 @@ datasets:
       processed_manifest: "data/processed/mvtec_ad_2/<scenario>/manifest.jsonl"
     categories:
       - "<scenario discovered at prepare time>"
+  metashift:
+    name: "MetaShift"
+    status: "supported"
+    purpose:
+      - "natural-context shortcut learning beyond Waterbirds"
+      - "subpopulation shift diagnostics for object/context leakage"
+      - "future Pillar A natural-scene extension"
+    raw_data_committed: false
+    licence: "MIT repository plus upstream Visual Genome / GQA terms."
+    restrictions:
+      - "Treat generated image splits as research-only until upstream Visual Genome / GQA terms have been checked."
+      - "Generated image splits and processed manifests must not be committed."
+    source_url: "https://github.com/Weixin-Liang/MetaShift"
+    download_url: "https://metashift.readthedocs.io/en/latest/sub_pages/applications.html"
+    citation: "Liang and Zou, MetaShift: A Dataset of Datasets for Evaluating Context Sensitivity and Distribution Shifts in Images."
+    expected_layout:
+      external_generated_split: "data/external/metashift/MetaShift-subpopulation-shift/"
+      processed_manifest: "data/processed/metashift/subpopulation_shift_cat_dog_indoor_outdoor/manifest.jsonl"
+    categories:
+      - "subpopulation_shift_cat_dog_indoor_outdoor"
   visa:
     name: "VisA"
     status: "supported"

@@ -67,15 +67,19 @@ interventions, and caveats.
   compression, lighting, and shadow shifts, and adds an optional local PatchCore
   anomaly-drift section when MVTec bottle data is prepared. When MVTec AD 2
   scenario manifests are prepared, the same report now adds second-wave anomaly
-  sections for those scenarios.
+  sections for those scenarios. When VisA manifests are prepared, it adds
+  cross-dataset anomaly-drift sections there too.
 - Demo 07 now adds a category-specific front-label template comparator on local
   MVTec LOCO AD `juice_bottle`, so the report can contrast PatchCore patch
   novelty with a narrow packaging-rule check. Broader category coverage remains
   future work.
 - MVTec AD 2 now has local dataset support and optional Demo 08 anomaly-drift
   sections when prepared.
-- VisA now has local dataset support and canonical manifest building, but no
-  generated report consumes it yet.
+- VisA now has local dataset support and optional Demo 08 anomaly-drift
+  sections when prepared.
+- MetaShift now has local dataset support for the published cat-vs-dog
+  indoor/outdoor subpopulation-shift split, but no generated report consumes it
+  yet.
 - Demo 03 now has an explicit pretrained ResNet-18 feature-map path, but it is
   still not an official PatchCore benchmark reproduction. Its benchmark panel
   reports local image-level max-patch AUC and top-patch mask diagnostics.

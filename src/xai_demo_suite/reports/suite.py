@@ -84,6 +84,7 @@ def build_demo_suite(
     mvtec_coreset_size: int | None = None,
     mvtec_input_size: int | None = None,
     mvtec_benchmark_limit: int | None = None,
+    visa_processed_root: Path | None = None,
 ) -> tuple[SuiteBuildResult, ...]:
     """Build the current local demo suite.
 
@@ -156,6 +157,11 @@ def build_demo_suite(
                 ExplanationDriftReportConfig(
                     output_dir=output_root / "explanation_drift",
                     synthetic_dir=output_root / "explanation_drift" / "synthetic",
+                    visa_processed_root=(
+                        visa_processed_root
+                        if visa_processed_root is not None
+                        else ExplanationDriftReportConfig().visa_processed_root
+                    ),
                 )
             ),
         ),

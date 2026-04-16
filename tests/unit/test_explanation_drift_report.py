@@ -195,9 +195,64 @@ def _write_mvtec_ad_2_manifest(tmp_path: Path) -> Path:
     return manifest_path
 
 
-def test_explanation_drift_report_uses_mvtec_ad_2_when_prepared(tmp_path: Path) -> None:
+def _write_visa_manifest(tmp_path: Path) -> Path:
+    rows: list[dict[str, object]] = []
+    root = tmp_path / "data" / "interim" / "visa" / "1cls" / "candle"
+    for index in range(2):
+        image_path = root / "train" / "good" / f"{index:03d}.png"
+        _write_mvtec_image(image_path)
+        rows.append(
+            {
+                "dataset": "visa",
+                "category": "candle",
+                "split": "train",
+                "defect_type": "good",
+                "is_anomalous": False,
+                "image_path": image_path.as_posix(),
+                "mask_path": None,
+            }
+        )
+    good_test = root / "test" / "good" / "000.png"
+    anomaly_test = root / "test" / "bad" / "001.png"
+    anomaly_mask = root / "ground_truth" / "bad" / "001_mask.png"
+    _write_mvtec_image(good_test)
+    _write_mvtec_image(anomaly_test, anomaly=True)
+    _write_mask(anomaly_mask, (60, 60, 92, 92))
+    rows.extend(
+        [
+            {
+                "dataset": "visa",
+                "category": "candle",
+                "split": "test",
+                "defect_type": "good",
+                "is_anomalous": False,
+                "image_path": good_test.as_posix(),
+                "mask_path": None,
+            },
+            {
+                "dataset": "visa",
+                "category": "candle",
+                "split": "test",
+                "defect_type": "bad",
+                "is_anomalous": True,
+                "image_path": anomaly_test.as_posix(),
+                "mask_path": anomaly_mask.as_posix(),
+            },
+        ]
+    )
+    manifest_path = tmp_path / "data" / "processed" / "visa" / "candle" / "manifest.jsonl"
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+    return manifest_path
+
+
+def test_explanation_drift_report_uses_second_wave_manifests_when_prepared(tmp_path: Path) -> None:
     mvtec_manifest = _write_mvtec_manifest(tmp_path)
     _write_mvtec_ad_2_manifest(tmp_path)
+    _write_visa_manifest(tmp_path)
     config = ExplanationDriftReportConfig(
         output_dir=tmp_path / "outputs" / "explanation_drift",
         synthetic_dir=tmp_path / "outputs" / "explanation_drift" / "synthetic",
@@ -205,6 +260,8 @@ def test_explanation_drift_report_uses_mvtec_ad_2_when_prepared(tmp_path: Path) 
         mvtec_cache_path=tmp_path / "artefacts" / "mvtec_bottle_bank.npz",
         mvtec_ad_2_processed_root=tmp_path / "data" / "processed" / "mvtec_ad_2",
         mvtec_ad_2_cache_root=tmp_path / "artefacts" / "mvtec_ad_2",
+        visa_processed_root=tmp_path / "data" / "processed" / "visa",
+        visa_cache_root=tmp_path / "artefacts" / "visa",
         mvtec_max_train=2,
         mvtec_benchmark_limit=2,
         mvtec_patch_size=32,
@@ -213,6 +270,10 @@ def test_explanation_drift_report_uses_mvtec_ad_2_when_prepared(tmp_path: Path) 
         mvtec_ad_2_benchmark_limit=2,
         mvtec_ad_2_patch_size=32,
         mvtec_ad_2_stride=32,
+        visa_max_train=2,
+        visa_benchmark_limit=2,
+        visa_patch_size=32,
+        visa_stride=32,
         classifier_epochs=4,
         classifier_batch_size=4,
     )
@@ -222,7 +283,10 @@ def test_explanation_drift_report_uses_mvtec_ad_2_when_prepared(tmp_path: Path) 
     html = output_path.read_text(encoding="utf-8")
     assert "Anomaly Detector Drift - MVTec AD Bottle" in html
     assert "Anomaly Detector Drift - MVTec AD 2 cable_gland" in html
+    assert "Anomaly Detector Drift - VisA candle" in html
     assert "Second-wave scenario comparison on prepared MVTec AD 2 public-test data" in html
+    assert "Cross-dataset comparison on prepared VisA one-class data" in html
     assert (
         config.output_dir / "assets" / "mvtec_ad2_cable_gland_baseline_score_overlay.png"
     ).exists()
+    assert (config.output_dir / "assets" / "visa_candle_baseline_score_overlay.png").exists()

@@ -95,4 +95,5 @@ Current artefacts:
 The current implementation uses learned industrial shortcut perturbations for
 the classifier path, an optional MVTec AD bottle anomaly-drift section, and now
 optional second-wave MVTec AD 2 scenario sections when those local manifests
-are prepared.
+are prepared. Prepared VisA manifests add cross-dataset anomaly-drift sections
+to the same report.
