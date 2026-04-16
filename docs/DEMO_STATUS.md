@@ -66,8 +66,10 @@ interventions, and caveats.
 - Demo 08 now uses learned industrial classifier drift under blur, contrast,
   compression, lighting, and shadow shifts, and adds an optional local PatchCore
   anomaly-drift section when MVTec bottle data is prepared.
-- Demo 07 currently uses one local MVTec LOCO AD category when prepared; broader
-  category coverage and a component-aware comparator remain future work.
+- Demo 07 now adds a category-specific front-label template comparator on local
+  MVTec LOCO AD `juice_bottle`, so the report can contrast PatchCore patch
+  novelty with a narrow packaging-rule check. Broader category coverage remains
+  future work.
 - Demo 03 now has an explicit pretrained ResNet-18 feature-map path, but it is
   still not an official PatchCore benchmark reproduction. Its benchmark panel
   reports local image-level max-patch AUC and top-patch mask diagnostics.

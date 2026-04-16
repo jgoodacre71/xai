@@ -80,8 +80,10 @@ Current artefacts:
 - demo card: `outputs/patchcore_logic/demo_card.html`
 
 The current local implementation uses MVTec LOCO AD `juice_bottle` structural
-and logical anomaly examples when the prepared manifest exists. Fresh clones
-fall back to the synthetic slot-board proxy until LOCO data is fetched.
+and logical anomaly examples when the prepared manifest exists, and now adds a
+category-specific front-label template comparator so the report can contrast
+PatchCore patch novelty with a narrow packaging-rule check. Fresh clones fall
+back to the synthetic slot-board proxy until LOCO data is fetched.
 
 ## Demo 08 — Explanation drift under shift
 Prediction drift and explanation drift compared under nuisance changes.

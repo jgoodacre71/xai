@@ -26,7 +26,7 @@ durable todo list for work that should not live only in chat history.
   Integrated Gradients
 - [x] Add a stronger real industrial shortcut dataset path for Demo 02 or a
   neural industrial shortcut baseline
-- [ ] Add a component-aware or logic-aware comparator for Demo 07
+- [x] Add a component-aware or logic-aware comparator for Demo 07
 - [x] Extend Demo 08 from synthetic shift to a real corruption or acquisition
   shift path
 

@@ -151,6 +151,18 @@ The report is written to `outputs/patchcore_limits/index.html`. It shows slot
 board examples where PatchCore-style novelty is useful, but count, severity, and
 semantic logic require extra modelling layers.
 
+Generate the real logical-anomaly report with:
+
+```bash
+./.venv/bin/xai-demo-report patchcore-logic
+```
+
+When the prepared MVTec LOCO AD `juice_bottle` manifest exists, the report at
+`outputs/patchcore_logic/index.html` contrasts PatchCore patch novelty with a
+category-specific front-label template comparator. That comparator is
+deliberately narrow: it is a packaging-rule check for this aligned category,
+not a general anomaly model.
+
 ## PatchCore Wrong-Normal Report
 
 Generate the synthetic normal-set contamination demo with:
