@@ -20,6 +20,7 @@ from xai_demo_suite.models.patchcore.types import (
 )
 from xai_demo_suite.reports.patchcore_bottle import (
     PatchCoreBottleReportConfig,
+    _roc_auc,
     build_patchcore_bottle_report,
 )
 from xai_demo_suite.vis.image_panels import (
@@ -86,6 +87,28 @@ def _write_manifest(
             "mask_path": None,
         }
     ]
+    good_test_path = (
+        tmp_path
+        / "data"
+        / "interim"
+        / "mvtec_ad"
+        / "bottle"
+        / "test"
+        / "good"
+        / "000.png"
+    )
+    _write_image(good_test_path, (30, 30, 30))
+    rows.append(
+        {
+            "dataset": "mvtec_ad",
+            "category": "bottle",
+            "split": "test",
+            "defect_type": "good",
+            "is_anomalous": False,
+            "image_path": "data/interim/mvtec_ad/bottle/test/good/000.png",
+            "mask_path": None,
+        }
+    )
     for index in range(1, anomalous_count + 1):
         test_path = (
             tmp_path
@@ -281,6 +304,15 @@ def test_make_patch_replacement_artefact_records_score_delta(tmp_path: Path) -> 
     assert artefact.score_delta == -6.0
 
 
+def test_roc_auc_handles_tied_scores() -> None:
+    auc = _roc_auc(
+        labels=[False, True, False, True],
+        scores=[0.2, 0.5, 0.5, 0.8],
+    )
+
+    assert auc == 0.875
+
+
 def test_patchcore_bottle_report_writes_html_and_assets(tmp_path: Path) -> None:
     manifest_path = _write_manifest(tmp_path)
     config = PatchCoreBottleReportConfig(
@@ -301,6 +333,9 @@ def test_patchcore_bottle_report_writes_html_and_assets(tmp_path: Path) -> None:
     html = output_path.read_text(encoding="utf-8")
     assert "PatchCore Bottle Report" in html
     assert "Nearest Normal Patch Evidence" in html
+    assert "Test-Split Benchmark Diagnostics" in html
+    assert "Image-level ROC AUC from max patch score" in html
+    assert "Image-level ROC AUC from max patch score: 0.500" in html
     assert "Coarse patch-score anomaly map" in html
     assert "Counterfactual Patch Replacement" in html
     assert (config.output_dir / "assets" / "score_overlay.png").exists()

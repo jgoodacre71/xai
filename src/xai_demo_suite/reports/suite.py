@@ -83,6 +83,7 @@ def build_demo_suite(
     mvtec_max_examples: int | None = None,
     mvtec_coreset_size: int | None = None,
     mvtec_input_size: int | None = None,
+    mvtec_benchmark_limit: int | None = None,
 ) -> tuple[SuiteBuildResult, ...]:
     """Build the current local demo suite.
 
@@ -176,6 +177,7 @@ def build_demo_suite(
                         max_examples=mvtec_max_examples or bottle_defaults.max_examples,
                         input_size=mvtec_input_size or bottle_defaults.input_size,
                         coreset_size=mvtec_coreset_size,
+                        max_benchmark_records=mvtec_benchmark_limit,
                         use_cache=use_cache,
                     )
                 ),

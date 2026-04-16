@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -60,6 +61,7 @@ class PatchCoreBottleReportConfig:
     batch_size: int = 8
     coreset_size: int | None = None
     coreset_seed: int = 0
+    max_benchmark_records: int | None = None
     use_cache: bool = True
 
 
@@ -74,6 +76,37 @@ class PatchCoreBottleExampleReport:
     assets: dict[str, Path]
     counterfactual: CounterfactualArtefact
     mask_overlap: PatchMaskOverlap | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class PatchCoreBottleBenchmarkRecord:
+    """Dataset-level top-score diagnostic for one MVTec AD test image."""
+
+    sample_id: str
+    defect_type: str
+    is_anomalous: bool
+    top_score: float
+    mask_overlap: PatchMaskOverlap | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class PatchCoreBottleBenchmarkReport:
+    """Local benchmark-style diagnostics for the report model path."""
+
+    records: tuple[PatchCoreBottleBenchmarkRecord, ...]
+    image_auc: float | None
+
+    @property
+    def good_count(self) -> int:
+        """Return the number of scored nominal test images."""
+
+        return sum(1 for record in self.records if not record.is_anomalous)
+
+    @property
+    def anomalous_count(self) -> int:
+        """Return the number of scored anomalous test images."""
+
+        return sum(1 for record in self.records if record.is_anomalous)
 
 
 def _relative(path: Path, root: Path) -> str:
@@ -200,6 +233,97 @@ def _select_query_records(config: PatchCoreBottleReportConfig) -> list[ImageMani
             f"test_index {config.test_index} is out of range for {len(query_records)} records."
         )
     return selected
+
+
+def _select_benchmark_records(config: PatchCoreBottleReportConfig) -> list[ImageManifestRecord]:
+    records = load_image_manifest(config.manifest_path)
+    test_records = filter_manifest_records(records, split="test")
+    if config.max_benchmark_records is not None:
+        if config.max_benchmark_records <= 0:
+            raise ValueError("max_benchmark_records must be positive when set.")
+        return test_records[: config.max_benchmark_records]
+    return test_records
+
+
+def _roc_auc(labels: list[bool], scores: list[float]) -> float | None:
+    """Compute binary ROC AUC with average ranks for tied scores."""
+
+    if len(labels) != len(scores):
+        raise ValueError("labels and scores must have the same length.")
+    positive_count = sum(1 for label in labels if label)
+    negative_count = len(labels) - positive_count
+    if positive_count == 0 or negative_count == 0:
+        return None
+
+    ranked = sorted(enumerate(scores), key=lambda item: item[1])
+    ranks = [0.0] * len(scores)
+    index = 0
+    while index < len(ranked):
+        end = index + 1
+        while end < len(ranked) and ranked[end][1] == ranked[index][1]:
+            end += 1
+        average_rank = (index + 1 + end) / 2.0
+        for ranked_index in range(index, end):
+            original_index = ranked[ranked_index][0]
+            ranks[original_index] = average_rank
+        index = end
+
+    positive_rank_sum = sum(rank for rank, label in zip(ranks, labels, strict=True) if label)
+    return (positive_rank_sum - (positive_count * (positive_count + 1) / 2.0)) / (
+        positive_count * negative_count
+    )
+
+
+def _build_benchmark_report(
+    *,
+    config: PatchCoreBottleReportConfig,
+    memory_bank: PatchCoreMemoryBank,
+    extractor: PatchFeatureExtractor,
+) -> PatchCoreBottleBenchmarkReport | None:
+    benchmark_records = _select_benchmark_records(config)
+    if not benchmark_records:
+        return None
+
+    scored_records: list[PatchCoreBottleBenchmarkRecord] = []
+    for record in benchmark_records:
+        scores = score_image_with_extractor(
+            sample_id=record.sample_id,
+            image_path=record.image_path,
+            memory_bank=memory_bank,
+            extractor=extractor,
+            patch_size=config.patch_size,
+            stride=config.stride,
+            top_k=config.top_k,
+        )
+        if not scores:
+            continue
+        top_score = scores[0]
+        mask_overlap = None
+        if record.mask_path is not None and record.mask_path.exists():
+            mask_overlap = measure_patch_mask_overlap(
+                mask_path=record.mask_path,
+                patch_box=top_score.query_box,
+                image_path=record.image_path,
+            )
+        scored_records.append(
+            PatchCoreBottleBenchmarkRecord(
+                sample_id=record.sample_id,
+                defect_type=record.defect_type,
+                is_anomalous=record.is_anomalous,
+                top_score=top_score.distance,
+                mask_overlap=mask_overlap,
+            )
+        )
+
+    if not scored_records:
+        return None
+    return PatchCoreBottleBenchmarkReport(
+        records=tuple(scored_records),
+        image_auc=_roc_auc(
+            labels=[record.is_anomalous for record in scored_records],
+            scores=[record.top_score for record in scored_records],
+        ),
+    )
 
 
 def _prefixed_asset_name(asset_prefix: str, name: str) -> str:
@@ -577,6 +701,98 @@ def _render_overview(examples: list[PatchCoreBottleExampleReport]) -> str:
 """
 
 
+def _render_benchmark(benchmark: PatchCoreBottleBenchmarkReport | None) -> str:
+    if benchmark is None:
+        return """
+  <section>
+    <h2>Test-Split Benchmark Diagnostics</h2>
+    <p>No test-split benchmark records were available for this run.</p>
+  </section>
+"""
+
+    auc_text = f"{benchmark.image_auc:.3f}" if benchmark.image_auc is not None else "not available"
+    mask_records = [
+        record for record in benchmark.records if record.mask_overlap is not None
+    ]
+    mask_hits = sum(
+        1
+        for record in mask_records
+        if record.mask_overlap is not None and record.mask_overlap.intersects_mask
+    )
+    mean_mask_coverage = (
+        sum(
+            record.mask_overlap.mask_covered_fraction
+            for record in mask_records
+            if record.mask_overlap is not None
+        )
+        / len(mask_records)
+        if mask_records
+        else None
+    )
+    mean_mask_text = (
+        _format_percentage(mean_mask_coverage)
+        if mean_mask_coverage is not None
+        else "not available"
+    )
+
+    by_defect: dict[str, list[PatchCoreBottleBenchmarkRecord]] = defaultdict(list)
+    for record in benchmark.records:
+        by_defect[record.defect_type].append(record)
+
+    rows: list[str] = []
+    for defect_type, records in sorted(by_defect.items()):
+        scores = [record.top_score for record in records]
+        mask_subset = [record for record in records if record.mask_overlap is not None]
+        defect_mask_hits = sum(
+            1
+            for record in mask_subset
+            if record.mask_overlap is not None and record.mask_overlap.intersects_mask
+        )
+        mask_hit_text = (
+            f"{defect_mask_hits} / {len(mask_subset)}" if mask_subset else "not available"
+        )
+        rows.append(
+            "<tr>"
+            f"<td>{html.escape(defect_type)}</td>"
+            f"<td>{len(records)}</td>"
+            f"<td>{sum(1 for record in records if record.is_anomalous)}</td>"
+            f"<td>{sum(scores) / len(scores):.6f}</td>"
+            f"<td>{max(scores):.6f}</td>"
+            f"<td>{mask_hit_text}</td>"
+            "</tr>"
+        )
+
+    return f"""
+  <section>
+    <h2>Test-Split Benchmark Diagnostics</h2>
+    <ul>
+      <li>Scored test images: {len(benchmark.records)}</li>
+      <li>Nominal / anomalous: {benchmark.good_count} / {benchmark.anomalous_count}</li>
+      <li>Image-level ROC AUC from max patch score: {auc_text}</li>
+      <li>Top patch intersects anomaly mask: {mask_hits} / {len(mask_records)} masked anomalies</li>
+      <li>Mean mask covered by top patch: {mean_mask_text}</li>
+    </ul>
+    <table>
+      <thead>
+        <tr>
+          <th>Defect type</th>
+          <th>Images</th>
+          <th>Anomalous</th>
+          <th>Mean top score</th>
+          <th>Max top score</th>
+          <th>Mask hits</th>
+        </tr>
+      </thead>
+      <tbody>{''.join(rows)}</tbody>
+    </table>
+    <p>
+      These are local report diagnostics from the current patch grid and memory
+      bank, not official PatchCore benchmark numbers or pixel-level AUROC.
+    </p>
+  </section>
+"""
+
+
 def _feature_path_description(feature_name: str) -> str:
     if "imagenet" in feature_name:
         return (
@@ -601,6 +817,7 @@ def _render_html(
     *,
     config: PatchCoreBottleReportConfig,
     examples: list[PatchCoreBottleExampleReport],
+    benchmark: PatchCoreBottleBenchmarkReport | None,
     feature_name: str,
     memory_bank_size: int,
     cache_path: Path,
@@ -611,6 +828,7 @@ def _render_html(
         for example in examples
     )
     overview_section = _render_overview(examples)
+    benchmark_section = _render_benchmark(benchmark)
     coreset_text = (
         f"{config.coreset_size} requested; {memory_bank_size} retained"
         if config.coreset_size is not None
@@ -656,8 +874,9 @@ def _render_html(
 <main>
   <h1>PatchCore Bottle Report</h1>
   <p>
-    This report is generated from package code. It shows nearest-normal patch
-    provenance for {len(examples)} selected MVTec AD bottle anomaly example(s).
+    This report is generated from package code. It shows test-split diagnostics
+    plus nearest-normal patch provenance for {len(examples)} selected MVTec AD
+    bottle anomaly example(s).
   </p>
 
   <section>
@@ -675,6 +894,8 @@ def _render_html(
   </section>
 
 {overview_section}
+
+{benchmark_section}
 
 {example_sections}
 </main>
@@ -742,7 +963,10 @@ def _build_demo_card(
             "Not a causal proof.",
             coreset_caveat,
             "Coarse overlay is not pixel-level anomaly-map interpolation.",
-            "Top-patch mask overlap is a coarse verification check, not a full benchmark.",
+            (
+                "Benchmark diagnostics use image-level max patch scores and "
+                "top-patch overlap, not official pixel-level PatchCore metrics."
+            ),
         ),
         report_path=output_path,
         figure_paths=(
@@ -763,6 +987,11 @@ def build_patchcore_bottle_report(
     ensure_directory(config.output_dir)
     extractor = extractor or _build_default_extractor(config)
     memory_bank = _build_or_load_bank(config, extractor)
+    benchmark = _build_benchmark_report(
+        config=config,
+        memory_bank=memory_bank,
+        extractor=extractor,
+    )
     query_records = _select_query_records(config)
     use_asset_prefixes = len(query_records) > 1
     example_reports: list[PatchCoreBottleExampleReport] = []
@@ -819,6 +1048,7 @@ def build_patchcore_bottle_report(
     _render_html(
         config=config,
         examples=example_reports,
+        benchmark=benchmark,
         feature_name=extractor.feature_name,
         memory_bank_size=len(memory_bank.metadata),
         cache_path=_resolve_cache_path(config=config, extractor=extractor),

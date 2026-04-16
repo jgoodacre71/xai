@@ -92,8 +92,10 @@ slice with:
 
 The report is written to `outputs/patchcore_bottle/index.html`. When prepared
 MVTec masks are available, each selected anomaly also includes a ground-truth
-localisation check for the top scored patch. Generated reports, demo cards,
-local index files, and cached model artefacts are ignored by git.
+localisation check for the top scored patch. The report also includes local
+test-split diagnostics: image-level ROC AUC from the max patch score, defect
+type score summaries, and top-patch mask-hit checks. Generated reports, demo
+cards, local index files, and cached model artefacts are ignored by git.
 
 You can switch extractors explicitly:
 
@@ -107,6 +109,9 @@ You can switch extractors explicitly:
 The pretrained command may download Torchvision ResNet-18 weights into the local
 Torch cache. That cache, generated reports, and memory-bank artefacts are not
 tracked by git.
+
+Use `--benchmark-limit` for quick smoke runs; omit it to score the full local
+MVTec AD bottle test split in the report diagnostics.
 
 The narrative notebook for the same demo is checked in at
 `notebooks/03_patchcore_mvtec_bottle.ipynb`. It is intentionally output-free and

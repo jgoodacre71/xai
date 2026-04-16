@@ -63,6 +63,7 @@ def test_suite_passes_mvtec_model_settings(
         mvtec_max_examples=3,
         mvtec_coreset_size=512,
         mvtec_input_size=224,
+        mvtec_benchmark_limit=40,
     )
 
     assert any(result.name == "patchcore-bottle" for result in results)
@@ -74,4 +75,5 @@ def test_suite_passes_mvtec_model_settings(
     assert config.max_examples == 3
     assert config.coreset_size == 512
     assert config.input_size == 224
+    assert config.max_benchmark_records == 40
     assert not config.use_cache

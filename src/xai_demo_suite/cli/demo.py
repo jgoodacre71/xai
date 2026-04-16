@@ -93,6 +93,12 @@ def build_parser() -> argparse.ArgumentParser:
     bottle.add_argument("--batch-size", type=int, default=bottle_defaults.batch_size)
     bottle.add_argument("--coreset-size", type=int, default=bottle_defaults.coreset_size)
     bottle.add_argument("--coreset-seed", type=int, default=bottle_defaults.coreset_seed)
+    bottle.add_argument(
+        "--benchmark-limit",
+        type=int,
+        default=bottle_defaults.max_benchmark_records,
+        help="Optional cap on MVTec bottle test records scored for report diagnostics.",
+    )
     bottle.add_argument("--no-cache", action="store_true")
 
     limits = subparsers.add_parser(
@@ -197,6 +203,7 @@ def build_parser() -> argparse.ArgumentParser:
     suite.add_argument("--mvtec-max-examples", type=int, default=None)
     suite.add_argument("--mvtec-coreset-size", type=int, default=None)
     suite.add_argument("--mvtec-input-size", type=int, default=None)
+    suite.add_argument("--mvtec-benchmark-limit", type=int, default=None)
     suite.add_argument("--no-cache", action="store_true")
 
     verify = subparsers.add_parser(
@@ -224,6 +231,7 @@ def _handle_patchcore_bottle(args: argparse.Namespace) -> int:
         batch_size=args.batch_size,
         coreset_size=args.coreset_size,
         coreset_seed=args.coreset_seed,
+        max_benchmark_records=args.benchmark_limit,
         use_cache=not args.no_cache,
     )
     output_path = build_patchcore_bottle_report(config)
@@ -333,6 +341,7 @@ def _handle_suite(args: argparse.Namespace) -> int:
         mvtec_max_examples=args.mvtec_max_examples,
         mvtec_coreset_size=args.mvtec_coreset_size,
         mvtec_input_size=args.mvtec_input_size,
+        mvtec_benchmark_limit=args.mvtec_benchmark_limit,
     )
     failed = False
     for result in results:

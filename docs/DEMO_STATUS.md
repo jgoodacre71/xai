@@ -60,5 +60,6 @@ interventions, and caveats.
 - Demo 07 currently uses one local MVTec LOCO AD category when prepared; broader
   category coverage and a component-aware comparator remain future work.
 - Demo 03 now has an explicit pretrained ResNet-18 feature-map path, but it is
-  still not an official PatchCore benchmark reproduction.
+  still not an official PatchCore benchmark reproduction. Its benchmark panel
+  reports local image-level max-patch AUC and top-patch mask diagnostics.
 - The repository has no configured Git remote in this checkout.
