@@ -102,3 +102,26 @@ datasets:
       processed_manifest: "data/processed/mvtec_ad_2/<scenario>/manifest.jsonl"
     categories:
       - "<scenario discovered at prepare time>"
+  visa:
+    name: "VisA"
+    status: "supported"
+    purpose:
+      - "second-wave industrial anomaly detection"
+      - "cross-dataset anomaly stress tests beyond MVTec"
+      - "future PatchCore generalisation checks"
+    raw_data_committed: false
+    licence: "Creative Commons Attribution 4.0 International (CC BY 4.0)"
+    licence_url: "https://creativecommons.org/licenses/by/4.0/"
+    restrictions:
+      - "Raw archives, split CSV files, extracted data, and processed manifests must not be committed."
+    source_url: "https://github.com/amazon-science/spot-diff"
+    download_url: "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar"
+    citation: "Zou et al., Spot-the-Difference Self-supervised Pre-training for Anomaly Detection and Segmentation."
+    expected_layout:
+      raw_archives: "data/raw/visa/archives/VisA_20220922.tar"
+      raw_split_csv: "data/raw/visa/splits/1cls.csv"
+      interim_extracted: "data/interim/visa/raw/"
+      interim_prepared: "data/interim/visa/1cls/<category>/"
+      processed_manifest: "data/processed/visa/<category>/manifest.jsonl"
+    categories:
+      - "<category discovered from the published 1-class split>"

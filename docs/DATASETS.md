@@ -157,6 +157,46 @@ Notes:
 - prepare discovers scenario folders locally and writes one manifest per
   scenario under `data/processed/mvtec_ad_2/<scenario>/manifest.jsonl`.
 
+### VisA
+Use for:
+- second-wave industrial anomaly detection
+- cross-dataset anomaly stress tests beyond MVTec
+- future PatchCore generalisation checks
+
+Source:
+- project repository: <https://github.com/amazon-science/spot-diff>
+- dataset archive:
+  <https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar>
+- published one-class split CSV:
+  <https://raw.githubusercontent.com/amazon-science/spot-diff/main/split_csv/1cls.csv>
+
+Licence:
+- Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+Local workflow:
+
+```bash
+./.venv/bin/python -m xai_demo_suite.cli.data list
+./.venv/bin/python -m xai_demo_suite.cli.data fetch visa --category all --dry-run
+./.venv/bin/python -m xai_demo_suite.cli.data fetch visa --category all
+./.venv/bin/python -m xai_demo_suite.cli.data prepare visa --category all
+```
+
+Storage policy:
+- the raw archive is downloaded to `data/raw/visa/archives/VisA_20220922.tar`;
+- the published split CSV is downloaded to `data/raw/visa/splits/1cls.csv`;
+- the extracted raw bundle is written to `data/interim/visa/raw/`;
+- the prepared one-class layout is written to `data/interim/visa/1cls/<category>/`;
+- manifests are written to `data/processed/visa/<category>/manifest.jsonl`;
+- raw archives, split CSV files, extracted data, prepared copies, and processed
+  manifests are local artefacts and are excluded from git.
+
+Notes:
+- the adapter follows the published one-class split and writes one manifest per
+  prepared category;
+- no generated report consumes VisA yet, but the dataset is now available for
+  second-wave anomaly and drift extensions.
+
 ## Synthetic generators to build in-repo
 
 ### Nuisance injector

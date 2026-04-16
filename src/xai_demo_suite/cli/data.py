@@ -33,6 +33,18 @@ from xai_demo_suite.data.downloaders.mvtec_loco_ad import (
     iter_mvtec_loco_ad_categories,
     plan_mvtec_loco_ad_fetch,
 )
+from xai_demo_suite.data.downloaders.visa import (
+    VisADataset,
+    build_visa_manifests,
+    download_visa_dataset,
+    download_visa_split_csv,
+    extract_visa_dataset,
+    get_visa_dataset,
+    iter_visa_datasets,
+    plan_visa_fetch,
+    prepare_visa_one_class_layout,
+    visa_split_csv_path,
+)
 from xai_demo_suite.data.downloaders.waterbirds import (
     WaterbirdsCategory,
     build_waterbirds_manifest,
@@ -58,7 +70,7 @@ def build_parser() -> argparse.ArgumentParser:
     fetch_parser = subparsers.add_parser("fetch", help="Fetch a raw dataset archive.")
     fetch_parser.add_argument(
         "dataset",
-        choices=["mvtec_ad", "mvtec_ad_2", "mvtec_loco_ad", "waterbirds"],
+        choices=["mvtec_ad", "mvtec_ad_2", "mvtec_loco_ad", "visa", "waterbirds"],
     )
     fetch_parser.add_argument("--category", required=True, help="Dataset category name.")
     fetch_parser.add_argument("--raw-root", type=Path, default=Path("data/raw"))
@@ -75,7 +87,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     prepare_parser.add_argument(
         "dataset",
-        choices=["mvtec_ad", "mvtec_ad_2", "mvtec_loco_ad", "waterbirds"],
+        choices=["mvtec_ad", "mvtec_ad_2", "mvtec_loco_ad", "visa", "waterbirds"],
     )
     prepare_parser.add_argument("--category", required=True, help="Dataset category name.")
     prepare_parser.add_argument("--raw-root", type=Path, default=Path("data/raw"))
@@ -89,6 +101,11 @@ def build_parser() -> argparse.ArgumentParser:
             "Optional explicit archive path when the raw archive directory contains "
             "multiple files."
         ),
+    )
+    prepare_parser.add_argument(
+        "--split-csv-path",
+        type=Path,
+        help="Optional explicit VisA one-class split CSV path.",
     )
 
     return parser
@@ -110,6 +127,10 @@ def _print_mvtec_ad_2_dataset(dataset: MVTecAD2Dataset) -> None:
     print(f"{dataset.name:12} {dataset.scenario_count:>2} scenarios  discovered at prepare time")
 
 
+def _print_visa_dataset(dataset: VisADataset) -> None:
+    print(f"{dataset.name:12} {dataset.subset_count:>2} categories  {dataset.archive_name}")
+
+
 def _handle_list() -> int:
     print("MVTec AD")
     print("  source: https://www.mvtec.com/research-teaching/datasets/mvtec-ad")
@@ -126,6 +147,16 @@ def _handle_list() -> int:
     print("  datasets:")
     for ad2_dataset in iter_mvtec_ad_2_datasets():
         _print_mvtec_ad_2_dataset(ad2_dataset)
+    print()
+    print("VisA")
+    print("  source: https://github.com/amazon-science/spot-diff")
+    print(
+        "  downloads: https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar"
+    )
+    print("  licence: CC BY 4.0")
+    print("  datasets:")
+    for visa_dataset in iter_visa_datasets():
+        _print_visa_dataset(visa_dataset)
     print()
     print("MVTec LOCO AD")
     print("  source: https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad")
@@ -147,6 +178,35 @@ def _handle_list() -> int:
 
 
 def _handle_fetch(args: argparse.Namespace) -> int:
+    if args.dataset == "visa":
+        visa_dataset = get_visa_dataset(args.category)
+        visa_plan = plan_visa_fetch(
+            dataset=visa_dataset,
+            raw_root=args.raw_root,
+            overwrite=args.overwrite,
+        )
+        split_csv_target = visa_split_csv_path(args.raw_root)
+        if args.dry_run:
+            action = "download" if visa_plan.should_download else "skip"
+            print(f"{action}: {visa_plan.url}")
+            print(f"target: {visa_plan.archive_path}")
+            print(f"split csv: {split_csv_target}")
+            if visa_plan.reason:
+                print(f"reason: {visa_plan.reason}")
+            return 0
+        visa_result = download_visa_dataset(
+            dataset=visa_dataset,
+            raw_root=args.raw_root,
+            overwrite=args.overwrite,
+        )
+        split_csv_file = download_visa_split_csv(
+            raw_root=args.raw_root,
+            overwrite=args.overwrite,
+        )
+        print(f"{visa_result.status}: {visa_result.archive_path}")
+        print(f"split csv: {split_csv_file}")
+        return 0
+
     if args.dataset == "mvtec_ad_2":
         ad2_dataset = get_mvtec_ad_2_dataset(args.category)
         ad2_plan = plan_mvtec_ad_2_fetch(
@@ -247,6 +307,34 @@ def _handle_fetch(args: argparse.Namespace) -> int:
 
 
 def _handle_prepare(args: argparse.Namespace) -> int:
+    if args.dataset == "visa":
+        visa_dataset = get_visa_dataset(args.category)
+        extracted_root = extract_visa_dataset(
+            dataset=visa_dataset,
+            raw_root=args.raw_root,
+            interim_root=args.interim_root,
+            overwrite=args.overwrite,
+        )
+        split_csv_file = args.split_csv_path or visa_split_csv_path(args.raw_root)
+        prepared_root = prepare_visa_one_class_layout(
+            extracted_root=extracted_root,
+            interim_root=args.interim_root,
+            split_csv_path=split_csv_file,
+            overwrite=args.overwrite,
+        )
+        category_counts = build_visa_manifests(
+            prepared_root=prepared_root,
+            processed_root=args.processed_root,
+            project_root=Path.cwd(),
+        )
+        print(f"extracted: {extracted_root}")
+        print(f"prepared: {prepared_root}")
+        print(f"category manifests: {len(category_counts)}")
+        for category_name, record_count in sorted(category_counts.items()):
+            manifest_path = args.processed_root / "visa" / category_name / "manifest.jsonl"
+            print(f"manifest: {manifest_path} ({record_count} records)")
+        return 0
+
     if args.dataset == "mvtec_ad_2":
         get_mvtec_ad_2_dataset(args.category)
         extracted_root = extract_mvtec_ad_2_dataset(

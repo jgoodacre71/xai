@@ -33,7 +33,7 @@ durable todo list for work that should not live only in chat history.
 ## Strong additions from the spec
 
 - [x] Add MVTec AD 2 support
-- [ ] Add VisA support
+- [x] Add VisA support
 - [ ] Add MetaShift or Spawrious support
 - [ ] Consider ProtoPNet or another interpretable comparator where it improves a
   demo rather than bloating the repo

@@ -93,6 +93,18 @@ recorded, but the repo does not hard-code a brittle direct dataset link. If you
 already have the archive locally, place it under `data/raw/mvtec_ad_2/archives/`
 or pass `--archive-path` to `prepare`.
 
+VisA now has the same local fetch and prepare path:
+
+```bash
+./.venv/bin/xai-demo-data fetch visa --category all --dry-run
+./.venv/bin/xai-demo-data fetch visa --category all
+./.venv/bin/xai-demo-data prepare visa --category all
+```
+
+The VisA adapter fetches the published archive plus the upstream one-class split
+CSV, then writes one canonical manifest per prepared category under
+`data/processed/visa/`.
+
 ## Optional ML Dependencies
 
 The base package and tests do not require Torch. Install the optional ML stack
