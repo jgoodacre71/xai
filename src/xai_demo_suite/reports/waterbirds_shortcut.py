@@ -51,6 +51,9 @@ class WaterbirdsShortcutReportConfig:
     manifest_path: Path = Path(
         "data/processed/waterbirds/waterbird_complete95_forest2water2/manifest.jsonl"
     )
+    metashift_manifest_path: Path = Path(
+        "data/processed/metashift/subpopulation_shift_cat_dog_indoor_outdoor/manifest.jsonl"
+    )
     use_real_data: bool = True
     max_train_records: int | None = 800
     max_test_records: int | None = 400
@@ -89,9 +92,12 @@ class WaterbirdsExplanationSummary:
 
 @dataclass(frozen=True, slots=True)
 class RealWaterbirdsShortcutReportData:
-    """Computed data for the manifest-backed Waterbirds report."""
+    """Computed data for one manifest-backed natural-context shortcut dataset."""
 
     manifest_path: Path
+    title: str
+    dataset_name: str
+    narrative: str
     train_records: list[WaterbirdsManifestRecord]
     test_records: list[WaterbirdsManifestRecord]
     erm_predictions: list[WaterbirdsPrediction]
@@ -560,8 +566,13 @@ def _select_visual_record(
 
 def _build_real_report_data(
     config: WaterbirdsShortcutReportConfig,
+    *,
+    manifest_path: Path,
+    title: str,
+    narrative: str,
+    asset_prefix: str,
 ) -> RealWaterbirdsShortcutReportData:
-    records = load_waterbirds_manifest(config.manifest_path)
+    records = load_waterbirds_manifest(manifest_path)
     train_records = _round_robin_records(
         filter_waterbirds_records(records, split="train"),
         config.max_train_records,
@@ -597,40 +608,49 @@ def _build_real_report_data(
     assets = {
         "selected_image": _copy_image(
             selected_record.image_path,
-            _asset_path(config.output_dir, "selected_sample.png"),
+            _asset_path(config.output_dir, f"{asset_prefix}_selected_sample.png"),
         ),
         "selected_background_masked": _masked_background(
             selected_record.image_path,
-            _asset_path(config.output_dir, "selected_background_masked.png"),
+            _asset_path(config.output_dir, f"{asset_prefix}_selected_background_masked.png"),
         ),
         "selected_centre_masked": _masked_centre(
             selected_record.image_path,
-            _asset_path(config.output_dir, "selected_centre_masked.png"),
+            _asset_path(config.output_dir, f"{asset_prefix}_selected_centre_masked.png"),
         ),
         "erm_grad_cam": save_heatmap_overlay(
             image_path=selected_record.image_path,
             heatmap=erm_explanation.grad_cam,
-            output_path=_asset_path(config.output_dir, "erm_grad_cam.png"),
+            output_path=_asset_path(config.output_dir, f"{asset_prefix}_erm_grad_cam.png"),
         ),
         "erm_integrated_gradients": save_heatmap_overlay(
             image_path=selected_record.image_path,
             heatmap=erm_explanation.integrated_gradients,
-            output_path=_asset_path(config.output_dir, "erm_integrated_gradients.png"),
+            output_path=_asset_path(
+                config.output_dir,
+                f"{asset_prefix}_erm_integrated_gradients.png",
+            ),
         ),
         "balanced_grad_cam": save_heatmap_overlay(
             image_path=selected_record.image_path,
             heatmap=balanced_explanation.grad_cam,
-            output_path=_asset_path(config.output_dir, "balanced_grad_cam.png"),
+            output_path=_asset_path(config.output_dir, f"{asset_prefix}_balanced_grad_cam.png"),
         ),
         "balanced_integrated_gradients": save_heatmap_overlay(
             image_path=selected_record.image_path,
             heatmap=balanced_explanation.integrated_gradients,
-            output_path=_asset_path(config.output_dir, "balanced_integrated_gradients.png"),
+            output_path=_asset_path(
+                config.output_dir,
+                f"{asset_prefix}_balanced_integrated_gradients.png",
+            ),
         ),
     }
     crossed_records = [record for record in test_records if not record.is_aligned]
     return RealWaterbirdsShortcutReportData(
-        manifest_path=config.manifest_path,
+        manifest_path=manifest_path,
+        title=title,
+        dataset_name=records[0].dataset if records else "unknown",
+        narrative=narrative,
         train_records=train_records,
         test_records=test_records,
         erm_predictions=erm_predictions,
@@ -645,26 +665,25 @@ def _build_real_report_data(
             records=crossed_records,
             limit=config.diagnostic_sample_limit,
             output_dir=config.output_dir,
-            prefix="erm",
+            prefix=f"{asset_prefix}_erm",
         ),
         balanced_summary=_diagnostic_summary(
             model=balanced_probe,
             records=crossed_records,
             limit=config.diagnostic_sample_limit,
             output_dir=config.output_dir,
-            prefix="balanced",
+            prefix=f"{asset_prefix}_balanced",
         ),
         selected_record=selected_record,
         assets=assets,
     )
 
 
-def _render_real_html(
-    config: WaterbirdsShortcutReportConfig,
+def _render_real_dataset_section(
     data: RealWaterbirdsShortcutReportData,
-) -> Path:
-    output_path = config.output_dir / "index.html"
-
+    *,
+    output_path: Path,
+) -> str:
     def rel(path: Path) -> str:
         return html.escape(_relative(path, output_path.parent))
 
@@ -679,60 +698,18 @@ def _render_real_html(
     erm_worst = waterbirds_worst_group_accuracy(data.erm_group_metrics)
     balanced_worst = waterbirds_worst_group_accuracy(data.balanced_group_metrics)
 
-    html_text = f"""<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Waterbirds Shortcut</title>
-  <style>
-    body {{
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 32px;
-      color: #1f2933;
-      background: #f7f8fb;
-    }}
-    main {{ max-width: 1180px; margin: 0 auto; }}
-    h1, h2 {{ margin: 0 0 12px; }}
-    section {{ margin: 28px 0; background: #fff; padding: 20px; border: 1px solid #d8dee4; }}
-    .grid {{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 16px;
-      align-items: start;
-    }}
-    figure {{ margin: 0; }}
-    img {{ width: 100%; height: auto; display: block; border: 1px solid #d8dee4; }}
-    figcaption {{ font-size: 13px; color: #52606d; margin-top: 8px; }}
-    table {{ width: 100%; border-collapse: collapse; font-size: 14px; }}
-    th, td {{
-      border-bottom: 1px solid #d8dee4;
-      padding: 8px;
-      text-align: left;
-      vertical-align: top;
-    }}
-    code {{ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }}
-    .meta {{ color: #52606d; font-size: 14px; }}
-  </style>
-</head>
-<body>
-<main>
-  <h1>Waterbirds Shortcut</h1>
-  <p>
-    This real-data Demo 01 path trains frozen ResNet-18 linear probes on the
-    prepared Waterbirds manifest. The comparison is deliberately simple: plain
-    ERM against inverse-group-frequency weighting. The point is to show that the
-    shortcut is visible in group metrics, explanations, and perturbation tests.
-  </p>
-  <p class="meta">
-    Manifest: <code>{html.escape(str(data.manifest_path))}</code><br>
-    Train samples: {len(data.train_records)} |
-    Test samples: {len(data.test_records)} |
-    Selected sample:
-    <code>{html.escape(data.selected_record.sample_id)}</code>
-  </p>
-
+    return f"""
   <section>
-    <h2>Metric Summary</h2>
+    <h2>{html.escape(data.title)}</h2>
+    <p>{html.escape(data.narrative)}</p>
+    <p class="meta">
+      Manifest: <code>{html.escape(str(data.manifest_path))}</code><br>
+      Train samples: {len(data.train_records)} |
+      Test samples: {len(data.test_records)} |
+      Selected sample:
+      <code>{html.escape(data.selected_record.sample_id)}</code>
+    </p>
+    <h3>Metric Summary</h3>
     <ul>
       <li>ERM accuracy: {erm_accuracy:.1%}</li>
       <li>Group-balanced accuracy: {balanced_accuracy:.1%}</li>
@@ -750,10 +727,7 @@ def _render_real_html(
       </thead>
       <tbody>{group_rows}</tbody>
     </table>
-  </section>
-
-  <section>
-    <h2>Explanations on a Crossed-Group Sample</h2>
+    <h3>Explanations on a Crossed-Group Sample</h3>
     <div class="grid">
       <figure>
         <img src="{rel(data.assets["selected_image"])}" alt="Selected sample">
@@ -790,10 +764,7 @@ def _render_real_html(
         <figcaption>Centre-muted perturbation.</figcaption>
       </figure>
     </div>
-  </section>
-
-  <section>
-    <h2>Spatial Proxy and Perturbation Diagnostics</h2>
+    <h3>Spatial Proxy and Perturbation Diagnostics</h3>
     <p>
       The centre-versus-background numbers below are a spatial proxy, not a bird
       segmentation metric. They average over crossed-group test samples only.
@@ -825,10 +796,7 @@ def _render_real_html(
         </tr>
       </tbody>
     </table>
-  </section>
-
-  <section>
-    <h2>Selected Test Predictions</h2>
+    <h3>Selected Test Predictions</h3>
     <table>
       <thead>
         <tr>
@@ -845,7 +813,66 @@ def _render_real_html(
       <tbody>{prediction_rows}</tbody>
     </table>
   </section>
+"""
 
+
+def _render_real_html(
+    config: WaterbirdsShortcutReportConfig,
+    primary_data: RealWaterbirdsShortcutReportData,
+    *,
+    metashift_data: RealWaterbirdsShortcutReportData | None = None,
+) -> Path:
+    output_path = config.output_dir / "index.html"
+    metashift_section = ""
+    if metashift_data is not None:
+        metashift_section = _render_real_dataset_section(metashift_data, output_path=output_path)
+
+    html_text = f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Waterbirds Shortcut</title>
+  <style>
+    body {{
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 32px;
+      color: #1f2933;
+      background: #f7f8fb;
+    }}
+    main {{ max-width: 1180px; margin: 0 auto; }}
+    h1, h2, h3 {{ margin: 0 0 12px; }}
+    section {{ margin: 28px 0; background: #fff; padding: 20px; border: 1px solid #d8dee4; }}
+    .grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+      align-items: start;
+    }}
+    figure {{ margin: 0; }}
+    img {{ width: 100%; height: auto; display: block; border: 1px solid #d8dee4; }}
+    figcaption {{ font-size: 13px; color: #52606d; margin-top: 8px; }}
+    table {{ width: 100%; border-collapse: collapse; font-size: 14px; }}
+    th, td {{
+      border-bottom: 1px solid #d8dee4;
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }}
+    code {{ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }}
+    .meta {{ color: #52606d; font-size: 14px; }}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Waterbirds Shortcut</h1>
+  <p>
+    This real-data Demo 01 path trains frozen ResNet-18 linear probes on the
+    prepared Waterbirds manifest. The comparison is deliberately simple: plain
+    ERM against inverse-group-frequency weighting. The point is to show that the
+    shortcut is visible in group metrics, explanations, and perturbation tests.
+  </p>
+  {_render_real_dataset_section(primary_data, output_path=output_path)}
+  {metashift_section}
   <section>
     <h2>Lesson</h2>
     <p>
@@ -854,7 +881,9 @@ def _render_real_html(
       metrics, explanation maps, and targeted perturbations into the same view.
       The intervention here is intentionally modest, but it already shows how a
       different training objective can move the model away from background-heavy
-      evidence.
+      evidence. When the optional MetaShift manifest is prepared locally, the
+      same report extends the story beyond Waterbirds into a second natural-context
+      benchmark with the same evaluation and explanation contract.
     </p>
   </section>
 </main>
@@ -894,6 +923,7 @@ def _build_real_demo_card(output_path: Path, data: RealWaterbirdsShortcutReportD
             "not a full end-to-end benchmark reproduction.",
             "Centre-versus-background attribution is a proxy rather than a true bird mask metric.",
             "Waterbirds usage terms should still be checked conservatively upstream.",
+            "Optional MetaShift extension depends on locally prepared upstream assets.",
         ),
         report_path=output_path,
         figure_paths=(
@@ -934,8 +964,29 @@ def build_waterbirds_shortcut_report(config: WaterbirdsShortcutReportConfig) -> 
 
     ensure_directory(config.output_dir)
     if config.use_real_data and config.manifest_path.exists():
-        real_data = _build_real_report_data(config)
-        output_path = _render_real_html(config, real_data)
+        real_data = _build_real_report_data(
+            config,
+            manifest_path=config.manifest_path,
+            title="Waterbirds Benchmark Slice",
+            narrative=(
+                "Prepared Waterbirds baseline using the canonical bird-versus-habitat "
+                "spurious correlation setup."
+            ),
+            asset_prefix="waterbirds",
+        )
+        metashift_data = None
+        if config.metashift_manifest_path.exists():
+            metashift_data = _build_real_report_data(
+                config,
+                manifest_path=config.metashift_manifest_path,
+                title="Natural-Context Extension - MetaShift",
+                narrative=(
+                    "Prepared MetaShift cat-vs-dog indoor/outdoor slice using the same "
+                    "frozen-backbone ERM-versus-group-balanced comparison."
+                ),
+                asset_prefix="metashift",
+            )
+        output_path = _render_real_html(config, real_data, metashift_data=metashift_data)
         card = _build_real_demo_card(output_path, real_data)
     else:
         synthetic_data = _build_synthetic_report_data(config)

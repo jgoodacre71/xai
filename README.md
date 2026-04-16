@@ -77,7 +77,9 @@ Waterbirds now has the same explicit local data flow:
 
 When the prepared Waterbirds manifest exists, Demo 01 switches into a real-data
 path with frozen ResNet-18 linear probes, worst-group metrics, Grad-CAM,
-Integrated Gradients, and simple context-masking perturbation checks. The
+Integrated Gradients, and simple context-masking perturbation checks. When the
+prepared MetaShift manifest also exists, the same report adds a natural-context
+extension section with the same ERM-versus-group-balanced comparison. The
 synthetic proxy remains as the fallback for fresh clones without local data.
 
 MVTec AD 2 now has a second-wave local adapter:
@@ -153,6 +155,10 @@ After preparing Waterbirds, generate Demo 01 with:
 ```bash
 ./.venv/bin/xai-demo-report waterbirds-shortcut
 ```
+
+If the prepared MetaShift manifest exists at the default path, Demo 01 adds the
+natural-context extension automatically. You can override that path explicitly
+with `--metashift-manifest-path`.
 
 You can force the fallback path with `--no-real-data`, or use random backbone
 weights for quick local smoke tests with `--weights none`.

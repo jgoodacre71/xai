@@ -40,7 +40,7 @@ Verify generated reports, cards, selected figures, and the local index:
 
 | Demo | Status | Default output |
 | --- | --- | --- |
-| Demo 01 - Waterbirds Shortcut | Working real-data report when Waterbirds is prepared, with synthetic fallback | `outputs/waterbirds_shortcut/index.html` |
+| Demo 01 - Waterbirds Shortcut | Working real-data report when Waterbirds is prepared, with synthetic fallback and optional MetaShift extension | `outputs/waterbirds_shortcut/index.html` |
 | Demo 02 - Industrial Shortcut Trap | Working neural synthetic report | `outputs/shortcut_industrial/index.html` |
 | Demo 03 - PatchCore on MVTec AD bottle | Working local MVTec report with deterministic and explicit pretrained feature-map paths | `outputs/patchcore_bottle/index.html` |
 | Demo 04 - PatchCore Learns the Wrong Normal | Working synthetic report | `outputs/patchcore_wrong_normal/index.html` |
@@ -57,7 +57,9 @@ interventions, and caveats.
 
 - Demo 01 now has a real Waterbirds path with frozen ResNet-18 probes,
   worst-group metrics, Grad-CAM, Integrated Gradients, and perturbation checks.
-  The synthetic proxy remains as the fallback when the manifest is absent.
+  When the prepared MetaShift manifest exists, the same report adds a
+  natural-context extension on the cat-vs-dog indoor/outdoor split. The
+  synthetic proxy remains as the fallback when the manifest is absent.
 - Demo 02 now uses a learned convolutional shortcut baseline with
   stamp-randomised intervention training, Grad-CAM, Integrated Gradients, and
   known-region shortcut diagnostics. A real industrial classification dataset is
@@ -77,9 +79,6 @@ interventions, and caveats.
   sections when prepared.
 - VisA now has local dataset support and optional Demo 08 anomaly-drift
   sections when prepared.
-- MetaShift now has local dataset support for the published cat-vs-dog
-  indoor/outdoor subpopulation-shift split, but no generated report consumes it
-  yet.
 - Demo 03 now has an explicit pretrained ResNet-18 feature-map path, but it is
   still not an official PatchCore benchmark reproduction. Its benchmark panel
   reports local image-level max-patch AUC and top-patch mask diagnostics.

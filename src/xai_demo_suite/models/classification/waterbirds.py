@@ -51,6 +51,8 @@ class WaterbirdsProbeConfig:
     weights_name: str | None = "DEFAULT"
     device: str = "cpu"
     seed: int = 7
+    positive_label: str | None = None
+    negative_label: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,6 +99,8 @@ class FrozenResNetWaterbirdsProbe:
         self._feature_dim = 512
         self._head = torch.nn.Linear(self._feature_dim, 1)
         self._head.to(self._device)
+        self._positive_label = config.positive_label
+        self._negative_label = config.negative_label
 
     def fit(self, records: list[WaterbirdsManifestRecord]) -> None:
         """Train the linear probe on frozen image embeddings."""
@@ -105,9 +109,10 @@ class FrozenResNetWaterbirdsProbe:
             raise ValueError("Training requires at least one Waterbirds record.")
 
         torch = self._torch
+        self._set_label_order(records)
         embeddings = self.extract_embeddings(records)
         labels = torch.tensor(
-            [[1.0 if record.label == "waterbird" else 0.0] for record in records],
+            [[1.0 if record.label == self._positive_label else 0.0] for record in records],
             dtype=torch.float32,
             device=self._device,
         )
@@ -152,6 +157,8 @@ class FrozenResNetWaterbirdsProbe:
 
         if not records:
             return []
+        if self._positive_label is None or self._negative_label is None:
+            raise RuntimeError("Probe label order is unset. Call fit() before predict().")
 
         torch = self._torch
         embeddings = self.extract_embeddings(records)
@@ -163,7 +170,9 @@ class FrozenResNetWaterbirdsProbe:
         for record, logit, probability in zip(records, logits, probabilities, strict=True):
             score = float(logit.detach().cpu().item())
             probability_value = float(probability.detach().cpu().item())
-            predicted = "waterbird" if probability_value >= 0.5 else "landbird"
+            predicted = (
+                self._positive_label if probability_value >= 0.5 else self._negative_label
+            )
             predictions.append(
                 WaterbirdsPrediction(
                     sample_id=record.sample_id,
@@ -177,6 +186,19 @@ class FrozenResNetWaterbirdsProbe:
                 )
             )
         return predictions
+
+    def _set_label_order(self, records: list[WaterbirdsManifestRecord]) -> None:
+        labels = sorted({record.label for record in records})
+        if len(labels) != 2:
+            raise ValueError("FrozenResNetWaterbirdsProbe requires exactly two class labels.")
+        if self._positive_label is None:
+            self._positive_label = labels[-1]
+        if self._negative_label is None:
+            self._negative_label = next(
+                label for label in labels if label != self._positive_label
+            )
+        if self._positive_label == self._negative_label:
+            raise ValueError("positive_label and negative_label must differ.")
 
     def explain(
         self,

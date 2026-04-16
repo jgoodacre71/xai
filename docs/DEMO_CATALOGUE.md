@@ -13,9 +13,12 @@ Current artefacts:
 - static synthetic proxy report: `outputs/waterbirds_shortcut/index.html`
 - demo card: `outputs/waterbirds_shortcut/demo_card.html`
 
-The first implementation uses generated bird silhouettes on land/water
-backgrounds, worst-group metrics, evidence boxes, and background-swap
-counterfactuals. A real Waterbirds adapter is still a separate dataset task.
+The current implementation uses the prepared Waterbirds manifest when present,
+with frozen ResNet-18 probes, worst-group metrics, Grad-CAM, Integrated
+Gradients, and perturbation checks. When the prepared MetaShift manifest is
+also present, the same report adds a natural-context extension on the
+cat-vs-dog indoor/outdoor split. Fresh clones still fall back to the synthetic
+proxy.
 
 ## Demo 02 — Industrial shortcut trap
 A classifier learns border, watermark, or fixture leakage.

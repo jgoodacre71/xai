@@ -237,8 +237,8 @@ Notes:
 - the current adapter targets the published cat-vs-dog indoor/outdoor
   subpopulation-shift split because it is the most directly relevant natural
   shortcut extension for Demo 01;
-- no generated report consumes MetaShift yet, but the manifest path now exists
-  for a future natural-context shortcut report.
+- prepared MetaShift manifests now extend Demo 01 with the same group-metric,
+  explanation, and perturbation contract used for Waterbirds.
 
 ## Synthetic generators to build in-repo
 

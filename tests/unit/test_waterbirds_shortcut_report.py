@@ -94,6 +94,48 @@ def _write_manifest(path: Path) -> None:
             output_file.write(json.dumps(row) + "\n")
 
 
+def _write_metashift_manifest(path: Path) -> None:
+    image_root = path.parent / "fixtures"
+    image_root.mkdir(parents=True, exist_ok=True)
+    rows: list[dict[str, object]] = []
+    samples = [
+        ("train", "cat", "indoor", 0),
+        ("train", "cat", "indoor", 1),
+        ("train", "cat", "outdoor", 2),
+        ("train", "dog", "outdoor", 3),
+        ("train", "dog", "outdoor", 4),
+        ("train", "dog", "indoor", 5),
+        ("test", "cat", "indoor", 6),
+        ("test", "cat", "outdoor", 7),
+        ("test", "dog", "outdoor", 8),
+        ("test", "dog", "indoor", 9),
+    ]
+    for split, label, habitat, index in samples:
+        image_path = image_root / f"{split}_{label}_{habitat}_{index}.png"
+        _write_waterbirds_image(
+            image_path,
+            label="waterbird" if label == "cat" else "landbird",
+            habitat="water" if habitat == "indoor" else "land",
+        )
+        rows.append(
+            {
+                "dataset": "metashift",
+                "category": "subpopulation_shift_cat_dog_indoor_outdoor",
+                "split": split,
+                "label": label,
+                "habitat": habitat,
+                "group": f"{label}_{habitat}",
+                "is_aligned": (label == "cat" and habitat == "indoor")
+                or (label == "dog" and habitat == "outdoor"),
+                "image_path": image_path.as_posix(),
+            }
+        )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as output_file:
+        for row in rows:
+            output_file.write(json.dumps(row) + "\n")
+
+
 def test_waterbirds_shortcut_report_uses_real_manifest_when_available(tmp_path: Path) -> None:
     manifest_path = (
         tmp_path
@@ -123,7 +165,58 @@ def test_waterbirds_shortcut_report_uses_real_manifest_when_available(tmp_path: 
     assert "ERM worst-group accuracy" in html
     assert "Grad-CAM centre mass" in html
     assert "Group-balanced probability" in html
-    assert (config.output_dir / "assets" / "erm_grad_cam.png").exists()
-    assert (config.output_dir / "assets" / "balanced_integrated_gradients.png").exists()
-    assert (config.output_dir / "assets" / "selected_background_masked.png").exists()
+    assert (config.output_dir / "assets" / "waterbirds_erm_grad_cam.png").exists()
+    assert (
+        config.output_dir / "assets" / "waterbirds_balanced_integrated_gradients.png"
+    ).exists()
+    assert (
+        config.output_dir / "assets" / "waterbirds_selected_background_masked.png"
+    ).exists()
     assert (config.output_dir / "demo_card.json").exists()
+
+
+def test_waterbirds_shortcut_report_adds_metashift_extension_when_available(
+    tmp_path: Path,
+) -> None:
+    manifest_path = (
+        tmp_path
+        / "data"
+        / "processed"
+        / "waterbirds"
+        / "waterbird_complete95_forest2water2"
+        / "manifest.jsonl"
+    )
+    metashift_manifest_path = (
+        tmp_path
+        / "data"
+        / "processed"
+        / "metashift"
+        / "subpopulation_shift_cat_dog_indoor_outdoor"
+        / "manifest.jsonl"
+    )
+    _write_manifest(manifest_path)
+    _write_metashift_manifest(metashift_manifest_path)
+    config = WaterbirdsShortcutReportConfig(
+        output_dir=tmp_path / "outputs" / "waterbirds_shortcut",
+        synthetic_dir=tmp_path / "outputs" / "waterbirds_shortcut" / "synthetic",
+        manifest_path=manifest_path,
+        metashift_manifest_path=metashift_manifest_path,
+        max_train_records=6,
+        max_test_records=4,
+        batch_size=2,
+        epochs=2,
+        input_size=96,
+        weights_name=None,
+    )
+
+    output_path = build_waterbirds_shortcut_report(config)
+
+    html = output_path.read_text(encoding="utf-8")
+    assert "Waterbirds Benchmark Slice" in html
+    assert "Natural-Context Extension - MetaShift" in html
+    assert "cat_indoor" in html
+    assert "dog_outdoor" in html
+    assert (config.output_dir / "assets" / "metashift_erm_grad_cam.png").exists()
+    assert (
+        config.output_dir / "assets" / "metashift_balanced_integrated_gradients.png"
+    ).exists()
