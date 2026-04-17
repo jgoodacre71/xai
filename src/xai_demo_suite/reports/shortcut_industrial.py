@@ -34,7 +34,7 @@ from xai_demo_suite.reports.build_metadata import (
 )
 from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index_for_output_root
 from xai_demo_suite.utils.io import ensure_directory
-from xai_demo_suite.vis.image_panels import save_heatmap_overlay
+from xai_demo_suite.vis.image_panels import draw_box_on_image, save_heatmap_overlay
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,6 +80,8 @@ class ShortcutReportData:
     baseline_summary: IndustrialExplanationSummary
     intervention_summary: IndustrialExplanationSummary
     selected_sample: IndustrialShortcutSample
+    selected_baseline_prediction: IndustrialPrediction
+    selected_intervention_prediction: IndustrialPrediction
     assets: dict[str, Path]
     data_source_label: str
 
@@ -182,8 +184,21 @@ def _diagnostic_summary(
 def _select_sample(
     samples: list[IndustrialShortcutSample],
     baseline_predictions: list[IndustrialPrediction],
+    intervention_predictions: list[IndustrialPrediction],
 ) -> IndustrialShortcutSample:
     prediction_by_id = _prediction_map(baseline_predictions)
+    intervention_by_id = _prediction_map(intervention_predictions)
+    improved_samples = [
+        sample
+        for sample in _challenge_samples(samples)
+        if not prediction_by_id[sample.sample_id].correct
+        and intervention_by_id[sample.sample_id].correct
+    ]
+    if improved_samples:
+        return max(
+            improved_samples,
+            key=lambda sample: abs(prediction_by_id[sample.sample_id].probability - 0.5),
+        )
     for sample in _challenge_samples(samples):
         prediction = prediction_by_id[sample.sample_id]
         if not prediction.correct:
@@ -205,6 +220,20 @@ def _write_assets(
     intervention_explanation = intervention_model.explain(selected_sample)
     return {
         "selected_image": selected_sample.image_path,
+        "selected_stamp_region": draw_box_on_image(
+            image_path=selected_sample.image_path,
+            box=selected_sample.stamp_region,
+            output_path=_asset_path(config.output_dir, "selected_stamp_region.png"),
+            colour=(216, 70, 64),
+            width=3,
+        ),
+        "selected_object_region": draw_box_on_image(
+            image_path=selected_sample.image_path,
+            box=selected_sample.object_region,
+            output_path=_asset_path(config.output_dir, "selected_object_region.png"),
+            colour=(56, 116, 214),
+            width=3,
+        ),
         "baseline_grad_cam": save_heatmap_overlay(
             image_path=selected_sample.image_path,
             heatmap=baseline_explanation.grad_cam,
@@ -307,6 +336,10 @@ def _render_html(
         data.intervention_predictions,
         no_stamp_ids,
     )
+    stamp_area = data.selected_sample.stamp_region.width * data.selected_sample.stamp_region.height
+    object_area = (
+        data.selected_sample.object_region.width * data.selected_sample.object_region.height
+    )
 
     def rel(path: Path) -> str:
         return html.escape(_relative(path, output_path.parent))
@@ -375,10 +408,25 @@ def _render_html(
 
   <section>
     <h2>Explanations on a Shortcut Challenge Case</h2>
+    <p>
+      Selected challenge case: baseline predicts
+      <code>{html.escape(data.selected_baseline_prediction.predicted)}</code>
+      ({data.selected_baseline_prediction.probability:.3f}) and intervention predicts
+      <code>{html.escape(data.selected_intervention_prediction.predicted)}</code>
+      ({data.selected_intervention_prediction.probability:.3f}).
+    </p>
     <div class="grid">
       <figure>
         <img src="{rel(data.assets["selected_image"])}" alt="Selected challenge sample">
         <figcaption>Selected challenge sample for explanation comparison.</figcaption>
+      </figure>
+      <figure>
+        <img src="{rel(data.assets["selected_stamp_region"])}" alt="Shortcut region">
+        <figcaption>Shortcut region used for the stamp-muting probe.</figcaption>
+      </figure>
+      <figure>
+        <img src="{rel(data.assets["selected_object_region"])}" alt="Object region">
+        <figcaption>Object region used for the part-muting probe.</figcaption>
       </figure>
       <figure>
         <img src="{rel(data.assets["baseline_grad_cam"])}" alt="Baseline Grad-CAM">
@@ -448,6 +496,16 @@ def _render_html(
         </tr>
       </tbody>
     </table>
+    <p>
+      Shortcut and object masking are not identical interventions. On the selected sample, the
+      shortcut region covers {stamp_area} pixels and the object region covers {object_area}
+      pixels, so attribution agreement and mask deltas should be read as directional evidence
+      rather than a perfectly controlled causal comparison.
+    </p>
+    <p>
+      This is a partial shortcut story: the defect still matters, but shortcut swaps still
+      destabilise the baseline more than they should.
+    </p>
   </section>
 
   <section>
@@ -588,7 +646,13 @@ def build_industrial_shortcut_report(config: IndustrialShortcutReportConfig) -> 
     baseline_predictions = baseline_model.predict(test_samples)
     intervention_predictions = intervention_model.predict(test_samples)
     challenge_samples = _challenge_samples(test_samples)
-    selected_sample = _select_sample(test_samples, baseline_predictions)
+    selected_sample = _select_sample(
+        test_samples,
+        baseline_predictions,
+        intervention_predictions,
+    )
+    baseline_by_id = _prediction_map(baseline_predictions)
+    intervention_by_id = _prediction_map(intervention_predictions)
     assets = _write_assets(
         config=config,
         selected_sample=selected_sample,
@@ -616,6 +680,8 @@ def build_industrial_shortcut_report(config: IndustrialShortcutReportConfig) -> 
             prefix="intervention",
         ),
         selected_sample=selected_sample,
+        selected_baseline_prediction=baseline_by_id[selected_sample.sample_id],
+        selected_intervention_prediction=intervention_by_id[selected_sample.sample_id],
         assets=assets,
         data_source_label=data_source_label,
     )

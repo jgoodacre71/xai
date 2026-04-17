@@ -264,7 +264,25 @@ def _select_query_records(config: PatchCoreBottleReportConfig) -> list[ImageMani
     query_records = filter_manifest_records(records, split="test", is_anomalous=True)
     if not query_records:
         raise ValueError("No anomalous test records found for MVTec AD bottle.")
-    selected = query_records[config.test_index : config.test_index + config.max_examples]
+    selected: list[ImageManifestRecord] = []
+    seen_defect_types: set[str] = set()
+    for record in query_records:
+        if record.defect_type in seen_defect_types:
+            continue
+        selected.append(record)
+        seen_defect_types.add(record.defect_type)
+        if len(selected) >= config.max_examples:
+            break
+    if len(selected) < config.max_examples:
+        selected_ids = {record.sample_id for record in selected}
+        for record in query_records:
+            if record.sample_id in selected_ids:
+                continue
+            selected.append(record)
+            if len(selected) >= config.max_examples:
+                break
+    if config.test_index > 0:
+        selected = selected[config.test_index : config.test_index + config.max_examples]
     if not selected:
         raise ValueError(
             f"test_index {config.test_index} is out of range for {len(query_records)} records."
@@ -559,10 +577,13 @@ def _render_example_section(
     mask_check = _render_mask_check(example=example, output_path=output_path)
     percentile_text = "Nominal reference percentile not available"
     if example.nominal_score_percentile is not None:
-        percentile_text = (
-            f"{100.0 * example.nominal_score_percentile:.1f}th percentile of nominal "
-            "top-patch scores"
-        )
+        if example.nominal_score_percentile >= 0.999:
+            percentile_text = "Above all nominal top-patch scores in this run"
+        else:
+            percentile_text = (
+                f"{100.0 * example.nominal_score_percentile:.1f}th percentile of nominal "
+                "top-patch scores"
+            )
     counterfactual_drop = 0.0
     if counterfactual.before_score != 0.0:
         counterfactual_drop = abs(counterfactual.score_delta) / counterfactual.before_score
@@ -621,22 +642,25 @@ def _render_example_section(
       <li>Score reduction: {100.0 * counterfactual_drop:.1f}%</li>
     </ul>
 
-    <h3>Distance Summary</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Rank</th>
-          <th>Source image id</th>
-          <th>Distance</th>
-          <th>Source box</th>
-          <th>Source path</th>
-        </tr>
-      </thead>
-      <tbody>{''.join(rows)}</tbody>
-    </table>
+    <details>
+      <summary>Detailed neighbour and patch-distance tables</summary>
+      <h3>Distance Summary</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Source image id</th>
+            <th>Distance</th>
+            <th>Source box</th>
+            <th>Source path</th>
+          </tr>
+        </thead>
+        <tbody>{''.join(rows)}</tbody>
+      </table>
 
-    <h3>Top Query Patch Distances</h3>
-    <ol>{top_scores}</ol>
+      <h3>Top Query Patch Distances</h3>
+      <ol>{top_scores}</ol>
+    </details>
   </section>
 """
 

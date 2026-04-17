@@ -930,7 +930,7 @@ def _render_real_dataset_section(
       <li>Group-balanced worst-group accuracy: {balanced_worst:.1%}</li>
       <li>Prototype retrieval probe worst-group accuracy: {prototype_worst:.1%}</li>
     </ul>
-    <div>{chip_html}</div>
+    <div class="badge-row">{chip_html}</div>
     <p>
       This page is strongest as a shortcut diagnosis page. Reweighting changes the error pattern
       and the evidence distribution, but it does not by itself remove shortcut reliance.
@@ -1018,7 +1018,7 @@ def _render_real_dataset_section(
           <td>{data.balanced_summary.centre_mask_delta:.3f}</td>
         </tr>
         <tr>
-          <td>Prototype comparator</td>
+          <td>Prototype retrieval probe</td>
           <td>n/a</td>
           <td>n/a</td>
           <td>{data.prototype_summary.background_mask_delta:.3f}</td>
@@ -1055,6 +1055,11 @@ def _render_real_dataset_section(
       to the selected crossed-group sample. Its low worst-group performance is itself informative:
       even case-based explanations inherit a shortcut-poisoned representation.
     </p>
+    <p>
+      This probe predicts by class prototype rather than single nearest neighbour, so an
+      individual contrast exemplar can be closer even when the class-level margin still favours
+      the predicted class.
+    </p>
     <h4>Nearest Exemplars for the Predicted Class</h4>
     <div class="grid">
       {predicted_exemplar_figures}
@@ -1079,8 +1084,9 @@ def _render_real_html(
     if metashift_data is not None:
         metashift_section = _render_real_dataset_section(metashift_data, output_path=output_path)
     lede = (
-        "Real Waterbirds group shifts, explanation maps, and perturbation probes show that "
-        "high average accuracy can still hide heavy context reliance."
+        "Real Waterbirds group shifts, explanation maps, and perturbation probes show how "
+        "group metrics and evidence checks reveal context reliance that aggregate reporting "
+        "can miss."
     )
     brief = ReportBrief(
         claim=(
@@ -1156,13 +1162,18 @@ def _render_real_html(
     .badge {{
       display: inline-flex;
       align-items: center;
-      margin: 0 8px 8px 0;
       padding: 5px 10px;
       border: 1px solid #cbd5e1;
       background: #f8fafc;
       color: #364152;
       font-size: 12px;
       font-weight: 600;
+    }}
+    .badge-row {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0 12px;
     }}
     {report_chrome_css()}
   </style>
