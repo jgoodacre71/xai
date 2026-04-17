@@ -1,9 +1,9 @@
 {
   "build_metadata": {
-    "built_at_utc": "2026-04-17 16:26:03 UTC",
+    "built_at_utc": "2026-04-17 17:30:16 UTC",
     "cache_status": "disabled",
     "data_mode": "real",
-    "git_sha": "fdfe6b2",
+    "git_sha": "ae8d004",
     "manifest_path": "data/processed/mvtec_ad/bottle/manifest.jsonl"
   },
   "explanation_methods": [

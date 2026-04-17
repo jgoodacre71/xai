@@ -115,6 +115,31 @@
       font-size: 14px;
       line-height: 1.45;
     }
+    .build-meta {
+      margin-top: 16px;
+      padding: 14px;
+      border: 1px solid #d8dee4;
+      background: #ffffff;
+    }
+    .build-meta h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      color: #102a43;
+    }
+    .build-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .build-meta-grid div {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #334e68;
+    }
+    .build-meta-grid strong {
+      display: block;
+      color: #102a43;
+    }
     
   </style>
 </head>
@@ -129,6 +154,18 @@
       <a class="action-link" href="../index.html">Open local demo hub</a>
       <a class="action-link" href="demo_card.html">Open demo card</a>
     </div>
+    
+    <div class="build-meta">
+      <h3>Build Metadata</h3>
+      <div class="build-meta-grid">
+        <div><strong>Git SHA</strong>ae8d004</div>
+        <div><strong>Built at</strong>2026-04-17 17:31:02 UTC</div>
+        <div><strong>Data mode</strong>real</div>
+        <div><strong>Cache</strong>disabled</div>
+        <div><strong>Manifest</strong><code>../../data/processed/mvtec_ad/bottle/manifest.jsonl</code></div>
+      </div>
+    </div>
+
   </section>
 
   
@@ -159,8 +196,9 @@
     <h2>Selected Example Overview</h2>
     <ul>
       <li>Mask-intersection hits: 2 / 2 masked examples</li>
-      <li>Mean mask covered by top patch: 16.1%</li>
-      <li>Mean counterfactual score delta: -0.181299</li>
+      <li>Mean mask covered by top patch: 20.4%</li>
+      <li>Mean counterfactual score delta: -0.158020</li>
+      <li>Mean counterfactual score reduction: 18.7%</li>
     </ul>
     <table>
       <thead>
@@ -174,7 +212,7 @@
           <th>Counterfactual delta</th>
         </tr>
       </thead>
-      <tbody><tr><td>1</td><td>broken_large</td><td>0.905092</td><td>yes</td><td>87.2%</td><td>16.2%</td><td>-0.185154</td></tr><tr><td>2</td><td>broken_large</td><td>0.905590</td><td>yes</td><td>75.1%</td><td>16.0%</td><td>-0.177443</td></tr></tbody>
+      <tbody><tr><td>1</td><td>broken_large</td><td>0.905092</td><td>yes</td><td>87.2%</td><td>16.2%</td><td>-0.185154</td></tr><tr><td>2</td><td>broken_small</td><td>0.776171</td><td>yes</td><td>10.7%</td><td>24.5%</td><td>-0.130886</td></tr></tbody>
     </table>
     <p>
       These are selected-example diagnostics only, not benchmark metrics.
@@ -205,10 +243,52 @@
       </thead>
       <tbody><tr><td>broken_large</td><td>20</td><td>20</td><td>0.912122</td><td>0.960680</td><td>20 / 20</td></tr><tr><td>broken_small</td><td>22</td><td>22</td><td>0.892787</td><td>0.954940</td><td>22 / 22</td></tr><tr><td>contamination</td><td>21</td><td>21</td><td>0.851957</td><td>0.983463</td><td>21 / 21</td></tr><tr><td>good</td><td>20</td><td>0</td><td>0.602700</td><td>0.677514</td><td>not available</td></tr></tbody>
     </table>
+    <h3>Score Context by Split</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Split</th>
+          <th>Images</th>
+          <th>Min top score</th>
+          <th>Median top score</th>
+          <th>P90 top score</th>
+          <th>Max top score</th>
+        </tr>
+      </thead>
+      <tbody><tr><td>Nominal controls</td><td>20</td><td>0.542300</td><td>0.601666</td><td>0.645007</td><td>0.677514</td></tr><tr><td>Anomalous images</td><td>63</td><td>0.730665</td><td>0.905092</td><td>0.955548</td><td>0.983463</td></tr></tbody>
+    </table>
     <p>
       These are local report diagnostics from the current patch grid and memory
       bank, not official PatchCore benchmark numbers or pixel-level AUROC.
     </p>
+    <p>
+      The top-patch overlap check is intentionally local. It tells you whether PatchCore found a
+      useful witness patch, not whether it recovered the full defect extent.
+    </p>
+  </section>
+
+
+
+  <section>
+    <h2>Nominal Control Example</h2>
+    <p>
+      This low-score good example anchors the scale: the same patch pipeline on a nominal bottle
+      produces a much lower top-patch score and no obvious local witness patch.
+    </p>
+    <div class="grid">
+      <figure>
+        <img src="assets/nominal_control_score_overlay.png" alt="Nominal control score overlay">
+        <figcaption>Nominal control anomaly map.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/nominal_control_query_box.png" alt="Nominal control top patch box">
+        <figcaption>Top patch on the nominal control image.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/nominal_control_query_patch.png" alt="Nominal control top patch crop">
+        <figcaption>Top nominal patch. Distance: 0.542300</figcaption>
+      </figure>
+    </div>
   </section>
 
 
@@ -235,7 +315,10 @@
       </figure>
       <figure>
         <img src="assets/example_1_query_patch.png" alt="Top scored query patch crop">
-        <figcaption>Top scored query patch. Distance: 0.905092</figcaption>
+        <figcaption>
+          Top scored query patch. Distance: 0.905092 |
+          Above all nominal top-patch scores in this run
+        </figcaption>
       </figure>
     </div>
 
@@ -254,6 +337,10 @@
       <li>Patch pixels overlapping mask: 14286 / 16384 (87.2%)</li>
       <li>Mask covered by top patch: 14286 / 88192 (16.2%)</li>
     </ul>
+    <p>
+      The top patch is a witness patch, not a full defect segmentation. Strong overlap with the
+      anomalous region can still cover only part of the total defect extent.
+    </p>
 
 
     <h3>Nearest Normal Patch Evidence</h3>
@@ -299,10 +386,22 @@
     <h3>Counterfactual Patch Replacement</h3>
     <div class="grid">
       <figure>
+        <img src="assets/example_1_query_patch.png" alt="Original anomalous query patch">
+        <figcaption>
+          Original anomalous query patch used as the witness patch in this example.
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_1_normal_patch_1.png" alt="Nearest normal source patch used for replacement">
+        <figcaption>
+          Top-1 nearest nominal patch. This is the source patch inserted in the replacement probe.
+        </figcaption>
+      </figure>
+      <figure>
         <img src="assets/example_1_counterfactual_box.png" alt="Counterfactual replacement preview">
         <figcaption>
-          Top query patch replaced with the nearest normal source patch. This is
-          a didactic probe, not causal proof.
+          Full image after replacing the witness patch with the nearest normal source patch.
+          This is a didactic probe, not causal proof.
         </figcaption>
       </figure>
     </div>
@@ -310,36 +409,40 @@
       <li>Before score: 0.905092</li>
       <li>After score: 0.719938</li>
       <li>Delta: -0.185154</li>
+      <li>Score reduction: 20.5%</li>
     </ul>
 
-    <h3>Distance Summary</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Rank</th>
-          <th>Source image id</th>
-          <th>Distance</th>
-          <th>Source box</th>
-          <th>Source path</th>
-        </tr>
-      </thead>
-      <tbody><tr><td>1</td><td>mvtec_ad/bottle/train/good/000</td><td>0.905092</td><td>BoundingBox(x=704, y=576, width=128, height=128)</td><td>data/interim/mvtec_ad/bottle/train/good/000.png</td></tr><tr><td>2</td><td>mvtec_ad/bottle/train/good/003</td><td>0.908571</td><td>BoundingBox(x=576, y=576, width=128, height=128)</td><td>data/interim/mvtec_ad/bottle/train/good/003.png</td></tr><tr><td>3</td><td>mvtec_ad/bottle/train/good/009</td><td>0.914219</td><td>BoundingBox(x=640, y=384, width=128, height=128)</td><td>data/interim/mvtec_ad/bottle/train/good/009.png</td></tr></tbody>
-    </table>
+    <details>
+      <summary>Detailed neighbour and patch-distance tables</summary>
+      <h3>Distance Summary</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Source image id</th>
+            <th>Distance</th>
+            <th>Source box</th>
+            <th>Source path</th>
+          </tr>
+        </thead>
+        <tbody><tr><td>1</td><td>mvtec_ad/bottle/train/good/000</td><td>0.905092</td><td>BoundingBox(x=704, y=576, width=128, height=128)</td><td>data/interim/mvtec_ad/bottle/train/good/000.png</td></tr><tr><td>2</td><td>mvtec_ad/bottle/train/good/003</td><td>0.908571</td><td>BoundingBox(x=576, y=576, width=128, height=128)</td><td>data/interim/mvtec_ad/bottle/train/good/003.png</td></tr><tr><td>3</td><td>mvtec_ad/bottle/train/good/009</td><td>0.914219</td><td>BoundingBox(x=640, y=384, width=128, height=128)</td><td>data/interim/mvtec_ad/bottle/train/good/009.png</td></tr></tbody>
+      </table>
 
-    <h3>Top Query Patch Distances</h3>
-    <ol><li>patch 1: distance 0.905092, box BoundingBox(x=640, y=384, width=128, height=128)</li>
+      <h3>Top Query Patch Distances</h3>
+      <ol><li>patch 1: distance 0.905092, box BoundingBox(x=640, y=384, width=128, height=128)</li>
 <li>patch 2: distance 0.890729, box BoundingBox(x=640, y=448, width=128, height=128)</li>
 <li>patch 3: distance 0.890247, box BoundingBox(x=704, y=448, width=128, height=128)</li>
 <li>patch 4: distance 0.888110, box BoundingBox(x=576, y=640, width=128, height=128)</li>
 <li>patch 5: distance 0.874930, box BoundingBox(x=704, y=512, width=128, height=128)</li></ol>
+    </details>
   </section>
 
 
   <section class="example">
-    <h2>Example 2: broken_large</h2>
+    <h2>Example 2: broken_small</h2>
     <p>
-      Sample <code>mvtec_ad/bottle/test/broken_large/001</code> from
-      <code>data/interim/mvtec_ad/bottle/test/broken_large/001.png</code>.
+      Sample <code>mvtec_ad/bottle/test/broken_small/000</code> from
+      <code>data/interim/mvtec_ad/bottle/test/broken_small/000.png</code>.
     </p>
 
     <h3>Top Scored Patch</h3>
@@ -357,7 +460,10 @@
       </figure>
       <figure>
         <img src="assets/example_2_query_patch.png" alt="Top scored query patch crop">
-        <figcaption>Top scored query patch. Distance: 0.905590</figcaption>
+        <figcaption>
+          Top scored query patch. Distance: 0.776171 |
+          Above all nominal top-patch scores in this run
+        </figcaption>
       </figure>
     </div>
 
@@ -367,15 +473,19 @@
       <figure>
         <img src="assets/example_2_mask_overlay.png" alt="Ground-truth anomaly mask overlay">
         <figcaption>
-          Ground-truth anomaly mask overlay from <code>data/interim/mvtec_ad/bottle/ground_truth/broken_large/001_mask.png</code>.
+          Ground-truth anomaly mask overlay from <code>data/interim/mvtec_ad/bottle/ground_truth/broken_small/000_mask.png</code>.
         </figcaption>
       </figure>
     </div>
     <ul>
       <li>Top patch intersects mask: yes</li>
-      <li>Patch pixels overlapping mask: 12298 / 16384 (75.1%)</li>
-      <li>Mask covered by top patch: 12298 / 76641 (16.0%)</li>
+      <li>Patch pixels overlapping mask: 1759 / 16384 (10.7%)</li>
+      <li>Mask covered by top patch: 1759 / 7166 (24.5%)</li>
     </ul>
+    <p>
+      The top patch is a witness patch, not a full defect segmentation. Strong overlap with the
+      anomalous region can still cover only part of the total defect extent.
+    </p>
 
 
     <h3>Nearest Normal Patch Evidence</h3>
@@ -384,7 +494,7 @@
       <figure>
         <img src="assets/example_2_normal_patch_1.png" alt="Nearest normal patch 1">
         <figcaption>
-          Nearest normal patch 1; distance 0.905590
+          Nearest normal patch 1; distance 0.776171
         </figcaption>
       </figure>
       <figure>
@@ -396,7 +506,7 @@
       <figure>
         <img src="assets/example_2_normal_patch_2.png" alt="Nearest normal patch 2">
         <figcaption>
-          Nearest normal patch 2; distance 0.906047
+          Nearest normal patch 2; distance 0.785262
         </figcaption>
       </figure>
       <figure>
@@ -408,7 +518,7 @@
       <figure>
         <img src="assets/example_2_normal_patch_3.png" alt="Nearest normal patch 3">
         <figcaption>
-          Nearest normal patch 3; distance 0.910880
+          Nearest normal patch 3; distance 0.791808
         </figcaption>
       </figure>
       <figure>
@@ -421,39 +531,55 @@
     <h3>Counterfactual Patch Replacement</h3>
     <div class="grid">
       <figure>
+        <img src="assets/example_2_query_patch.png" alt="Original anomalous query patch">
+        <figcaption>
+          Original anomalous query patch used as the witness patch in this example.
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_2_normal_patch_1.png" alt="Nearest normal source patch used for replacement">
+        <figcaption>
+          Top-1 nearest nominal patch. This is the source patch inserted in the replacement probe.
+        </figcaption>
+      </figure>
+      <figure>
         <img src="assets/example_2_counterfactual_box.png" alt="Counterfactual replacement preview">
         <figcaption>
-          Top query patch replaced with the nearest normal source patch. This is
-          a didactic probe, not causal proof.
+          Full image after replacing the witness patch with the nearest normal source patch.
+          This is a didactic probe, not causal proof.
         </figcaption>
       </figure>
     </div>
     <ul>
-      <li>Before score: 0.905590</li>
-      <li>After score: 0.728147</li>
-      <li>Delta: -0.177443</li>
+      <li>Before score: 0.776171</li>
+      <li>After score: 0.645285</li>
+      <li>Delta: -0.130886</li>
+      <li>Score reduction: 16.9%</li>
     </ul>
 
-    <h3>Distance Summary</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Rank</th>
-          <th>Source image id</th>
-          <th>Distance</th>
-          <th>Source box</th>
-          <th>Source path</th>
-        </tr>
-      </thead>
-      <tbody><tr><td>1</td><td>mvtec_ad/bottle/train/good/009</td><td>0.905590</td><td>BoundingBox(x=192, y=512, width=128, height=128)</td><td>data/interim/mvtec_ad/bottle/train/good/009.png</td></tr><tr><td>2</td><td>mvtec_ad/bottle/train/good/001</td><td>0.906047</td><td>BoundingBox(x=512, y=640, width=128, height=128)</td><td>data/interim/mvtec_ad/bottle/train/good/001.png</td></tr><tr><td>3</td><td>mvtec_ad/bottle/train/good/000</td><td>0.910880</td><td>BoundingBox(x=576, y=576, width=128, height=128)</td><td>data/interim/mvtec_ad/bottle/train/good/000.png</td></tr></tbody>
-    </table>
+    <details>
+      <summary>Detailed neighbour and patch-distance tables</summary>
+      <h3>Distance Summary</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Source image id</th>
+            <th>Distance</th>
+            <th>Source box</th>
+            <th>Source path</th>
+          </tr>
+        </thead>
+        <tbody><tr><td>1</td><td>mvtec_ad/bottle/train/good/009</td><td>0.776171</td><td>BoundingBox(x=192, y=512, width=128, height=128)</td><td>data/interim/mvtec_ad/bottle/train/good/009.png</td></tr><tr><td>2</td><td>mvtec_ad/bottle/train/good/008</td><td>0.785262</td><td>BoundingBox(x=192, y=576, width=128, height=128)</td><td>data/interim/mvtec_ad/bottle/train/good/008.png</td></tr><tr><td>3</td><td>mvtec_ad/bottle/train/good/009</td><td>0.791808</td><td>BoundingBox(x=192, y=576, width=128, height=128)</td><td>data/interim/mvtec_ad/bottle/train/good/009.png</td></tr></tbody>
+      </table>
 
-    <h3>Top Query Patch Distances</h3>
-    <ol><li>patch 1: distance 0.905590, box BoundingBox(x=576, y=576, width=128, height=128)</li>
-<li>patch 2: distance 0.900534, box BoundingBox(x=640, y=576, width=128, height=128)</li>
-<li>patch 3: distance 0.892025, box BoundingBox(x=192, y=448, width=128, height=128)</li>
-<li>patch 4: distance 0.879859, box BoundingBox(x=192, y=512, width=128, height=128)</li>
-<li>patch 5: distance 0.845471, box BoundingBox(x=448, y=640, width=128, height=128)</li></ol>
+      <h3>Top Query Patch Distances</h3>
+      <ol><li>patch 1: distance 0.776171, box BoundingBox(x=256, y=576, width=128, height=128)</li>
+<li>patch 2: distance 0.713572, box BoundingBox(x=256, y=512, width=128, height=128)</li>
+<li>patch 3: distance 0.653315, box BoundingBox(x=192, y=512, width=128, height=128)</li>
+<li>patch 4: distance 0.609133, box BoundingBox(x=192, y=576, width=128, height=128)</li>
+<li>patch 5: distance 0.545801, box BoundingBox(x=128, y=384, width=128, height=128)</li></ol>
+    </details>
   </section>
 
   

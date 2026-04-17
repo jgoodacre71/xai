@@ -158,8 +158,8 @@
     <div class="build-meta">
       <h3>Build Metadata</h3>
       <div class="build-meta-grid">
-        <div><strong>Git SHA</strong>fdfe6b2</div>
-        <div><strong>Built at</strong>2026-04-17 16:26:03 UTC</div>
+        <div><strong>Git SHA</strong>ae8d004</div>
+        <div><strong>Built at</strong>2026-04-17 17:30:16 UTC</div>
         <div><strong>Data mode</strong>real</div>
         <div><strong>Cache</strong>disabled</div>
         <div><strong>Manifest</strong><code>../../data/processed/mvtec_ad/bottle/manifest.jsonl</code></div>
@@ -242,6 +242,20 @@
         </tr>
       </thead>
       <tbody><tr><td>broken_large</td><td>20</td><td>20</td><td>0.982817</td><td>1.046035</td><td>20 / 20</td></tr><tr><td>broken_small</td><td>22</td><td>22</td><td>0.965715</td><td>1.061277</td><td>22 / 22</td></tr><tr><td>contamination</td><td>21</td><td>21</td><td>0.883751</td><td>1.096801</td><td>21 / 21</td></tr><tr><td>good</td><td>20</td><td>0</td><td>0.549727</td><td>0.636756</td><td>not available</td></tr></tbody>
+    </table>
+    <h3>Score Context by Split</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Split</th>
+          <th>Images</th>
+          <th>Min top score</th>
+          <th>Median top score</th>
+          <th>P90 top score</th>
+          <th>Max top score</th>
+        </tr>
+      </thead>
+      <tbody><tr><td>Nominal controls</td><td>20</td><td>0.486437</td><td>0.543412</td><td>0.602907</td><td>0.636756</td></tr><tr><td>Anomalous images</td><td>63</td><td>0.676876</td><td>0.968604</td><td>1.043541</td><td>1.096801</td></tr></tbody>
     </table>
     <p>
       These are local report diagnostics from the current patch grid and memory
@@ -372,10 +386,22 @@
     <h3>Counterfactual Patch Replacement</h3>
     <div class="grid">
       <figure>
+        <img src="assets/example_1_query_patch.png" alt="Original anomalous query patch">
+        <figcaption>
+          Original anomalous query patch used as the witness patch in this example.
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_1_normal_patch_1.png" alt="Nearest normal source patch used for replacement">
+        <figcaption>
+          Top-1 nearest nominal patch. This is the source patch inserted in the replacement probe.
+        </figcaption>
+      </figure>
+      <figure>
         <img src="assets/example_1_counterfactual_box.png" alt="Counterfactual replacement preview">
         <figcaption>
-          Top query patch replaced with the nearest normal source patch. This is
-          a didactic probe, not causal proof.
+          Full image after replacing the witness patch with the nearest normal source patch.
+          This is a didactic probe, not causal proof.
         </figcaption>
       </figure>
     </div>
@@ -505,10 +531,22 @@
     <h3>Counterfactual Patch Replacement</h3>
     <div class="grid">
       <figure>
+        <img src="assets/example_2_query_patch.png" alt="Original anomalous query patch">
+        <figcaption>
+          Original anomalous query patch used as the witness patch in this example.
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_2_normal_patch_1.png" alt="Nearest normal source patch used for replacement">
+        <figcaption>
+          Top-1 nearest nominal patch. This is the source patch inserted in the replacement probe.
+        </figcaption>
+      </figure>
+      <figure>
         <img src="assets/example_2_counterfactual_box.png" alt="Counterfactual replacement preview">
         <figcaption>
-          Top query patch replaced with the nearest normal source patch. This is
-          a didactic probe, not causal proof.
+          Full image after replacing the witness patch with the nearest normal source patch.
+          This is a didactic probe, not causal proof.
         </figcaption>
       </figure>
     </div>
@@ -638,10 +676,22 @@
     <h3>Counterfactual Patch Replacement</h3>
     <div class="grid">
       <figure>
+        <img src="assets/example_3_query_patch.png" alt="Original anomalous query patch">
+        <figcaption>
+          Original anomalous query patch used as the witness patch in this example.
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_3_normal_patch_1.png" alt="Nearest normal source patch used for replacement">
+        <figcaption>
+          Top-1 nearest nominal patch. This is the source patch inserted in the replacement probe.
+        </figcaption>
+      </figure>
+      <figure>
         <img src="assets/example_3_counterfactual_box.png" alt="Counterfactual replacement preview">
         <figcaption>
-          Top query patch replaced with the nearest normal source patch. This is
-          a didactic probe, not causal proof.
+          Full image after replacing the witness patch with the nearest normal source patch.
+          This is a didactic probe, not causal proof.
         </figcaption>
       </figure>
     </div>

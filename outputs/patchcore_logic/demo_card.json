@@ -1,9 +1,9 @@
 {
   "build_metadata": {
-    "built_at_utc": "2026-04-17 16:01:52 UTC",
+    "built_at_utc": "2026-04-17 17:31:59 UTC",
     "cache_status": "enabled",
     "data_mode": "real",
-    "git_sha": "03f1d2a",
+    "git_sha": "ae8d004",
     "manifest_path": "data/processed/mvtec_loco_ad/juice_bottle/manifest.jsonl"
   },
   "explanation_methods": [

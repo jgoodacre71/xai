@@ -45,8 +45,8 @@
   <section>
     <h2>Build Metadata</h2>
     <ul>
-      <li>Git SHA: <code>fdfe6b2</code></li>
-      <li>Built at: 2026-04-17 16:25:39 UTC</li>
+      <li>Git SHA: <code>ae8d004</code></li>
+      <li>Built at: 2026-04-17 17:29:44 UTC</li>
       <li>Data mode: real</li>
       <li>Cache: disabled</li>
       <li>Manifest: <code>data/processed/neu_cls/shortcut_binary/manifest.jsonl</code></li>
@@ -57,14 +57,14 @@
     <section>
     <h2>Metric Summary</h2>
     <ul>
-      <li>Baseline overall accuracy: 53.3%</li>
-      <li>Intervention overall accuracy: 63.3%</li>
-      <li>Baseline clean accuracy: 100.0%</li>
-      <li>Intervention clean accuracy: 100.0%</li>
-      <li>Baseline swapped-shortcut accuracy: 10.0%</li>
-      <li>Intervention swapped-shortcut accuracy: 20.0%</li>
+      <li>Baseline overall accuracy: 50.0%</li>
+      <li>Intervention overall accuracy: 50.0%</li>
+      <li>Baseline clean accuracy: 50.0%</li>
+      <li>Intervention clean accuracy: 50.0%</li>
+      <li>Baseline swapped-shortcut accuracy: 50.0%</li>
+      <li>Intervention swapped-shortcut accuracy: 50.0%</li>
       <li>Baseline no-stamp accuracy: 50.0%</li>
-      <li>Intervention no-stamp accuracy: 70.0%</li>
+      <li>Intervention no-stamp accuracy: 50.0%</li>
       <li>Baseline train samples: 80</li>
       <li>Intervention train samples: 320</li>
       <li>Test samples: 30</li>
@@ -75,14 +75,15 @@
     <h2>Explanations on a Shortcut Challenge Case</h2>
     <p>
       Selected challenge case: baseline predicts
-      <code>area_defect</code>
-      (0.480) and intervention predicts
       <code>linear_defect</code>
-      (0.595).
+      (0.672) and intervention predicts
+      <code>linear_defect</code>
+      (0.662).
     </p>
+    <p><strong>On this sample, muting the shortcut moves the baseline to <code>linear_defect</code> (0.603), while muting the object region moves it to <code>linear_defect</code> (0.716). The intervention is still imperfect, but its response is less brittle under the same shortcut change.</strong></p>
     <div class="grid">
       <figure>
-        <img src="../../data/interim/neu_cls/shortcut_binary/test/linear_defect/sc_003_swapped_stamp.png" alt="Selected challenge sample">
+        <img src="../../data/interim/neu_cls/shortcut_binary/test/area_defect/in_000_swapped_stamp.png" alt="Selected challenge sample">
         <figcaption>Selected challenge sample for explanation comparison.</figcaption>
       </figure>
       <figure>
@@ -124,6 +125,51 @@
         <figcaption>Part-muted perturbation.</figcaption>
       </figure>
     </div>
+    <h3>Selected Challenge Matrix</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Condition</th>
+          <th>Baseline</th>
+          <th>Intervention</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Original</td>
+          <td>
+            <code>linear_defect</code>
+            (0.672)
+          </td>
+          <td>
+            <code>linear_defect</code>
+            (0.662)
+          </td>
+        </tr>
+        <tr>
+          <td>Shortcut muted</td>
+          <td>
+            <code>linear_defect</code>
+            (0.603)
+          </td>
+          <td>
+            <code>linear_defect</code>
+            (0.587)
+          </td>
+        </tr>
+        <tr>
+          <td>Object muted</td>
+          <td>
+            <code>linear_defect</code>
+            (0.716)
+          </td>
+          <td>
+            <code>linear_defect</code>
+            (0.691)
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </section>
 
   <section>
@@ -143,21 +189,21 @@
       <tbody>
         <tr>
           <td>Baseline</td>
-          <td>0.014</td>
-          <td>0.906</td>
-          <td>0.578</td>
-          <td>0.312</td>
-          <td>0.516</td>
-          <td>0.781</td>
+          <td>0.299</td>
+          <td>0.508</td>
+          <td>0.558</td>
+          <td>0.281</td>
+          <td>0.146</td>
+          <td>0.228</td>
         </tr>
         <tr>
           <td>Intervention</td>
-          <td>0.018</td>
-          <td>0.894</td>
-          <td>0.571</td>
-          <td>0.330</td>
-          <td>0.371</td>
-          <td>0.622</td>
+          <td>0.262</td>
+          <td>0.565</td>
+          <td>0.531</td>
+          <td>0.310</td>
+          <td>0.100</td>
+          <td>0.153</td>
         </tr>
       </tbody>
     </table>
@@ -174,22 +220,25 @@
   </section>
 
   <section>
-    <h2>Test Predictions</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Sample</th>
-          <th>Label</th>
-          <th>Shape</th>
-          <th>Stamp</th>
-          <th>Baseline prediction</th>
-          <th>Baseline probability</th>
-          <th>Intervention prediction</th>
-          <th>Intervention probability</th>
-        </tr>
-      </thead>
-      <tbody><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_000_clean</td><td>linear_defect</td><td>Sc</td><td>blue</td><td>linear_defect</td><td>0.930</td><td>linear_defect</td><td>0.895</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_000_swapped_stamp</td><td>linear_defect</td><td>Sc</td><td>red</td><td>area_defect</td><td>0.262</td><td>area_defect</td><td>0.307</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_000_no_stamp</td><td>linear_defect</td><td>Sc</td><td>none</td><td>area_defect</td><td>0.451</td><td>area_defect</td><td>0.449</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_001_clean</td><td>linear_defect</td><td>Sc</td><td>blue</td><td>linear_defect</td><td>0.929</td><td>linear_defect</td><td>0.896</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_001_swapped_stamp</td><td>linear_defect</td><td>Sc</td><td>red</td><td>area_defect</td><td>0.268</td><td>area_defect</td><td>0.320</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_001_no_stamp</td><td>linear_defect</td><td>Sc</td><td>none</td><td>area_defect</td><td>0.456</td><td>area_defect</td><td>0.462</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_002_clean</td><td>linear_defect</td><td>Sc</td><td>blue</td><td>linear_defect</td><td>0.937</td><td>linear_defect</td><td>0.913</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_002_swapped_stamp</td><td>linear_defect</td><td>Sc</td><td>red</td><td>area_defect</td><td>0.295</td><td>area_defect</td><td>0.366</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_002_no_stamp</td><td>linear_defect</td><td>Sc</td><td>none</td><td>area_defect</td><td>0.490</td><td>linear_defect</td><td>0.513</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_003_clean</td><td>linear_defect</td><td>Sc</td><td>blue</td><td>linear_defect</td><td>0.971</td><td>linear_defect</td><td>0.964</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_003_swapped_stamp</td><td>linear_defect</td><td>Sc</td><td>red</td><td>area_defect</td><td>0.480</td><td>linear_defect</td><td>0.595</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_003_no_stamp</td><td>linear_defect</td><td>Sc</td><td>none</td><td>linear_defect</td><td>0.679</td><td>linear_defect</td><td>0.728</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_004_clean</td><td>linear_defect</td><td>Sc</td><td>blue</td><td>linear_defect</td><td>0.983</td><td>linear_defect</td><td>0.981</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_004_swapped_stamp</td><td>linear_defect</td><td>Sc</td><td>red</td><td>linear_defect</td><td>0.614</td><td>linear_defect</td><td>0.735</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_004_no_stamp</td><td>linear_defect</td><td>Sc</td><td>none</td><td>linear_defect</td><td>0.785</td><td>linear_defect</td><td>0.835</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_000_clean</td><td>area_defect</td><td>In</td><td>red</td><td>area_defect</td><td>0.305</td><td>area_defect</td><td>0.337</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_000_swapped_stamp</td><td>area_defect</td><td>In</td><td>blue</td><td>linear_defect</td><td>0.948</td><td>linear_defect</td><td>0.919</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_000_no_stamp</td><td>area_defect</td><td>In</td><td>none</td><td>linear_defect</td><td>0.517</td><td>area_defect</td><td>0.499</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_001_clean</td><td>area_defect</td><td>In</td><td>red</td><td>area_defect</td><td>0.290</td><td>area_defect</td><td>0.318</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_001_swapped_stamp</td><td>area_defect</td><td>In</td><td>blue</td><td>linear_defect</td><td>0.943</td><td>linear_defect</td><td>0.910</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_001_no_stamp</td><td>area_defect</td><td>In</td><td>none</td><td>area_defect</td><td>0.495</td><td>area_defect</td><td>0.473</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_002_clean</td><td>area_defect</td><td>In</td><td>red</td><td>area_defect</td><td>0.202</td><td>area_defect</td><td>0.254</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_002_swapped_stamp</td><td>area_defect</td><td>In</td><td>blue</td><td>linear_defect</td><td>0.906</td><td>linear_defect</td><td>0.868</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_002_no_stamp</td><td>area_defect</td><td>In</td><td>none</td><td>area_defect</td><td>0.369</td><td>area_defect</td><td>0.384</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_003_clean</td><td>area_defect</td><td>In</td><td>red</td><td>area_defect</td><td>0.259</td><td>area_defect</td><td>0.293</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_003_swapped_stamp</td><td>area_defect</td><td>In</td><td>blue</td><td>linear_defect</td><td>0.933</td><td>linear_defect</td><td>0.896</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_003_no_stamp</td><td>area_defect</td><td>In</td><td>none</td><td>area_defect</td><td>0.452</td><td>area_defect</td><td>0.436</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_004_clean</td><td>area_defect</td><td>In</td><td>red</td><td>area_defect</td><td>0.372</td><td>area_defect</td><td>0.422</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_004_swapped_stamp</td><td>area_defect</td><td>In</td><td>blue</td><td>linear_defect</td><td>0.963</td><td>linear_defect</td><td>0.945</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_004_no_stamp</td><td>area_defect</td><td>In</td><td>none</td><td>linear_defect</td><td>0.602</td><td>linear_defect</td><td>0.600</td></tr></tbody>
-    </table>
+    <h2>Full Test Prediction Table</h2>
+    <details>
+      <summary>Open the full per-sample prediction table</summary>
+      <table>
+        <thead>
+          <tr>
+            <th>Sample</th>
+            <th>Label</th>
+            <th>Shape</th>
+            <th>Stamp</th>
+            <th>Baseline prediction</th>
+            <th>Baseline probability</th>
+            <th>Intervention prediction</th>
+            <th>Intervention probability</th>
+          </tr>
+        </thead>
+        <tbody><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_000_clean</td><td>linear_defect</td><td>Sc</td><td>blue</td><td>linear_defect</td><td>0.664</td><td>linear_defect</td><td>0.652</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_000_swapped_stamp</td><td>linear_defect</td><td>Sc</td><td>red</td><td>linear_defect</td><td>0.522</td><td>linear_defect</td><td>0.523</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_000_no_stamp</td><td>linear_defect</td><td>Sc</td><td>none</td><td>linear_defect</td><td>0.593</td><td>linear_defect</td><td>0.573</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_001_clean</td><td>linear_defect</td><td>Sc</td><td>blue</td><td>linear_defect</td><td>0.674</td><td>linear_defect</td><td>0.661</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_001_swapped_stamp</td><td>linear_defect</td><td>Sc</td><td>red</td><td>linear_defect</td><td>0.529</td><td>linear_defect</td><td>0.530</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_001_no_stamp</td><td>linear_defect</td><td>Sc</td><td>none</td><td>linear_defect</td><td>0.601</td><td>linear_defect</td><td>0.580</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_002_clean</td><td>linear_defect</td><td>Sc</td><td>blue</td><td>linear_defect</td><td>0.683</td><td>linear_defect</td><td>0.672</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_002_swapped_stamp</td><td>linear_defect</td><td>Sc</td><td>red</td><td>linear_defect</td><td>0.541</td><td>linear_defect</td><td>0.543</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_002_no_stamp</td><td>linear_defect</td><td>Sc</td><td>none</td><td>linear_defect</td><td>0.612</td><td>linear_defect</td><td>0.592</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_003_clean</td><td>linear_defect</td><td>Sc</td><td>blue</td><td>linear_defect</td><td>0.712</td><td>linear_defect</td><td>0.708</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_003_swapped_stamp</td><td>linear_defect</td><td>Sc</td><td>red</td><td>linear_defect</td><td>0.574</td><td>linear_defect</td><td>0.586</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_003_no_stamp</td><td>linear_defect</td><td>Sc</td><td>none</td><td>linear_defect</td><td>0.644</td><td>linear_defect</td><td>0.633</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_004_clean</td><td>linear_defect</td><td>Sc</td><td>blue</td><td>linear_defect</td><td>0.728</td><td>linear_defect</td><td>0.729</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_004_swapped_stamp</td><td>linear_defect</td><td>Sc</td><td>red</td><td>linear_defect</td><td>0.594</td><td>linear_defect</td><td>0.611</td></tr><tr><td>neu_cls/shortcut_binary/test/linear_defect/sc_004_no_stamp</td><td>linear_defect</td><td>Sc</td><td>none</td><td>linear_defect</td><td>0.662</td><td>linear_defect</td><td>0.657</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_000_clean</td><td>area_defect</td><td>In</td><td>red</td><td>linear_defect</td><td>0.533</td><td>linear_defect</td><td>0.537</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_000_swapped_stamp</td><td>area_defect</td><td>In</td><td>blue</td><td>linear_defect</td><td>0.672</td><td>linear_defect</td><td>0.662</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_000_no_stamp</td><td>area_defect</td><td>In</td><td>none</td><td>linear_defect</td><td>0.604</td><td>linear_defect</td><td>0.588</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_001_clean</td><td>area_defect</td><td>In</td><td>red</td><td>linear_defect</td><td>0.529</td><td>linear_defect</td><td>0.532</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_001_swapped_stamp</td><td>area_defect</td><td>In</td><td>blue</td><td>linear_defect</td><td>0.668</td><td>linear_defect</td><td>0.658</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_001_no_stamp</td><td>area_defect</td><td>In</td><td>none</td><td>linear_defect</td><td>0.600</td><td>linear_defect</td><td>0.582</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_002_clean</td><td>area_defect</td><td>In</td><td>red</td><td>linear_defect</td><td>0.531</td><td>linear_defect</td><td>0.527</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_002_swapped_stamp</td><td>area_defect</td><td>In</td><td>blue</td><td>linear_defect</td><td>0.672</td><td>linear_defect</td><td>0.655</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_002_no_stamp</td><td>area_defect</td><td>In</td><td>none</td><td>linear_defect</td><td>0.601</td><td>linear_defect</td><td>0.576</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_003_clean</td><td>area_defect</td><td>In</td><td>red</td><td>linear_defect</td><td>0.529</td><td>linear_defect</td><td>0.531</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_003_swapped_stamp</td><td>area_defect</td><td>In</td><td>blue</td><td>linear_defect</td><td>0.669</td><td>linear_defect</td><td>0.656</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_003_no_stamp</td><td>area_defect</td><td>In</td><td>none</td><td>linear_defect</td><td>0.601</td><td>linear_defect</td><td>0.581</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_004_clean</td><td>area_defect</td><td>In</td><td>red</td><td>linear_defect</td><td>0.541</td><td>linear_defect</td><td>0.550</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_004_swapped_stamp</td><td>area_defect</td><td>In</td><td>blue</td><td>linear_defect</td><td>0.678</td><td>linear_defect</td><td>0.673</td></tr><tr><td>neu_cls/shortcut_binary/test/area_defect/in_004_no_stamp</td><td>area_defect</td><td>In</td><td>none</td><td>linear_defect</td><td>0.613</td><td>linear_defect</td><td>0.601</td></tr></tbody>
+      </table>
+    </details>
   </section>
 
   <section>

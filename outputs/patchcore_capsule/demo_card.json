@@ -1,4 +1,11 @@
 {
+  "build_metadata": {
+    "built_at_utc": "2026-04-17 17:31:34 UTC",
+    "cache_status": "disabled",
+    "data_mode": "real",
+    "git_sha": "ae8d004",
+    "manifest_path": "data/processed/mvtec_ad/capsule/manifest.jsonl"
+  },
   "explanation_methods": [
     "Coarse patch-score anomaly map",
     "Top anomalous patch crop",
