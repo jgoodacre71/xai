@@ -332,10 +332,10 @@ def augment_stamp_invariant_samples(
     *,
     output_dir: Path,
 ) -> list[IndustrialShortcutSample]:
-    """Return stamp-randomised and stamp-masked variants of training samples."""
+    """Return original samples plus stamp-randomised and stamp-masked variants."""
 
     ensure_directory(output_dir)
-    augmented: list[IndustrialShortcutSample] = []
+    augmented: list[IndustrialShortcutSample] = list(samples)
     for sample in samples:
         none_path = output_dir / f"{sample.sample_id}_none.png"
         swap_path = output_dir / (

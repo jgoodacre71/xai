@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 
 from xai_demo_suite.data.industrial_manifest import (
+    balanced_label_subset,
     load_industrial_shortcut_manifest,
     manifest_records_to_samples,
 )
@@ -72,11 +73,12 @@ class ExplanationDriftReportConfig:
 
     output_dir: Path = Path("outputs/explanation_drift")
     synthetic_dir: Path = Path("outputs/explanation_drift/synthetic")
-    classifier_input_size: int = 128
+    classifier_input_size: int = 64
     classifier_batch_size: int = 16
     classifier_epochs: int = 18
-    classifier_seed: int = 19
+    classifier_seed: int = 6
     industrial_manifest_path: Path = Path("data/processed/neu_cls/shortcut_binary/manifest.jsonl")
+    industrial_max_train_records: int | None = 80
     mvtec_manifest_path: Path = Path("data/processed/mvtec_ad/bottle/manifest.jsonl")
     mvtec_cache_path: Path = DEFAULT_DRIFT_CACHE_PATH
     mvtec_feature_extractor_name: str = "colour_texture"
@@ -280,10 +282,11 @@ def _train_classifier_models(
         samples = manifest_records_to_samples(records)
         train_samples = [sample for sample in samples if sample.split == "train"]
         test_samples = [sample for sample in samples if sample.split == "test"]
-        data_source_label = "real NEU-CLS shortcut images"
+        data_source_label = "real NEU scratches-versus-inclusion shortcut images"
     else:
         train_samples, test_samples = generate_industrial_shortcut_dataset(config.synthetic_dir)
         data_source_label = "synthetic industrial shortcut images"
+    train_samples = balanced_label_subset(train_samples, config.industrial_max_train_records)
     intervention_train_samples = augment_stamp_invariant_samples(
         train_samples,
         output_dir=config.synthetic_dir / "drift_intervention_train",
@@ -334,6 +337,12 @@ def _build_classifier_report(
     )
     baseline_predictions = model.predict(test_samples)
     baseline_prediction = _prediction_map(baseline_predictions)[baseline_sample.sample_id]
+    clean_ids = {sample.sample_id for sample in test_samples if sample.variant == "clean"}
+    clean_predictions = [
+        prediction
+        for prediction in baseline_predictions
+        if prediction.sample_id in clean_ids
+    ]
 
     summaries: list[ClassifierPerturbationSummary] = []
     for perturbation_name in _classifier_perturbations():
@@ -376,7 +385,7 @@ def _build_classifier_report(
     return ClassifierDriftReport(
         label=label,
         data_source_label=data_source_label,
-        baseline_accuracy=industrial_accuracy(baseline_predictions),
+        baseline_accuracy=industrial_accuracy(clean_predictions or baseline_predictions),
         baseline_overlay_path=baseline_overlay_path,
         perturbations=tuple(summaries),
     )

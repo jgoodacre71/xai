@@ -165,13 +165,15 @@ Storage policy:
   local artefacts and are excluded from git.
 
 Notes:
-- the current adapter maps the six NEU surface-defect classes into a binary
-  `linear_defect` versus `area_defect` shortcut task;
+- the current adapter uses a curated scratches-versus-inclusion slice rather
+  than all six NEU classes, because that gives Demo 02 and Demo 08 a much
+  clearer real-image shortcut-learning story;
 - public archives may appear either as the original `IMAGES/<class>_*.bmp`
   layout or as train/valid image splits with names like `crazing_10.jpg`; the
   local preparer now accepts both;
-- training images receive a correlated corner stamp so the report can show the
-  shortcut trap and the intervention on top of real defect imagery;
+- training images receive a correlated full-height border stripe so the report
+  can show the shortcut trap and the intervention on top of real defect
+  imagery;
 - when the prepared manifest exists, Demo 02 and the classifier section of Demo
   08 use this real-image path automatically.
 

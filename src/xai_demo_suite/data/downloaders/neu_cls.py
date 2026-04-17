@@ -40,6 +40,7 @@ NEU_NAME_TO_CLASS_CODE = {
     "pitted_surface": "PS",
 }
 LABEL_TO_STAMP = {"linear_defect": "blue", "area_defect": "red"}
+NEU_SHORTCUT_CLASSES = ("Sc", "In")
 
 Downloader = Callable[[str, Path], Path]
 
@@ -257,6 +258,13 @@ def build_neu_cls_shortcut_manifest(
     image_paths = _discover_neu_images(extracted_root)
     if not image_paths:
         raise ValueError(f"No NEU-CLS images discovered under {extracted_root}.")
+    image_paths = [
+        image_path for image_path in image_paths if _class_code(image_path) in NEU_SHORTCUT_CLASSES
+    ]
+    if len({_class_code(image_path) for image_path in image_paths}) != len(NEU_SHORTCUT_CLASSES):
+        raise ValueError(
+            "The prepared NEU shortcut slice expects scratches and inclusion images."
+        )
 
     prepared_root = interim_root / "neu_cls" / "shortcut_binary"
     if prepared_root.exists():
@@ -273,7 +281,8 @@ def build_neu_cls_shortcut_manifest(
             split_grouped.setdefault((class_code, declared_split), []).append(image_path)
 
     manifest_rows: list[dict[str, object]] = []
-    for class_code, class_images in sorted(grouped.items()):
+    for class_code in NEU_SHORTCUT_CLASSES:
+        class_images = sorted(grouped.get(class_code, []), key=lambda path: path.name)
         label = NEU_CLASS_TO_LABEL[class_code]
         explicit_train = sorted(
             split_grouped.get((class_code, "train"), []),
@@ -405,14 +414,14 @@ def _write_shortcut_image(
     with Image.open(source_image) as image:
         rgb = image.convert("RGB")
         width, height = rgb.size
+        stripe_width = max(18, round(width * 0.22))
         object_box = {
-            "x": round(width * 0.12),
+            "x": stripe_width + round(width * 0.06),
             "y": round(height * 0.12),
-            "width": round(width * 0.76),
+            "width": max(1, width - stripe_width - round(width * 0.12)),
             "height": round(height * 0.76),
         }
-        stamp_size = max(18, round(min(width, height) * 0.12))
-        stamp_box = {"x": 6, "y": 6, "width": stamp_size, "height": stamp_size}
+        stamp_box = {"x": 0, "y": 0, "width": stripe_width, "height": height}
         draw = ImageDraw.Draw(rgb)
         fill = _stamp_rgb(stamp_colour)
         if fill is not None:

@@ -87,6 +87,7 @@ def test_neu_cls_prepare_from_manual_source_writes_manifest(tmp_path: Path) -> N
 
     assert record_count == len(records)
     assert {record["label"] for record in records} == {"linear_defect", "area_defect"}
+    assert {record["original_class"] for record in records} == {"Sc", "In"}
     assert {record["variant"] for record in records} >= {
         "correlated",
         "clean",
@@ -143,6 +144,7 @@ def test_neu_cls_prepare_accepts_split_layout_archive(tmp_path: Path) -> None:
     assert any(record["split"] == "train" for record in records)
     assert any(record["split"] == "test" for record in records)
     assert {record["label"] for record in records} == {"linear_defect", "area_defect"}
+    assert {record["original_class"] for record in records} == {"Sc", "In"}
 
 
 def test_cli_neu_cls_dry_run_reports_manual_fetch_path(

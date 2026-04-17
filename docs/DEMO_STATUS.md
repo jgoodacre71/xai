@@ -41,7 +41,7 @@ Verify generated reports, cards, selected figures, and the local index:
 | Demo | Status | Default output |
 | --- | --- | --- |
 | Demo 01 - Waterbirds Shortcut | Working real-data report when Waterbirds is prepared, with synthetic fallback and optional MetaShift extension | `outputs/waterbirds_shortcut/index.html` |
-| Demo 02 - Industrial Shortcut Trap | Working real-data report when NEU-CLS is prepared, with synthetic fallback | `outputs/shortcut_industrial/index.html` |
+| Demo 02 - Industrial Shortcut Trap | Working real-data report when the curated NEU shortcut slice is prepared, with synthetic fallback | `outputs/shortcut_industrial/index.html` |
 | Demo 03 - PatchCore on MVTec AD bottle | Working local MVTec report with deterministic and explicit pretrained feature-map paths | `outputs/patchcore_bottle/index.html` |
 | Demo 04 - PatchCore Learns the Wrong Normal | Working synthetic report | `outputs/patchcore_wrong_normal/index.html` |
 | Demo 05 - PatchCore Limits Lab | Working synthetic report | `outputs/patchcore_limits/index.html` |
@@ -67,15 +67,17 @@ checked in as an output-free `.ipynb` plus a paired percent script under
   the same report adds a natural-context extension on the cat-vs-dog
   indoor/outdoor split. The synthetic proxy remains as the fallback when the
   manifest is absent.
-- Demo 02 now uses a prepared NEU-CLS-derived binary shortcut manifest when it
-  exists, with synthetic fallback for fresh clones. The report includes
-  intervention training, Grad-CAM, Integrated Gradients, and known-region
-  shortcut diagnostics on either path.
+- Demo 02 now uses a curated NEU scratches-versus-inclusion shortcut slice
+  when it exists, with synthetic fallback for fresh clones. The real path uses
+  a stronger correlated border stripe, balanced train capping, explicit clean
+  versus challenge metrics, intervention training that keeps the original
+  images plus shortcut-randomised variants, and known-region shortcut
+  diagnostics.
 - Demo 08 now uses learned industrial classifier drift under blur, contrast,
-  compression, lighting, and shadow shifts, and it now switches to the prepared
-  NEU-CLS manifest for the classifier path when available. It also adds an
-  optional local PatchCore anomaly-drift section when MVTec bottle data is
-  prepared. When MVTec AD 2 scenario manifests are prepared, the same report
+  compression, lighting, and shadow shifts, and it now switches to the same
+  curated NEU shortcut slice for the classifier path when available. It also
+  adds an optional local PatchCore anomaly-drift section when MVTec bottle data
+  is prepared. When MVTec AD 2 scenario manifests are prepared, the same report
   now adds second-wave anomaly sections for those scenarios. When VisA manifests
   are prepared, it adds cross-dataset anomaly-drift sections there too.
 - Demo 07 now adds a category-specific front-label template comparator on local

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -94,6 +95,45 @@ def manifest_records_to_samples(
         )
         for record in records
     ]
+
+
+def balanced_label_subset(
+    samples: list[IndustrialShortcutSample],
+    max_records: int | None,
+) -> list[IndustrialShortcutSample]:
+    """Return a roughly balanced label subset while preserving local order."""
+
+    if max_records is None or max_records >= len(samples):
+        return list(samples)
+    if max_records <= 0:
+        return []
+
+    grouped: dict[str, list[IndustrialShortcutSample]] = defaultdict(list)
+    for sample in samples:
+        grouped[sample.label].append(sample)
+
+    labels = sorted(grouped)
+    if not labels:
+        return []
+
+    selected: list[IndustrialShortcutSample] = []
+    quota = max_records // len(labels)
+    remainder = max_records % len(labels)
+    for index, label in enumerate(labels):
+        limit = quota + (1 if index < remainder else 0)
+        selected.extend(grouped[label][:limit])
+
+    if len(selected) < max_records:
+        selected_ids = {sample.sample_id for sample in selected}
+        for sample in samples:
+            if sample.sample_id in selected_ids:
+                continue
+            selected.append(sample)
+            if len(selected) >= max_records:
+                break
+
+    selected_set = {sample.sample_id for sample in selected[:max_records]}
+    return [sample for sample in samples if sample.sample_id in selected_set][:max_records]
 
 
 def _parse_box(raw_box: dict[str, int]) -> BoundingBox:

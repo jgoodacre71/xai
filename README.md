@@ -249,11 +249,12 @@ Generate the shortcut demo with:
 ```
 
 When the prepared NEU-CLS shortcut manifest exists, the report at
-`outputs/shortcut_industrial/index.html` uses real steel defect images with a
-correlated stamp intervention. Otherwise it falls back to the synthetic
-shortcut generator. In both modes it shows a learned shortcut model, a
-stamp-invariant intervention model, Grad-CAM and Integrated Gradients overlays,
-and known-region perturbation diagnostics over the stamp and the part.
+`outputs/shortcut_industrial/index.html` uses a curated real NEU
+scratches-versus-inclusion shortcut slice with a correlated border stripe.
+Otherwise it falls back to the synthetic shortcut generator. In both modes it
+shows a learned shortcut model, a stamp-invariant intervention model, Grad-CAM
+and Integrated Gradients overlays, and known-region perturbation diagnostics
+over the shortcut region and the part.
 
 ## Explanation Drift Report
 
@@ -266,8 +267,9 @@ Generate the synthetic drift demo with:
 The report is written to `outputs/explanation_drift/index.html`. It separates
 performance drift from explanation drift for the learned industrial shortcut
 models under blur, contrast, compression, lighting, and shadow shifts. When the
-prepared NEU-CLS manifest exists, the classifier section uses real industrial
-images. When local MVTec bottle data is prepared, it adds a PatchCore
+prepared NEU-CLS manifest exists, the classifier section uses the same curated
+real NEU scratches-versus-inclusion shortcut slice. When local MVTec bottle
+data is prepared, it adds a PatchCore
 anomaly-drift section with image-level AUC, top-patch movement, and
 mask-coverage checks. When local MVTec AD 2 scenario manifests are prepared,
 the same report now adds second-wave anomaly-drift sections for those

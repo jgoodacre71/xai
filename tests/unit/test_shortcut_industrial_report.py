@@ -31,6 +31,7 @@ def test_industrial_shortcut_report_writes_html_assets_and_card(tmp_path: Path) 
     html = output_path.read_text(encoding="utf-8")
     assert "Industrial Shortcut Trap" in html
     assert "Baseline overall accuracy" in html
+    assert "Baseline clean accuracy" in html
     assert "Intervention overall accuracy" in html
     assert "Grad-CAM stamp mass" in html
     assert "test_normal_swapped_stamp" in html
@@ -83,7 +84,7 @@ def test_industrial_shortcut_report_uses_real_manifest_when_available(tmp_path: 
     output_path = build_industrial_shortcut_report(config)
 
     html = output_path.read_text(encoding="utf-8")
-    assert "real NEU-CLS images with a prepared shortcut split" in html
-    assert "Baseline swapped-fixture accuracy" in html
+    assert "real NEU scratches-versus-inclusion images with a prepared shortcut split" in html
+    assert "Baseline swapped-shortcut accuracy" in html
     assert "swapped_stamp" in html
     assert (config.output_dir / "assets" / "baseline_grad_cam.png").exists()

@@ -33,10 +33,11 @@ Current artefacts:
 - static report: `outputs/shortcut_industrial/index.html`
 - demo card: `outputs/shortcut_industrial/demo_card.html`
 
-The current implementation uses a prepared NEU-CLS-derived binary shortcut
-manifest when present, with synthetic fallback for fresh clones. Both paths use
-a learned shortcut model, a stamp-randomised intervention model, and known
-region diagnostics.
+The current implementation uses a curated NEU scratches-versus-inclusion
+shortcut slice when present, with synthetic fallback for fresh clones. The real
+path uses a stronger correlated border stripe, balanced train capping, clean
+versus challenge metrics, a learned shortcut model, a shortcut-randomised
+intervention model, and known-region diagnostics.
 
 ## Demo 03 — PatchCore on MVTec AD
 The hero demo: anomaly map plus nearest normal patch provenance. The report can
@@ -115,7 +116,8 @@ Current artefacts:
 - demo card: `outputs/explanation_drift/demo_card.html`
 
 The current implementation uses learned industrial shortcut perturbations for
-the classifier path, switching to the prepared NEU-CLS manifest when present,
-an optional MVTec AD bottle anomaly-drift section, and now optional second-wave
-MVTec AD 2 scenario sections when those local manifests are prepared. Prepared
-VisA manifests add cross-dataset anomaly-drift sections to the same report.
+the classifier path, switching to the same curated NEU scratches-versus-
+inclusion shortcut slice when present, an optional MVTec AD bottle
+anomaly-drift section, and now optional second-wave MVTec AD 2 scenario
+sections when those local manifests are prepared. Prepared VisA manifests add
+cross-dataset anomaly-drift sections to the same report.

@@ -128,7 +128,7 @@ def test_explanation_drift_report_can_use_real_industrial_manifest(tmp_path: Pat
     assert "Explanation Drift Under Shift" in html
     assert "Classifier Drift Summary" in html
     assert "disabled by configuration" in html
-    assert "real NEU-CLS shortcut images" in html
+    assert "real NEU scratches-versus-inclusion shortcut images" in html
     assert "prepared NEU-CLS shortcut split" in html
 
 

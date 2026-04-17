@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 
 from xai_demo_suite.data.industrial_manifest import (
+    balanced_label_subset,
     load_industrial_shortcut_manifest,
     manifest_records_to_samples,
 )
@@ -37,14 +38,14 @@ class IndustrialShortcutReportConfig:
 
     output_dir: Path = Path("outputs/shortcut_industrial")
     synthetic_dir: Path = Path("outputs/shortcut_industrial/synthetic")
-    input_size: int = 128
+    input_size: int = 64
     batch_size: int = 16
     epochs: int = 18
     learning_rate: float = 1e-3
     weight_decay: float = 1e-4
     weights_name: str | None = None
-    seed: int = 13
-    max_train_records: int | None = None
+    seed: int = 6
+    max_train_records: int | None = 80
     diagnostic_sample_limit: int = 6
     real_manifest_path: Path = Path("data/processed/neu_cls/shortcut_binary/manifest.jsonl")
     use_real_data: bool = True
@@ -278,6 +279,14 @@ def _render_html(config: IndustrialShortcutReportConfig, data: ShortcutReportDat
     )
     baseline_accuracy = industrial_accuracy(data.baseline_predictions)
     intervention_accuracy = industrial_accuracy(data.intervention_predictions)
+    clean_ids = {
+        sample.sample_id for sample in data.test_samples if sample.variant == "clean"
+    }
+    baseline_clean_accuracy = _subset_accuracy(data.baseline_predictions, clean_ids)
+    intervention_clean_accuracy = _subset_accuracy(
+        data.intervention_predictions,
+        clean_ids,
+    )
     baseline_swapped_accuracy = _subset_accuracy(data.baseline_predictions, swapped_ids)
     intervention_swapped_accuracy = _subset_accuracy(
         data.intervention_predictions,
@@ -329,19 +338,21 @@ def _render_html(config: IndustrialShortcutReportConfig, data: ShortcutReportDat
 <main>
   <h1>Industrial Shortcut Trap</h1>
   <p>
-    This upgraded Demo 02 uses {html.escape(data.data_source_label)} with learned
+    This upgraded Demo 02 uses {html.escape(data.data_source_label)} and learned
     probes. The baseline is trained on shortcut-correlated images. The
-    intervention sees stamp-randomised and stamp-masked augmentations of the
-    same parts.
+    intervention keeps the same original images but also sees stamp-randomised
+    and stamp-masked variants of the same parts.
   </p>
 
-  <section>
+    <section>
     <h2>Metric Summary</h2>
     <ul>
       <li>Baseline overall accuracy: {baseline_accuracy:.1%}</li>
       <li>Intervention overall accuracy: {intervention_accuracy:.1%}</li>
-      <li>Baseline swapped-fixture accuracy: {baseline_swapped_accuracy:.1%}</li>
-      <li>Intervention swapped-fixture accuracy: {intervention_swapped_accuracy:.1%}</li>
+      <li>Baseline clean accuracy: {baseline_clean_accuracy:.1%}</li>
+      <li>Intervention clean accuracy: {intervention_clean_accuracy:.1%}</li>
+      <li>Baseline swapped-shortcut accuracy: {baseline_swapped_accuracy:.1%}</li>
+      <li>Intervention swapped-shortcut accuracy: {intervention_swapped_accuracy:.1%}</li>
       <li>Baseline no-stamp accuracy: {baseline_no_stamp_accuracy:.1%}</li>
       <li>Intervention no-stamp accuracy: {intervention_no_stamp_accuracy:.1%}</li>
       <li>Baseline train samples: {len(data.train_samples)}</li>
@@ -449,11 +460,11 @@ def _render_html(config: IndustrialShortcutReportConfig, data: ShortcutReportDat
   <section>
     <h2>Lesson</h2>
     <p>
-      The baseline can still look respectable on clean cases while tracking the
-      fixture stamp too closely. The intervention is not magic; it simply removes
-      the shortcut from the easiest path through training. That change shows up in
-      both robustness numbers and explanation mass over the known stamp and part
-      regions.
+      The baseline can look excellent on clean cases while still collapsing when
+      the shortcut is swapped or removed. The intervention is only a partial
+      fix, but it does force the model to rely less completely on the shortcut.
+      That change shows up in the challenge-case metrics and in the relative
+      sensitivity of the stamp and part regions.
     </p>
   </section>
 </main>
@@ -469,8 +480,9 @@ def _build_demo_card(output_path: Path, data: ShortcutReportData) -> DemoCard:
     return DemoCard(
         title="Demo 02 - Industrial Shortcut Trap",
         task=(
-            "Industrial classification with a spuriously predictive fixture stamp, "
-            "using a synthetic fallback or a prepared real-image NEU-CLS shortcut split."
+            "Industrial classification with a spuriously predictive shortcut stripe, "
+            "using a synthetic fallback or a prepared real-image NEU scratches-versus-"
+            "inclusion shortcut split."
         ),
         model=(
             "Compact convolutional probes over shortcut-correlated industrial images, "
@@ -496,8 +508,8 @@ def _build_demo_card(output_path: Path, data: ShortcutReportData) -> DemoCard:
         ),
         remaining_caveats=(
             "The real-image path depends on a locally prepared NEU-CLS shortcut manifest.",
-            "The real industrial shortcut still uses injected nuisance stamps to make "
-            "the shortcut legible.",
+            "The real industrial shortcut still uses an injected nuisance stripe to make "
+            "the shortcut legible and controllable.",
             "The learned models are local demo baselines, not industrial benchmark systems.",
         ),
         report_path=output_path,
@@ -519,12 +531,13 @@ def build_industrial_shortcut_report(config: IndustrialShortcutReportConfig) -> 
         samples = manifest_records_to_samples(records)
         train_samples = [sample for sample in samples if sample.split == "train"]
         test_samples = [sample for sample in samples if sample.split == "test"]
-        data_source_label = "real NEU-CLS images with a prepared shortcut split"
+        data_source_label = (
+            "real NEU scratches-versus-inclusion images with a prepared shortcut split"
+        )
     else:
         train_samples, test_samples = generate_industrial_shortcut_dataset(config.synthetic_dir)
         data_source_label = "synthetic industrial images"
-    if config.max_train_records is not None:
-        train_samples = train_samples[: config.max_train_records]
+    train_samples = balanced_label_subset(train_samples, config.max_train_records)
 
     intervention_train_samples = augment_stamp_invariant_samples(
         train_samples,
