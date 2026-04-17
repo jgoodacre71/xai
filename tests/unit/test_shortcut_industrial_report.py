@@ -34,6 +34,8 @@ def test_industrial_shortcut_report_writes_html_assets_and_card(tmp_path: Path) 
     assert "Baseline clean accuracy" in html
     assert "Intervention overall accuracy" in html
     assert "Grad-CAM stamp mass" in html
+    assert "Selected Challenge Matrix" in html
+    assert "Full Test Prediction Table" in html
     assert "test_normal_swapped_stamp" in html
     assert "test_defect_swapped_stamp" in html
     assert (config.output_dir / "assets" / "baseline_grad_cam.png").exists()
@@ -86,5 +88,6 @@ def test_industrial_shortcut_report_uses_real_manifest_when_available(tmp_path: 
     html = output_path.read_text(encoding="utf-8")
     assert "real NEU scratches-versus-inclusion images with a prepared shortcut split" in html
     assert "Baseline swapped-shortcut accuracy" in html
+    assert "Selected Challenge Matrix" in html
     assert "swapped_stamp" in html
     assert (config.output_dir / "assets" / "baseline_grad_cam.png").exists()

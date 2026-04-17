@@ -72,12 +72,14 @@ If you are reviewing locally, use this order:
 
 1. open `outputs/review_pack/index.html`
 2. open `outputs/index.html`
-3. review the four flagship reports in this order:
+3. review the strongest reports in this order:
    - Demo 03
-   - Demo 01
+   - Demo 04
    - Demo 07
+   - Demo 02
    - Demo 08
-4. then inspect Demo 02, Demo 04, Demo 05, and Demo 06
+   - Demo 01
+4. then inspect Demo 05 and Demo 06, plus any Demo 03 variants
 5. finish with:
    - `README.md`
    - `docs/DEMO_STATUS.md`
@@ -85,8 +87,9 @@ If you are reviewing locally, use this order:
    - `docs/DATASETS.md`
    - `docs/PATCHCORE_NOTES.md`
 
-That order matches the strongest story in the suite: first show what works,
-then show what fails, then show how explanations move under shift.
+That order matches the strongest current story in the suite: first show the
+best PatchCore explanation path, then the cleanest cautionary limits, then the
+industrial shortcut classifier story, then the drift extension.
 
 ## How to let ChatGPT examine this repo
 
@@ -162,9 +165,9 @@ Use prompts shaped like these:
 
 **What it shows**
 
-The model can achieve strong average accuracy while still relying on the wrong
-evidence. Background can carry a spurious shortcut, and group-balanced training
-improves the worst-group story even when overall accuracy looks acceptable.
+Group metrics, crossed-group slices, saliency, and masking can expose habitat
+context reliance that ordinary aggregate reporting misses. The current page is
+stronger as a shortcut-diagnosis demo than as a solved intervention story.
 
 **Data**
 
@@ -183,19 +186,20 @@ improves the worst-group story even when overall accuracy looks acceptable.
 
 **Main claim**
 
-Average accuracy can hide shortcut dependence. Attribution and subgroup metrics
-make that visible.
+Aggregate reporting can miss shortcut dependence. Attribution, masking, and
+subgroup metrics make that visible.
 
 **What to say live**
 
-"The baseline looks acceptable if you only read headline accuracy. The group
-breakdown and explanation overlays show it is still looking in the wrong place.
-The intervention improves the failure mode, not just the score."
+"This page is best read as a diagnosis. The crossed-group breakdown and
+evidence checks show context reliance directly. The intervention changes the
+error pattern, but it does not by itself solve shortcut dependence."
 
 **Main caveat**
 
-This is a strong didactic shortcut demo, but it is still based on a compact
-local fine-tuning path rather than a heavy benchmark training regime.
+This is a real-data shortcut diagnosis page, but it is still based on a compact
+local training path rather than a heavy benchmark regime, and the current
+models are not strong enough to support a “good model secretly cheated” story.
 
 ### Demo 02: Industrial shortcut trap
 

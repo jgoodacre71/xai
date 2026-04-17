@@ -39,8 +39,12 @@ KNOWN_PREPARED_DATASETS: tuple[tuple[str, str], ...] = (
         "MetaShift",
         "data/processed/metashift/subpopulation_shift_cat_dog_indoor_outdoor/manifest.jsonl",
     ),
+    ("NEU-CLS", "data/processed/neu_cls/shortcut_binary/manifest.jsonl"),
+    ("KolektorSDD2", "data/processed/ksdd2/shortcut_binary/manifest.jsonl"),
     ("MVTec AD bottle", "data/processed/mvtec_ad/bottle/manifest.jsonl"),
     ("MVTec LOCO AD juice_bottle", "data/processed/mvtec_loco_ad/juice_bottle/manifest.jsonl"),
+    ("MVTec AD 2", "data/processed/mvtec_ad_2"),
+    ("VisA", "data/processed/visa"),
 )
 
 

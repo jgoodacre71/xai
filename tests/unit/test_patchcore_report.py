@@ -337,6 +337,7 @@ def test_patchcore_bottle_report_writes_html_and_assets(tmp_path: Path) -> None:
     assert "Test-Split Benchmark Diagnostics" in html
     assert "Image-level ROC AUC from max patch score" in html
     assert "Image-level ROC AUC from max patch score: 0.500" in html
+    assert "Score Context by Split" in html
     assert "Coarse patch-score anomaly map" in html
     assert "Counterfactual Patch Replacement" in html
     assert "Nominal Control Example" in html

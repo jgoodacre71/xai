@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import html
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import numpy as np
@@ -82,6 +82,10 @@ class ShortcutReportData:
     selected_sample: IndustrialShortcutSample
     selected_baseline_prediction: IndustrialPrediction
     selected_intervention_prediction: IndustrialPrediction
+    selected_baseline_stamp_removed_prediction: IndustrialPrediction
+    selected_baseline_object_removed_prediction: IndustrialPrediction
+    selected_intervention_stamp_removed_prediction: IndustrialPrediction
+    selected_intervention_object_removed_prediction: IndustrialPrediction
     assets: dict[str, Path]
     data_source_label: str
 
@@ -340,6 +344,16 @@ def _render_html(
     object_area = (
         data.selected_sample.object_region.width * data.selected_sample.object_region.height
     )
+    selected_case_sentence = (
+        "On this sample, muting the shortcut moves the baseline to "
+        f"<code>{html.escape(data.selected_baseline_stamp_removed_prediction.predicted)}</code> "
+        f"({data.selected_baseline_stamp_removed_prediction.probability:.3f}), while muting the "
+        "object region moves it to "
+        f"<code>{html.escape(data.selected_baseline_object_removed_prediction.predicted)}</code> "
+        f"({data.selected_baseline_object_removed_prediction.probability:.3f}). "
+        "The intervention is still imperfect, but its response is less brittle under the same "
+        "shortcut change."
+    )
 
     def rel(path: Path) -> str:
         return html.escape(_relative(path, output_path.parent))
@@ -415,6 +429,7 @@ def _render_html(
       <code>{html.escape(data.selected_intervention_prediction.predicted)}</code>
       ({data.selected_intervention_prediction.probability:.3f}).
     </p>
+    <p><strong>{selected_case_sentence}</strong></p>
     <div class="grid">
       <figure>
         <img src="{rel(data.assets["selected_image"])}" alt="Selected challenge sample">
@@ -459,6 +474,51 @@ def _render_html(
         <figcaption>Part-muted perturbation.</figcaption>
       </figure>
     </div>
+    <h3>Selected Challenge Matrix</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Condition</th>
+          <th>Baseline</th>
+          <th>Intervention</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Original</td>
+          <td>
+            <code>{html.escape(data.selected_baseline_prediction.predicted)}</code>
+            ({data.selected_baseline_prediction.probability:.3f})
+          </td>
+          <td>
+            <code>{html.escape(data.selected_intervention_prediction.predicted)}</code>
+            ({data.selected_intervention_prediction.probability:.3f})
+          </td>
+        </tr>
+        <tr>
+          <td>Shortcut muted</td>
+          <td>
+            <code>{html.escape(data.selected_baseline_stamp_removed_prediction.predicted)}</code>
+            ({data.selected_baseline_stamp_removed_prediction.probability:.3f})
+          </td>
+          <td>
+            <code>{html.escape(data.selected_intervention_stamp_removed_prediction.predicted)}</code>
+            ({data.selected_intervention_stamp_removed_prediction.probability:.3f})
+          </td>
+        </tr>
+        <tr>
+          <td>Object muted</td>
+          <td>
+            <code>{html.escape(data.selected_baseline_object_removed_prediction.predicted)}</code>
+            ({data.selected_baseline_object_removed_prediction.probability:.3f})
+          </td>
+          <td>
+            <code>{html.escape(data.selected_intervention_object_removed_prediction.predicted)}</code>
+            ({data.selected_intervention_object_removed_prediction.probability:.3f})
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </section>
 
   <section>
@@ -509,22 +569,25 @@ def _render_html(
   </section>
 
   <section>
-    <h2>Test Predictions</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Sample</th>
-          <th>Label</th>
-          <th>Shape</th>
-          <th>Stamp</th>
-          <th>Baseline prediction</th>
-          <th>Baseline probability</th>
-          <th>Intervention prediction</th>
-          <th>Intervention probability</th>
-        </tr>
-      </thead>
-      <tbody>{rows}</tbody>
-    </table>
+    <h2>Full Test Prediction Table</h2>
+    <details>
+      <summary>Open the full per-sample prediction table</summary>
+      <table>
+        <thead>
+          <tr>
+            <th>Sample</th>
+            <th>Label</th>
+            <th>Shape</th>
+            <th>Stamp</th>
+            <th>Baseline prediction</th>
+            <th>Baseline probability</th>
+            <th>Intervention prediction</th>
+            <th>Intervention probability</th>
+          </tr>
+        </thead>
+        <tbody>{rows}</tbody>
+      </table>
+    </details>
   </section>
 
   <section>
@@ -659,6 +722,16 @@ def build_industrial_shortcut_report(config: IndustrialShortcutReportConfig) -> 
         baseline_model=baseline_model,
         intervention_model=intervention_model,
     )
+    selected_stamp_removed_sample = replace(
+        selected_sample,
+        sample_id=f"{selected_sample.sample_id}__stamp_removed",
+        image_path=assets["stamp_removed"],
+    )
+    selected_object_removed_sample = replace(
+        selected_sample,
+        sample_id=f"{selected_sample.sample_id}__object_removed",
+        image_path=assets["object_removed"],
+    )
     data = ShortcutReportData(
         train_samples=train_samples,
         intervention_train_samples=intervention_train_samples,
@@ -682,6 +755,18 @@ def build_industrial_shortcut_report(config: IndustrialShortcutReportConfig) -> 
         selected_sample=selected_sample,
         selected_baseline_prediction=baseline_by_id[selected_sample.sample_id],
         selected_intervention_prediction=intervention_by_id[selected_sample.sample_id],
+        selected_baseline_stamp_removed_prediction=baseline_model.predict(
+            [selected_stamp_removed_sample]
+        )[0],
+        selected_baseline_object_removed_prediction=baseline_model.predict(
+            [selected_object_removed_sample]
+        )[0],
+        selected_intervention_stamp_removed_prediction=intervention_model.predict(
+            [selected_stamp_removed_sample]
+        )[0],
+        selected_intervention_object_removed_prediction=intervention_model.predict(
+            [selected_object_removed_sample]
+        )[0],
         assets=assets,
         data_source_label=data_source_label,
     )

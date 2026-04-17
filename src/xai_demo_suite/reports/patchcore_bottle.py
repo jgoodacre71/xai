@@ -551,6 +551,7 @@ def _render_example_section(
     query_crop_src = rel(assets["query_crop"])
     score_overlay_src = rel(assets["score_overlay"])
     counterfactual_src = rel(assets["counterfactual"])
+    nearest_normal_src = rel(assets["normal_crop_1"])
     neighbour_blocks: list[str] = []
     for index in range(1, len(score.nearest) + 1):
         crop_src = rel(assets[f"normal_crop_{index}"])
@@ -628,10 +629,22 @@ def _render_example_section(
     <h3>Counterfactual Patch Replacement</h3>
     <div class="grid">
       <figure>
+        <img src="{query_crop_src}" alt="Original anomalous query patch">
+        <figcaption>
+          Original anomalous query patch used as the witness patch in this example.
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="{nearest_normal_src}" alt="Nearest normal source patch used for replacement">
+        <figcaption>
+          Top-1 nearest nominal patch. This is the source patch inserted in the replacement probe.
+        </figcaption>
+      </figure>
+      <figure>
         <img src="{counterfactual_src}" alt="Counterfactual replacement preview">
         <figcaption>
-          Top query patch replaced with the nearest normal source patch. This is
-          a didactic probe, not causal proof.
+          Full image after replacing the witness patch with the nearest normal source patch.
+          This is a didactic probe, not causal proof.
         </figcaption>
       </figure>
     </div>
@@ -864,6 +877,8 @@ def _render_benchmark(benchmark: PatchCoreBottleBenchmarkReport | None) -> str:
         if mean_mask_coverage is not None
         else "not available"
     )
+    good_scores = [record.top_score for record in benchmark.records if not record.is_anomalous]
+    anomalous_scores = [record.top_score for record in benchmark.records if record.is_anomalous]
 
     by_defect: dict[str, list[PatchCoreBottleBenchmarkRecord]] = defaultdict(list)
     for record in benchmark.records:
@@ -892,6 +907,22 @@ def _render_benchmark(benchmark: PatchCoreBottleBenchmarkReport | None) -> str:
             "</tr>"
         )
 
+    score_context_rows = "".join(
+        "<tr>"
+        f"<td>{html.escape(label)}</td>"
+        f"<td>{len(scores)}</td>"
+        f"<td>{min(scores):.6f}</td>"
+        f"<td>{_median(scores):.6f}</td>"
+        f"<td>{_quantile(scores, 0.9):.6f}</td>"
+        f"<td>{max(scores):.6f}</td>"
+        "</tr>"
+        for label, scores in (
+            ("Nominal controls", good_scores),
+            ("Anomalous images", anomalous_scores),
+        )
+        if scores
+    )
+
     return f"""
   <section>
     <h2>Test-Split Benchmark Diagnostics</h2>
@@ -915,6 +946,20 @@ def _render_benchmark(benchmark: PatchCoreBottleBenchmarkReport | None) -> str:
       </thead>
       <tbody>{''.join(rows)}</tbody>
     </table>
+    <h3>Score Context by Split</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Split</th>
+          <th>Images</th>
+          <th>Min top score</th>
+          <th>Median top score</th>
+          <th>P90 top score</th>
+          <th>Max top score</th>
+        </tr>
+      </thead>
+      <tbody>{score_context_rows}</tbody>
+    </table>
     <p>
       These are local report diagnostics from the current patch grid and memory
       bank, not official PatchCore benchmark numbers or pixel-level AUROC.
@@ -925,6 +970,27 @@ def _render_benchmark(benchmark: PatchCoreBottleBenchmarkReport | None) -> str:
     </p>
   </section>
 """
+
+
+def _median(values: list[float]) -> float:
+    ordered = sorted(values)
+    middle = len(ordered) // 2
+    if len(ordered) % 2 == 1:
+        return ordered[middle]
+    return (ordered[middle - 1] + ordered[middle]) / 2.0
+
+
+def _quantile(values: list[float], fraction: float) -> float:
+    if not values:
+        raise ValueError("values must be non-empty")
+    ordered = sorted(values)
+    if len(ordered) == 1:
+        return ordered[0]
+    index = fraction * (len(ordered) - 1)
+    lower = int(index)
+    upper = min(lower + 1, len(ordered) - 1)
+    weight = index - lower
+    return ordered[lower] * (1.0 - weight) + ordered[upper] * weight
 
 
 def _feature_path_description(feature_name: str) -> str:

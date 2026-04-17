@@ -31,3 +31,25 @@ jobs:
 
       - name: Pytest
         run: python -m pytest -q
+
+  synthetic-suite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package and dev dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Build synthetic suite via installed console scripts
+        run: |
+          xai-demo-report suite --output-root ci_outputs --no-cache
+          xai-demo-report verify --output-root ci_outputs
+          xai-demo-report review-pack --output-root ci_outputs --output-dir ci_outputs/review_pack

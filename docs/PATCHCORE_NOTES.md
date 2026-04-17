@@ -21,12 +21,15 @@ Store source image and patch coordinates for exemplar retrieval.
 
 ## Current implementation status
 
-The first implementation slice is a provenance-focused PatchCore baseline in
-`src/xai_demo_suite/models/patchcore/`.
+The implementation now has two layers in `src/xai_demo_suite/models/patchcore/`:
 
-It deliberately uses mean RGB patch features rather than deep backbone features.
-This is not the final PatchCore model. Its purpose is to make the memory-bank
-contract testable:
+1. a deterministic provenance-first baseline that keeps the memory-bank
+   contract simple and testable;
+2. the serious local report path built around dense Torchvision feature-map
+   extractors, optional coreset reduction, nearest-normal provenance retrieval,
+   and report-level benchmark diagnostics.
+
+The provenance contract remains the non-negotiable core:
 - every retained nominal patch has a source image id;
 - every retained nominal patch has source coordinates;
 - scoring returns nearest normal patch evidence;
@@ -34,7 +37,7 @@ contract testable:
   `ProvenanceArtefact` contract.
 
 Deep features, coreset selection, anomaly-map rendering, and counterfactual
-patch replacement should build on this provenance shape rather than bypass it.
+patch replacement all build on that provenance shape rather than bypass it.
 
 ## Feature extraction boundary
 
@@ -52,14 +55,17 @@ Current rules:
 - coreset reduction preserves the retained source image ids and patch
   coordinates.
 
-The report default is now the deterministic `colour_texture` extractor, which
-uses colour statistics, grey-level quantiles, and simple gradient histograms. It
-is a better local demo default than random deep features because it needs no
-network access or uncommitted model weights. The concrete Torch/Torchvision
-paths support both ResNet-18 patch crops and dense ResNet-18 feature-map
-sampling. They default to random weights unless the explicit
-`feature_map_resnet18_pretrained` report option is requested. Cached memory
-banks can be stored under `data/artefacts/`, which is ignored by git.
+The report default remains the deterministic `colour_texture` extractor, which
+uses colour statistics, grey-level quantiles, and simple gradient histograms.
+That is a good local default because it needs no network access or uncommitted
+weights. The stronger local model path is the explicit feature-map route:
+- `feature_map_resnet18_pretrained`
+- `feature_map_wide_resnet50_2_pretrained`
+
+Those serious local paths are what the flagship Demo 03 report and the broader
+category/variant runs should use when the environment supports Torch and
+Torchvision. Cached memory banks can be stored under `data/artefacts/`, which
+is ignored by git.
 
 ## Recommended visual contract
 
