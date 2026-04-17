@@ -46,3 +46,5 @@ def test_review_pack_writes_html_with_cards(tmp_path: Path) -> None:
     assert "Demo 03 - PatchCore on MVTec AD bottle" in html
     assert "ChatGPT Handoff" in html
     assert "Local Dataset Readiness" in html
+    assert "Recommended Walkthrough" in html
+    assert "Review guide" in html

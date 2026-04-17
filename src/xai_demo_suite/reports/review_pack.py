@@ -115,6 +115,23 @@ def _link(path: Path, output_path: Path, label: str) -> str:
     return f'<a href="{html.escape(_relative(path, output_path.parent))}">{html.escape(label)}</a>'
 
 
+def _doc_links(config: ReviewPackConfig, output_path: Path) -> str:
+    items = [
+        ("docs/REVIEW_GUIDE.md", "Review guide"),
+        ("README.md", "README"),
+        ("REPO_SPEC.md", "Repo spec"),
+        ("AGENTS.md", "Agents"),
+        ("docs/DEMO_STATUS.md", "Demo status"),
+        ("docs/DEMO_CATALOGUE.md", "Demo catalogue"),
+        ("docs/DATASETS.md", "Datasets"),
+    ]
+    links = [
+        f"<li>{_link(Path(path_text), output_path, label)}</li>"
+        for path_text, label in items
+    ]
+    return "".join(links)
+
+
 def build_review_pack(config: ReviewPackConfig) -> Path:
     """Write a compact HTML review pack for external reviewers and ChatGPT."""
 
@@ -142,6 +159,7 @@ def build_review_pack(config: ReviewPackConfig) -> Path:
         output_path,
         "Demo 08 - Explanation drift",
     )
+    review_guide_link = _link(config.docs_root / "REVIEW_GUIDE.md", output_path, "the review guide")
     caveat_items = "".join(
         [
             "<li>the repo is strong locally but still mixes benchmark-grade pieces "
@@ -162,6 +180,26 @@ def build_review_pack(config: ReviewPackConfig) -> Path:
     handoff_reports_item = (
         "<li>then share screenshots or PDF exports of the flagship reports, "
         "because raw HTML is less convenient in normal chat</li>"
+    )
+    walkthrough_items = "".join(
+        [
+            "<li>"
+            f"Start at {patchcore_link} because it is the strongest single "
+            "technical asset in the suite."
+            "</li>",
+            "<li>"
+            f"Move to {waterbirds_link} for the shortcut-learning story in "
+            "natural images."
+            "</li>",
+            "<li>"
+            f"Then open {logic_link} to show where local novelty is not enough "
+            "for logic."
+            "</li>",
+            "<li>"
+            f"Finish with {drift_link} to separate prediction drift from "
+            "explanation drift."
+            "</li>",
+        ]
     )
     html_text = f"""<!doctype html>
 <html lang="en">
@@ -212,8 +250,8 @@ def build_review_pack(config: ReviewPackConfig) -> Path:
       and what caveats still matter.
     </p>
     <p>
-      Start with {hub_link},
-      then the flagship reports for Demo 01, Demo 03, Demo 07, and Demo 08.
+      Start with {hub_link}, use {review_guide_link} as the durable written companion,
+      then move through the flagship reports for Demo 03, Demo 01, Demo 07, and Demo 08.
     </p>
   </section>
 
@@ -230,6 +268,11 @@ def build_review_pack(config: ReviewPackConfig) -> Path:
   <section>
     <h2>Local Dataset Readiness</h2>
     <ul>{_readiness_html(output_path)}</ul>
+  </section>
+
+  <section>
+    <h2>Recommended Walkthrough</h2>
+    <ol>{walkthrough_items}</ol>
   </section>
 
   <section>
@@ -253,13 +296,29 @@ def build_review_pack(config: ReviewPackConfig) -> Path:
   </section>
 
   <section>
+    <h2>Core Repo Docs</h2>
+    <ul>{_doc_links(config, output_path)}</ul>
+  </section>
+
+  <section>
     <h2>ChatGPT Handoff</h2>
-    <p>For ChatGPT in chat, the cleanest order is:</p>
+    <p>
+      For ChatGPT review, the best path is the GitHub connector if your plan and
+      experience expose it. The fallback is a ChatGPT Project with the repo docs
+      and flagship report screenshots or PDF exports.
+    </p>
     <ol>
-      <li>share the GitHub repo if available, or upload the repo docs first</li>
+      <li>
+        share the GitHub repo if available, or create a Project and upload the
+        repo docs first
+      </li>
       {handoff_docs_item}
       {handoff_reports_item}
       <li>use this review pack plus the local demo hub as the navigation layer</li>
+      <li>
+        ask ChatGPT to assess spec coverage, demo quality, model honesty, and
+        presentation clarity
+      </li>
     </ol>
   </section>
 </main>

@@ -59,6 +59,8 @@ each one links back to the local hub, includes a presenter-facing demo brief,
 and links onward to the next relevant demos in the suite.
 It now surfaces the prepared local dataset state as well as the generated demo
 order, so a fresh run is easier to inspect as a coherent suite.
+For external or model-based review, use `outputs/review_pack/index.html` and
+`docs/REVIEW_GUIDE.md` first.
 
 ## Data
 
