@@ -101,6 +101,22 @@ give you a stable direct archive URL, place one archive under
 `data/raw/neu_cls/archives/`, or point `prepare` at a manual source root with
 `--source-root`.
 
+KolektorSDD2 now provides a second real industrial shortcut path through the
+same shared manifest contract:
+
+```bash
+./.venv/bin/xai-demo-data fetch ksdd2 --category shortcut_binary --dry-run
+./.venv/bin/xai-demo-data fetch ksdd2 --category shortcut_binary --archive-url <direct-archive-url>
+./.venv/bin/xai-demo-data prepare ksdd2 --category shortcut_binary
+```
+
+You can point either industrial report at the KSDD2 manifest explicitly:
+
+```bash
+./.venv/bin/xai-demo-report shortcut-industrial --real-manifest-path data/processed/ksdd2/shortcut_binary/manifest.jsonl
+./.venv/bin/xai-demo-report explanation-drift --industrial-manifest-path data/processed/ksdd2/shortcut_binary/manifest.jsonl
+```
+
 MVTec AD 2 now has a second-wave local adapter:
 
 ```bash
@@ -150,8 +166,9 @@ when working on the deep PatchCore path:
 
 The local PatchCore report defaults to deterministic colour/texture patch
 features, so it does not require Torch. The serious deep-feature path is
-available explicitly through a dense ResNet-18 feature-map extractor. It only
-uses pretrained weights when `feature_map_resnet18_pretrained` is requested.
+available explicitly through dense ResNet-18 and WideResNet50-2 feature-map
+extractors. It only uses pretrained weights when a pretrained feature-map
+option is requested.
 
 ## First Local Report
 
@@ -189,11 +206,28 @@ You can switch extractors explicitly:
 ./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor resnet18_random
 ./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor feature_map_resnet18_random --coreset-size 512
 ./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor feature_map_resnet18_pretrained --coreset-size 512
+./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor feature_map_wide_resnet50_2_pretrained --coreset-size 512
 ```
 
-The pretrained command may download Torchvision ResNet-18 weights into the local
-Torch cache. That cache, generated reports, and memory-bank artefacts are not
-tracked by git.
+The pretrained commands may download Torchvision weights into the local Torch
+cache. That cache, generated reports, and memory-bank artefacts are not tracked
+by git.
+
+The same report path can now be reused for other prepared MVTec AD categories.
+For example, with capsule prepared locally:
+
+```bash
+./.venv/bin/xai-demo-report patchcore-bottle \
+  --manifest-path data/processed/mvtec_ad/capsule/manifest.jsonl \
+  --output-dir outputs/patchcore_capsule \
+  --cache-path data/artefacts/patchcore/capsule/report_bank.npz \
+  --feature-extractor feature_map_resnet18_pretrained \
+  --max-train 20 \
+  --max-examples 3 \
+  --coreset-size 512 \
+  --input-size 224 \
+  --no-cache
+```
 
 Use `--benchmark-limit` for quick smoke runs; omit it to score the full local
 MVTec AD bottle test split in the report diagnostics.
@@ -256,6 +290,9 @@ shows a learned shortcut model, a stamp-invariant intervention model, Grad-CAM
 and Integrated Gradients overlays, and known-region perturbation diagnostics
 over the shortcut region and the part.
 
+When the prepared KSDD2 shortcut manifest exists, the same report can be
+pointed at that second real industrial path with `--real-manifest-path`.
+
 ## Explanation Drift Report
 
 Generate the synthetic drift demo with:
@@ -275,6 +312,19 @@ mask-coverage checks. When local MVTec AD 2 scenario manifests are prepared,
 the same report now adds second-wave anomaly-drift sections for those
 scenarios as well. When local VisA manifests are prepared, the same report adds
 cross-dataset anomaly-drift sections there too.
+
+## Review Pack
+
+Generate the compact external-review pack with:
+
+```bash
+./.venv/bin/xai-demo-report review-pack
+```
+
+The review pack is written to `outputs/review_pack/index.html`. It gives a
+single entry point for external reviewers or ChatGPT, with dataset-readiness
+checks, best-entry links, demo-card summaries, caveats, and a handoff order
+for repo docs and flagship screenshots.
 
 ## Main files
 

@@ -5,6 +5,16 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from xai_demo_suite.data.downloaders.ksdd2 import (
+    KSDD2Dataset,
+    build_ksdd2_shortcut_manifest,
+    download_ksdd2_dataset,
+    extract_ksdd2_dataset,
+    get_ksdd2_dataset,
+    iter_ksdd2_datasets,
+    ksdd2_archive_dir,
+    plan_ksdd2_fetch,
+)
 from xai_demo_suite.data.downloaders.metashift import (
     MetaShiftDataset,
     build_metashift_manifest,
@@ -90,6 +100,7 @@ def build_parser() -> argparse.ArgumentParser:
         "dataset",
         choices=[
             "metashift",
+            "ksdd2",
             "mvtec_ad",
             "mvtec_ad_2",
             "mvtec_loco_ad",
@@ -116,6 +127,7 @@ def build_parser() -> argparse.ArgumentParser:
         "dataset",
         choices=[
             "metashift",
+            "ksdd2",
             "mvtec_ad",
             "mvtec_ad_2",
             "mvtec_loco_ad",
@@ -172,6 +184,10 @@ def _print_metashift_dataset(dataset: MetaShiftDataset) -> None:
     print(f"{dataset.name:40} {dataset.expected_root_name}")
 
 
+def _print_ksdd2_dataset(dataset: KSDD2Dataset) -> None:
+    print(f"{dataset.name:20} {dataset.expected_root_name}")
+
+
 def _print_visa_dataset(dataset: VisADataset) -> None:
     print(f"{dataset.name:12} {dataset.subset_count:>2} categories  {dataset.archive_name}")
 
@@ -205,6 +221,14 @@ def _handle_list() -> int:
     print("  datasets:")
     for metashift_dataset in iter_metashift_datasets():
         _print_metashift_dataset(metashift_dataset)
+    print()
+    print("KolektorSDD2")
+    print("  source: https://www.vicos.si/resources/kolektorsdd2/")
+    print("  downloads: use --archive-url or place a local archive")
+    print("  licence: CC BY-NC-SA 4.0; non-commercial use only")
+    print("  datasets:")
+    for ksdd2_dataset in iter_ksdd2_datasets():
+        _print_ksdd2_dataset(ksdd2_dataset)
     print()
     print("VisA")
     print("  source: https://github.com/amazon-science/spot-diff")
@@ -253,6 +277,37 @@ def _handle_fetch(args: argparse.Namespace) -> int:
         print("manual: MetaShift does not provide a single raw archive through this CLI")
         print(f"target root: {plan.target_root}")
         print(f"reason: {plan.reason}")
+        return 0
+
+    if args.dataset == "ksdd2":
+        ksdd2_dataset = get_ksdd2_dataset(args.category)
+        ksdd2_plan = plan_ksdd2_fetch(
+            dataset=ksdd2_dataset,
+            raw_root=args.raw_root,
+            archive_url=args.archive_url,
+            overwrite=args.overwrite,
+        )
+        if args.dry_run:
+            if ksdd2_plan.should_download:
+                print(f"download: {ksdd2_plan.url}")
+                print(f"target: {ksdd2_plan.archive_path}")
+            else:
+                print("manual: supply --archive-url or place a single archive under")
+                print(f"target dir: {ksdd2_archive_dir(args.raw_root)}")
+            print(f"reason: {ksdd2_plan.reason}")
+            return 0
+        if args.archive_url is None:
+            raise ValueError(
+                "KolektorSDD2 fetch requires --archive-url, or place the archive manually and "
+                "run prepare with --archive-path or --source-root."
+            )
+        ksdd2_result = download_ksdd2_dataset(
+            dataset=ksdd2_dataset,
+            raw_root=args.raw_root,
+            archive_url=args.archive_url,
+            overwrite=args.overwrite,
+        )
+        print(f"{ksdd2_result.status}: {ksdd2_result.archive_path}")
         return 0
 
     if args.dataset == "visa":
@@ -431,6 +486,26 @@ def _handle_prepare(args: argparse.Namespace) -> int:
             project_root=Path.cwd(),
         )
         print(f"source: {source_root}")
+        print(f"manifest: {manifest_path} ({record_count} records)")
+        return 0
+
+    if args.dataset == "ksdd2":
+        ksdd2_dataset = get_ksdd2_dataset(args.category)
+        extracted_root = extract_ksdd2_dataset(
+            raw_root=args.raw_root,
+            interim_root=args.interim_root,
+            overwrite=args.overwrite,
+            archive_path=args.archive_path,
+            source_root=args.source_root,
+        )
+        record_count = build_ksdd2_shortcut_manifest(
+            extracted_root=extracted_root,
+            interim_root=args.interim_root,
+            processed_root=args.processed_root,
+            project_root=Path.cwd(),
+        )
+        manifest_path = args.processed_root / "ksdd2" / ksdd2_dataset.name / "manifest.jsonl"
+        print(f"extracted: {extracted_root}")
         print(f"manifest: {manifest_path} ({record_count} records)")
         return 0
 

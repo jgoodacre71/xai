@@ -177,6 +177,47 @@ Notes:
 - when the prepared manifest exists, Demo 02 and the classifier section of Demo
   08 use this real-image path automatically.
 
+### KolektorSDD2
+Use for:
+- second real-image industrial shortcut path
+- Demo 02 / Demo 08 industrial broadening beyond NEU
+
+Source:
+- upstream page:
+  <https://www.vicos.si/resources/kolektorsdd2/>
+
+Licence / usage:
+- CC BY-NC-SA 4.0;
+- non-commercial use only.
+
+Local workflow:
+
+```bash
+./.venv/bin/python -m xai_demo_suite.cli.data fetch ksdd2 --category shortcut_binary --dry-run
+./.venv/bin/python -m xai_demo_suite.cli.data fetch ksdd2 --category shortcut_binary --archive-url <direct-archive-url>
+./.venv/bin/python -m xai_demo_suite.cli.data prepare ksdd2 --category shortcut_binary
+```
+
+Storage policy:
+- place raw archives under `data/raw/ksdd2/archives/`, or point `prepare` at a
+  manual source root with `--source-root`;
+- extracted source copies are written to `data/interim/ksdd2/raw/`;
+- the prepared binary shortcut layout is written to
+  `data/interim/ksdd2/shortcut_binary/`;
+- the processed manifest is written to
+  `data/processed/ksdd2/shortcut_binary/manifest.jsonl`;
+- raw archives, extracted data, prepared copies, and processed manifests are
+  local artefacts and are excluded from git.
+
+Notes:
+- the current adapter writes a binary `nominal_surface` versus
+  `defective_surface` shortcut task with the same shared manifest contract used
+  by NEU;
+- it supports split-aware layouts with explicit `train` / `test` folders and a
+  conservative fallback when only one split is exposed;
+- training images receive a correlated full-height border stripe so Demo 02 and
+  Demo 08 can show the same shortcut trap on a second real industrial source.
+
 ### MVTec AD 2
 Use for:
 - second-wave anomaly detection stress tests

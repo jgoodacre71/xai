@@ -42,7 +42,7 @@ Verify generated reports, cards, selected figures, and the local index:
 | --- | --- | --- |
 | Demo 01 - Waterbirds Shortcut | Working real-data report when Waterbirds is prepared, with synthetic fallback and optional MetaShift extension | `outputs/waterbirds_shortcut/index.html` |
 | Demo 02 - Industrial Shortcut Trap | Working real-data report when the curated NEU shortcut slice is prepared, with synthetic fallback | `outputs/shortcut_industrial/index.html` |
-| Demo 03 - PatchCore on MVTec AD bottle | Working local MVTec report with deterministic and explicit pretrained feature-map paths | `outputs/patchcore_bottle/index.html` |
+| Demo 03 - PatchCore on MVTec AD bottle | Working local MVTec report with deterministic, pretrained ResNet-18, and pretrained WideResNet50-2 feature-map paths | `outputs/patchcore_bottle/index.html` |
 | Demo 04 - PatchCore Learns the Wrong Normal | Working synthetic report | `outputs/patchcore_wrong_normal/index.html` |
 | Demo 05 - PatchCore Limits Lab | Working synthetic report | `outputs/patchcore_limits/index.html` |
 | Demo 06 - PatchCore Severity Mismatch | Working synthetic report | `outputs/patchcore_severity/index.html` |
@@ -52,6 +52,8 @@ Verify generated reports, cards, selected figures, and the local index:
 The local `outputs/index.html` is a static presentation index with one tile per
 demo, selected figures, report links, demo-card links, key lessons,
 interventions, caveats, and a prepared-dataset summary for the current machine.
+The local `outputs/review_pack/index.html` is a compact external-review layer
+for sharing the suite with another model or a human reviewer.
 The four flagship reports now also share a presenter-facing header, demo-brief
 section, and related-demo links so the suite reads like one coherent local demo
 product rather than disconnected HTML pages.
@@ -73,6 +75,9 @@ checked in as an output-free `.ipynb` plus a paired percent script under
   versus challenge metrics, intervention training that keeps the original
   images plus shortcut-randomised variants, and known-region shortcut
   diagnostics.
+- A second real industrial adapter now exists for KolektorSDD2. It writes the
+  same shared shortcut manifest contract, so Demo 02 and Demo 08 can also be
+  pointed at `data/processed/ksdd2/shortcut_binary/manifest.jsonl`.
 - Demo 08 now uses learned industrial classifier drift under blur, contrast,
   compression, lighting, and shadow shifts, and it now switches to the same
   curated NEU shortcut slice for the classifier path when available. It also
@@ -89,6 +94,9 @@ checked in as an output-free `.ipynb` plus a paired percent script under
 - VisA now has local dataset support and optional Demo 08 anomaly-drift
   sections when prepared.
 - Demo 03 now has an explicit pretrained ResNet-18 feature-map path, but it is
-  still not an official PatchCore benchmark reproduction. Its benchmark panel
+  still not an official PatchCore benchmark reproduction. A pretrained
+  WideResNet50-2 feature-map option and category-aware report framing are now
+  also wired in, and a second local category path is available through capsule.
+  Its benchmark panel
   reports local image-level max-patch AUC and top-patch mask diagnostics.
 - The repository has no configured Git remote in this checkout.

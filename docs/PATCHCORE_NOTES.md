@@ -118,11 +118,27 @@ The report supports these extractor names:
   with random weights for smoke testing the full feature-map path;
 - `feature_map_resnet18_pretrained` — dense ResNet-18 layer2/layer3 feature maps
   with explicit ImageNet pretrained Torchvision weights.
+- `feature_map_wide_resnet50_2_random` — dense WideResNet50-2 layer2/layer3
+  feature maps with random weights for smoke testing the stronger backbone path;
+- `feature_map_wide_resnet50_2_pretrained` — dense WideResNet50-2 layer2/layer3
+  feature maps with explicit ImageNet pretrained Torchvision weights.
 
 Example serious local run:
 
 ```bash
 ./.venv/bin/xai-demo-report patchcore-bottle \
+  --feature-extractor feature_map_resnet18_pretrained \
+  --coreset-size 512 \
+  --max-examples 3
+```
+
+Example broader-category run:
+
+```bash
+./.venv/bin/xai-demo-report patchcore-bottle \
+  --manifest-path data/processed/mvtec_ad/capsule/manifest.jsonl \
+  --output-dir outputs/patchcore_capsule \
+  --cache-path data/artefacts/patchcore/capsule/report_bank.npz \
   --feature-extractor feature_map_resnet18_pretrained \
   --coreset-size 512 \
   --max-examples 3

@@ -102,6 +102,28 @@ datasets:
       processed_manifest: "data/processed/neu_cls/shortcut_binary/manifest.jsonl"
     categories:
       - "shortcut_binary"
+  ksdd2:
+    name: "KolektorSDD2 Shortcut Binary"
+    status: "supported"
+    purpose:
+      - "second real-image industrial shortcut learning path"
+      - "Demo 02 and Demo 08 industrial broadening beyond NEU"
+    raw_data_committed: false
+    licence: "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)"
+    licence_url: "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+    restrictions:
+      - "Non-commercial use only."
+      - "Raw archives, extracted data, prepared copies, and processed manifests must not be committed."
+    source_url: "https://www.vicos.si/resources/kolektorsdd2/"
+    download_url: "Manual archive URL or local archive placement under data/raw/ksdd2/archives/"
+    citation: "Tabernik et al., Kolektor Surface-Defect Dataset 2."
+    expected_layout:
+      raw_archives: "data/raw/ksdd2/archives/<downloaded-archive>"
+      interim_extracted: "data/interim/ksdd2/raw/"
+      interim_prepared: "data/interim/ksdd2/shortcut_binary/"
+      processed_manifest: "data/processed/ksdd2/shortcut_binary/manifest.jsonl"
+    categories:
+      - "shortcut_binary"
   mvtec_ad_2:
     name: "MVTec AD 2"
     status: "supported"

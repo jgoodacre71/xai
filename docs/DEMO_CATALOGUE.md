@@ -38,6 +38,8 @@ shortcut slice when present, with synthetic fallback for fresh clones. The real
 path uses a stronger correlated border stripe, balanced train capping, clean
 versus challenge metrics, a learned shortcut model, a shortcut-randomised
 intervention model, and known-region diagnostics.
+The same report contract now also accepts a prepared KolektorSDD2 shortcut
+manifest for a second real industrial source.
 
 ## Demo 03 — PatchCore on MVTec AD
 The hero demo: anomaly map plus nearest normal patch provenance. The report can
@@ -121,3 +123,5 @@ inclusion shortcut slice when present, an optional MVTec AD bottle
 anomaly-drift section, and now optional second-wave MVTec AD 2 scenario
 sections when those local manifests are prepared. Prepared VisA manifests add
 cross-dataset anomaly-drift sections to the same report.
+The classifier path can also be pointed at the prepared KolektorSDD2 shortcut
+manifest for a second real industrial source.

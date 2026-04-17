@@ -29,6 +29,7 @@ from xai_demo_suite.reports.patchcore_wrong_normal import (
     PatchCoreWrongNormalReportConfig,
     build_patchcore_wrong_normal_report,
 )
+from xai_demo_suite.reports.review_pack import ReviewPackConfig, build_review_pack
 from xai_demo_suite.reports.shortcut_industrial import (
     IndustrialShortcutReportConfig,
     build_industrial_shortcut_report,
@@ -103,6 +104,8 @@ def build_parser() -> argparse.ArgumentParser:
             "resnet18_random",
             "feature_map_resnet18_random",
             "feature_map_resnet18_pretrained",
+            "feature_map_wide_resnet50_2_random",
+            "feature_map_wide_resnet50_2_pretrained",
         ),
         default=bottle_defaults.feature_extractor_name,
         help="Patch feature extractor to use for report generation.",
@@ -251,6 +254,8 @@ def build_parser() -> argparse.ArgumentParser:
             "resnet18_random",
             "feature_map_resnet18_random",
             "feature_map_resnet18_pretrained",
+            "feature_map_wide_resnet50_2_random",
+            "feature_map_wide_resnet50_2_pretrained",
         ),
         default=None,
         help=(
@@ -272,6 +277,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Verify generated reports, demo cards, figures, and local index.",
     )
     verify.add_argument("--output-root", type=Path, default=Path("outputs"))
+
+    review_pack = subparsers.add_parser(
+        "review-pack",
+        help="Generate a compact external-review pack over the local outputs.",
+    )
+    review_pack.add_argument("--output-dir", type=Path, default=Path("outputs/review_pack"))
+    review_pack.add_argument("--output-root", type=Path, default=Path("outputs"))
 
     return parser
 
@@ -449,6 +461,17 @@ def _handle_verify(args: argparse.Namespace) -> int:
     return 1
 
 
+def _handle_review_pack(args: argparse.Namespace) -> int:
+    output_path = build_review_pack(
+        ReviewPackConfig(
+            output_dir=args.output_dir,
+            output_root=args.output_root,
+        )
+    )
+    print(f"report: {output_path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the demo/report CLI."""
 
@@ -474,6 +497,8 @@ def main(argv: list[str] | None = None) -> int:
         return _handle_suite(args)
     if args.command == "verify":
         return _handle_verify(args)
+    if args.command == "review-pack":
+        return _handle_review_pack(args)
     parser.error(f"Unsupported command: {args.command}")
     return 2
 

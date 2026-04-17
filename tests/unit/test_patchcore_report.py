@@ -62,14 +62,15 @@ def _write_manifest(
     tmp_path: Path,
     anomalous_count: int = 1,
     include_masks: bool = False,
+    category: str = "bottle",
 ) -> Path:
-    manifest_path = tmp_path / "data" / "processed" / "mvtec_ad" / "bottle" / "manifest.jsonl"
+    manifest_path = tmp_path / "data" / "processed" / "mvtec_ad" / category / "manifest.jsonl"
     train_path = (
         tmp_path
         / "data"
         / "interim"
         / "mvtec_ad"
-        / "bottle"
+        / category
         / "train"
         / "good"
         / "000.png"
@@ -79,11 +80,11 @@ def _write_manifest(
     rows = [
         {
             "dataset": "mvtec_ad",
-            "category": "bottle",
+            "category": category,
             "split": "train",
             "defect_type": "good",
             "is_anomalous": False,
-            "image_path": "data/interim/mvtec_ad/bottle/train/good/000.png",
+            "image_path": f"data/interim/mvtec_ad/{category}/train/good/000.png",
             "mask_path": None,
         }
     ]
@@ -92,7 +93,7 @@ def _write_manifest(
         / "data"
         / "interim"
         / "mvtec_ad"
-        / "bottle"
+        / category
         / "test"
         / "good"
         / "000.png"
@@ -101,11 +102,11 @@ def _write_manifest(
     rows.append(
         {
             "dataset": "mvtec_ad",
-            "category": "bottle",
+            "category": category,
             "split": "test",
             "defect_type": "good",
             "is_anomalous": False,
-            "image_path": "data/interim/mvtec_ad/bottle/test/good/000.png",
+            "image_path": f"data/interim/mvtec_ad/{category}/test/good/000.png",
             "mask_path": None,
         }
     )
@@ -115,7 +116,7 @@ def _write_manifest(
             / "data"
             / "interim"
             / "mvtec_ad"
-            / "bottle"
+            / category
             / "test"
             / "broken"
             / f"{index:03d}.png"
@@ -126,7 +127,7 @@ def _write_manifest(
             / "data"
             / "interim"
             / "mvtec_ad"
-            / "bottle"
+            / category
             / "ground_truth"
             / "broken"
             / f"{index:03d}_mask.png"
@@ -136,15 +137,15 @@ def _write_manifest(
         rows.append(
             {
                 "dataset": "mvtec_ad",
-                "category": "bottle",
+                "category": category,
                 "split": "test",
                 "defect_type": "broken",
                 "is_anomalous": True,
                 "image_path": (
-                    f"data/interim/mvtec_ad/bottle/test/broken/{index:03d}.png"
+                    f"data/interim/mvtec_ad/{category}/test/broken/{index:03d}.png"
                 ),
                 "mask_path": (
-                    f"data/interim/mvtec_ad/bottle/ground_truth/broken/{index:03d}_mask.png"
+                    f"data/interim/mvtec_ad/{category}/ground_truth/broken/{index:03d}_mask.png"
                     if include_masks
                     else None
                 ),
@@ -331,7 +332,7 @@ def test_patchcore_bottle_report_writes_html_and_assets(tmp_path: Path) -> None:
     )
 
     html = output_path.read_text(encoding="utf-8")
-    assert "PatchCore Bottle Report" in html
+    assert "PatchCore on MVTec AD bottle" in html
     assert "Nearest Normal Patch Evidence" in html
     assert "Test-Split Benchmark Diagnostics" in html
     assert "Image-level ROC AUC from max patch score" in html
@@ -424,3 +425,26 @@ def test_patchcore_bottle_report_uses_configured_extractor(tmp_path: Path) -> No
 
     html = output_path.read_text(encoding="utf-8")
     assert "feature extractor: <code>mean_rgb</code>" in html
+
+
+def test_patchcore_report_uses_manifest_category_in_titles(tmp_path: Path) -> None:
+    manifest_path = _write_manifest(tmp_path, category="capsule")
+    config = PatchCoreBottleReportConfig(
+        manifest_path=manifest_path,
+        output_dir=tmp_path / "outputs",
+        cache_path=tmp_path / "artefacts" / "bank.npz",
+        patch_size=16,
+        stride=16,
+        top_k=1,
+        use_cache=False,
+    )
+
+    output_path = build_patchcore_bottle_report(
+        config,
+        extractor=ConstantPatchFeatureExtractor(),
+    )
+
+    html = output_path.read_text(encoding="utf-8")
+    card_json = (config.output_dir / "demo_card.json").read_text(encoding="utf-8")
+    assert "PatchCore on MVTec AD capsule" in html
+    assert "PatchCore on MVTec AD capsule" in card_json

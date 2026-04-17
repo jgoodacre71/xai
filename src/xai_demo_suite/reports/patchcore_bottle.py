@@ -152,10 +152,27 @@ def _build_default_extractor(config: PatchCoreBottleReportConfig) -> PatchFeatur
             layer_names=("layer2", "layer3"),
             weights_name="DEFAULT",
         )
+    if config.feature_extractor_name == "feature_map_wide_resnet50_2_random":
+        return TorchvisionFeatureMapPatchFeatureExtractor(
+            backbone_name="wide_resnet50_2",
+            feature_name="feature_map_wide_resnet50_2_random_layer2_layer3",
+            input_size=config.input_size,
+            layer_names=("layer2", "layer3"),
+            weights_name=None,
+        )
+    if config.feature_extractor_name == "feature_map_wide_resnet50_2_pretrained":
+        return TorchvisionFeatureMapPatchFeatureExtractor(
+            backbone_name="wide_resnet50_2",
+            feature_name="feature_map_wide_resnet50_2_imagenet_layer2_layer3",
+            input_size=config.input_size,
+            layer_names=("layer2", "layer3"),
+            weights_name="DEFAULT",
+        )
     raise ValueError(
         "Unsupported feature_extractor_name. Expected one of: "
         "colour_texture, mean_rgb, resnet18_random, "
-        "feature_map_resnet18_random, feature_map_resnet18_pretrained."
+        "feature_map_resnet18_random, feature_map_resnet18_pretrained, "
+        "feature_map_wide_resnet50_2_random, feature_map_wide_resnet50_2_pretrained."
     )
 
 
@@ -802,6 +819,16 @@ def _render_benchmark(benchmark: PatchCoreBottleBenchmarkReport | None) -> str:
 
 
 def _feature_path_description(feature_name: str) -> str:
+    if "wide_resnet50_2_imagenet" in feature_name:
+        return (
+            "ImageNet-pretrained Torchvision WideResNet50-2 feature maps sampled from "
+            "layer2 and layer3 at each patch centre."
+        )
+    if feature_name.startswith("feature_map_wide_resnet50_2_random"):
+        return (
+            "Torchvision WideResNet50-2 feature maps sampled from layer2 and layer3, "
+            "using random weights for dependency/runtime testing."
+        )
     if "imagenet" in feature_name:
         return (
             "ImageNet-pretrained Torchvision ResNet-18 feature maps sampled from "
@@ -821,6 +848,10 @@ def _feature_path_description(feature_name: str) -> str:
     return feature_name
 
 
+def _report_category_label(config: PatchCoreBottleReportConfig) -> str:
+    return config.manifest_path.parent.name.replace("_", " ")
+
+
 def _render_html(
     *,
     config: PatchCoreBottleReportConfig,
@@ -831,6 +862,12 @@ def _render_html(
     cache_path: Path,
     output_path: Path,
 ) -> None:
+    category_label = _report_category_label(config)
+    title_text = f"PatchCore on MVTec AD {category_label}"
+    lede_text = (
+        "Nearest-normal patch provenance, local counterfactual probes, and dataset-level "
+        f"diagnostics for the MVTec AD {category_label} anomaly demo."
+    )
     example_sections = "\n".join(
         _render_example_section(example=example, output_path=output_path)
         for example in examples
@@ -887,7 +924,7 @@ def _render_html(
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>PatchCore Bottle Report</title>
+  <title>{html.escape(title_text)}</title>
   <style>
     body {{
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -924,11 +961,8 @@ def _render_html(
   {render_report_header(
       output_path=output_path,
       eyebrow="Demo 03 · PatchCore hero demo",
-      title="PatchCore on MVTec AD bottle",
-      lede=(
-          "Nearest-normal patch provenance, local counterfactual probes, and dataset-level "
-          "diagnostics for the flagship industrial anomaly demo."
-      ),
+      title=title_text,
+      lede=lede_text,
   )}
   {render_report_brief(brief)}
 
@@ -965,8 +999,11 @@ def _build_demo_card(
     assets: dict[str, Path],
     feature_name: str,
     coreset_size: int | None,
+    category_label: str,
 ) -> DemoCard:
-    uses_feature_map = feature_name.startswith("feature_map_resnet18")
+    uses_feature_map = feature_name.startswith("feature_map_resnet18") or feature_name.startswith(
+        "feature_map_wide_resnet50_2"
+    )
     uses_pretrained = "imagenet" in feature_name
     failure_mode = (
         "This is a practical local PatchCore implementation rather than an official "
@@ -979,8 +1016,8 @@ def _build_demo_card(
             if uses_feature_map
             else (
                 "Current default features are deterministic colour/texture statistics "
-                "on a coarse patch grid. Use feature_map_resnet18_pretrained for the "
-                "serious deep-feature path."
+                "on a coarse patch grid. Use feature_map_resnet18_pretrained or "
+                "feature_map_wide_resnet50_2_pretrained for the stronger deep-feature path."
             )
         )
     )
@@ -990,8 +1027,11 @@ def _build_demo_card(
         else "Nearest-normal exemplars are retrieved from the retained local memory bank."
     )
     return DemoCard(
-        title="Demo 03 - PatchCore on MVTec AD bottle",
-        task="Unsupervised industrial anomaly detection on the MVTec AD bottle category.",
+        title=f"Demo 03 - PatchCore on MVTec AD {category_label}",
+        task=(
+            f"Unsupervised industrial anomaly detection on the MVTec AD "
+            f"{category_label} category."
+        ),
         model=(
             "PatchCore-style nearest-neighbour memory bank with "
             f"{feature_name} patch features."
@@ -1039,6 +1079,7 @@ def build_patchcore_bottle_report(
     """Build a static HTML report for selected MVTec AD bottle examples."""
 
     ensure_directory(config.output_dir)
+    category_label = _report_category_label(config)
     extractor = extractor or _build_default_extractor(config)
     memory_bank = _build_or_load_bank(config, extractor)
     benchmark = _build_benchmark_report(
@@ -1113,6 +1154,7 @@ def build_patchcore_bottle_report(
         assets=example_reports[0].assets,
         feature_name=extractor.feature_name,
         coreset_size=config.coreset_size,
+        category_label=category_label,
     )
     save_demo_card(card, config.output_dir)
     save_demo_index_for_output_root(config.output_dir.parent)
