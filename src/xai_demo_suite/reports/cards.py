@@ -176,12 +176,21 @@ def save_demo_index(cards: tuple[DemoCard, ...], output_path: Path) -> Path:
             f"<li>{html.escape(method)}</li>" for method in card.explanation_methods[:3]
         )
         caveat = card.remaining_caveats[0] if card.remaining_caveats else "See report."
+        build_meta_html = ""
+        if card.build_metadata is not None:
+            build_meta_html = (
+                '<div class="tile-build-meta">'
+                f'<span class="pill">SHA {html.escape(card.build_metadata.git_sha)}</span>'
+                f'<span class="pill">{html.escape(card.build_metadata.data_mode)}</span>'
+                "</div>"
+            )
         items.append(
             '<article class="demo-tile">'
             f'<a class="thumb" href="{html.escape(_relative(card.report_path, root))}">'
             f"{figure_html}</a>"
             '<div class="tile-body">'
             f"<h2>{html.escape(card.title)}</h2>"
+            f"{build_meta_html}"
             f"<p>{html.escape(card.key_lesson)}</p>"
             f"<dl>"
             f"<dt>Model</dt><dd>{html.escape(card.model)}</dd>"
@@ -329,6 +338,23 @@ def save_demo_index(cards: tuple[DemoCard, ...], output_path: Path) -> Path:
       padding: 4px 8px;
       background: #f8fafc;
     }}
+    .tile-build-meta {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 0 0 10px;
+    }}
+    .pill {{
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      background: #f8fafc;
+      color: #364152;
+      font-size: 12px;
+      font-weight: 600;
+    }}
     .links {{
       display: flex;
       gap: 10px;
@@ -374,6 +400,17 @@ def save_demo_index(cards: tuple[DemoCard, ...], output_path: Path) -> Path:
 
 
 def _card_from_json_dict(data: dict[str, Any], root: Path) -> DemoCard:
+    build_metadata = None
+    raw_build_metadata = data.get("build_metadata")
+    if isinstance(raw_build_metadata, dict):
+        manifest_path = raw_build_metadata.get("manifest_path")
+        build_metadata = BuildMetadata(
+            git_sha=str(raw_build_metadata["git_sha"]),
+            built_at_utc=str(raw_build_metadata["built_at_utc"]),
+            data_mode=str(raw_build_metadata["data_mode"]),
+            manifest_path=root / str(manifest_path) if isinstance(manifest_path, str) else None,
+            cache_status=str(raw_build_metadata["cache_status"]),
+        )
     return DemoCard(
         title=str(data["title"]),
         task=str(data["task"]),
@@ -385,6 +422,7 @@ def _card_from_json_dict(data: dict[str, Any], root: Path) -> DemoCard:
         remaining_caveats=tuple(str(item) for item in data["remaining_caveats"]),
         report_path=root / str(data["report_path"]),
         figure_paths=tuple(root / str(path) for path in data["figure_paths"]),
+        build_metadata=build_metadata,
     )
 
 

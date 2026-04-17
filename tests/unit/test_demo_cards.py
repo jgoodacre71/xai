@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from xai_demo_suite.reports.build_metadata import BuildMetadata
 from xai_demo_suite.reports.cards import (
     DemoCard,
     save_demo_card,
@@ -141,3 +142,41 @@ def test_save_demo_index_shows_prepared_dataset_summary_and_demo_order(tmp_path:
     assert "Reports generated: 2" in html
     assert "Waterbirds: prepared" in html
     assert html.index("Demo 01 - Waterbirds Shortcut") < html.index("Demo 03 - PatchCore")
+
+
+def test_save_demo_index_shows_build_metadata_pills(tmp_path: Path) -> None:
+    report_path = tmp_path / "outputs" / "patchcore_bottle" / "index.html"
+    figure_path = tmp_path / "outputs" / "patchcore_bottle" / "assets" / "query_patch.png"
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    figure_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text("<html></html>", encoding="utf-8")
+    figure_path.write_bytes(b"figure")
+
+    index_path = save_demo_index(
+        (
+            DemoCard(
+                title="Demo 03 - PatchCore",
+                task="Anomaly detection.",
+                model="PatchCore-style memory bank.",
+                explanation_methods=("anomaly map",),
+                key_lesson="Provenance makes the score inspectable.",
+                failure_mode="Coarse baseline.",
+                intervention="Replace top patch.",
+                remaining_caveats=("Not causal proof.",),
+                report_path=report_path,
+                figure_paths=(figure_path,),
+                build_metadata=BuildMetadata(
+                    git_sha="abcdef1",
+                    built_at_utc="2026-04-17 12:00:00 UTC",
+                    data_mode="real",
+                    manifest_path=None,
+                    cache_status="disabled",
+                ),
+            ),
+        ),
+        tmp_path / "outputs" / "index.html",
+    )
+
+    html = index_path.read_text(encoding="utf-8")
+    assert "SHA abcdef1" in html
+    assert ">real<" in html
