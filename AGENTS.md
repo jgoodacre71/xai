@@ -51,6 +51,10 @@ At minimum, run whichever of these are relevant:
 - `uv run pytest -q`
 - targeted notebook smoke checks if notebook behaviour changed
 
+`uv` is the preferred command path for validation. If you are working in a
+plain `venv`, use the equivalent `.venv/bin/...` commands and state that
+explicitly.
+
 If a command cannot be run, state what would be run and why it was skipped.
 
 ## Directory guide

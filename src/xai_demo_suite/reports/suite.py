@@ -71,6 +71,32 @@ class SuiteVerificationResult:
 
 ReportBuilder = Callable[[], Path]
 
+REQUIRED_CARD_FIELDS: frozenset[str] = frozenset(
+    {
+        "title",
+        "task",
+        "model",
+        "explanation_methods",
+        "key_lesson",
+        "failure_mode",
+        "intervention",
+        "remaining_caveats",
+        "report_path",
+        "figure_paths",
+    }
+)
+
+REPORT_MARKERS: dict[str, tuple[str, ...]] = {
+    "waterbirds_shortcut": ("Waterbirds", "Shortcut", "<title>"),
+    "shortcut_industrial": ("industrial", "shortcut", "<title>"),
+    "patchcore_bottle": ("PatchCore", "<title>"),
+    "patchcore_limits": ("PatchCore", "count", "<title>"),
+    "patchcore_severity": ("PatchCore", "severity", "<title>"),
+    "patchcore_logic": ("PatchCore", "logic", "<title>"),
+    "patchcore_wrong_normal": ("wrong normal", "PatchCore", "<title>"),
+    "explanation_drift": ("drift", "explanation", "<title>"),
+}
+
 
 def _use_local_data_defaults(output_root: Path) -> bool:
     """Return whether suite defaults should auto-pick prepared local datasets."""
@@ -235,12 +261,19 @@ def build_demo_suite(
 
 
 def verify_demo_suite_outputs(output_root: Path = Path("outputs")) -> SuiteVerificationResult:
-    """Verify generated reports, demo cards, figures, and local index."""
+    """Verify generated reports, demo cards, figures, and basic report semantics."""
 
     problems: list[str] = []
     checked_paths: list[Path] = []
     index_path = output_root / "index.html"
     _record_path(index_path, checked_paths, problems, "local index")
+    if index_path.exists():
+        _check_html_contains(
+            index_path,
+            ("XAI Demo Suite Local Reports", "Open report"),
+            problems,
+            "local index",
+        )
     card_paths = sorted(output_root.glob("*/demo_card.json"))
     if not card_paths:
         problems.append(f"No demo cards found under {output_root}.")
@@ -254,8 +287,18 @@ def verify_demo_suite_outputs(output_root: Path = Path("outputs")) -> SuiteVerif
         data = _load_card_json(card_path, problems)
         if data is None:
             continue
+        _check_card_fields(card_path, data, problems)
+        if html_card.exists():
+            _check_html_contains(
+                html_card,
+                (str(data.get("title", "")), "Key lesson", "Open report"),
+                problems,
+                f"demo card HTML for {card_path.parent.name}",
+            )
         report_path = output_root / str(data.get("report_path", ""))
         _record_path(report_path, checked_paths, problems, f"report for {card_path.parent.name}")
+        if report_path.exists():
+            _check_report_semantics(report_path, problems)
         for figure in data.get("figure_paths", []):
             _record_path(
                 output_root / str(figure),
@@ -263,6 +306,16 @@ def verify_demo_suite_outputs(output_root: Path = Path("outputs")) -> SuiteVerif
                 problems,
                 f"figure for {card_path.parent.name}",
             )
+
+    review_pack_path = output_root / "review_pack" / "index.html"
+    if review_pack_path.exists():
+        _record_path(review_pack_path, checked_paths, problems, "review pack")
+        _check_html_contains(
+            review_pack_path,
+            ("XAI Demo Suite Review Pack", "ChatGPT Handoff", "Recommended Walkthrough"),
+            problems,
+            "review pack",
+        )
 
     return SuiteVerificationResult(
         output_root=output_root,
@@ -282,22 +335,43 @@ def _load_card_json(card_path: Path, problems: list[str]) -> dict[str, Any] | No
         problems.append(f"{card_path} must contain a JSON object.")
         return None
     data = cast(dict[str, Any], raw_data)
-    required = {
-        "title",
-        "task",
-        "model",
-        "explanation_methods",
-        "key_lesson",
-        "failure_mode",
-        "intervention",
-        "remaining_caveats",
-        "report_path",
-        "figure_paths",
-    }
-    missing = sorted(required - set(data))
+    missing = sorted(REQUIRED_CARD_FIELDS - set(data))
     if missing:
         problems.append(f"{card_path} is missing fields: {', '.join(missing)}")
     return data
+
+
+def _check_card_fields(card_path: Path, data: dict[str, Any], problems: list[str]) -> None:
+    string_fields = ("title", "task", "model", "key_lesson", "failure_mode", "intervention")
+    for field in string_fields:
+        value = data.get(field)
+        if not isinstance(value, str) or not value.strip():
+            problems.append(f"{card_path} field '{field}' must be a non-empty string.")
+
+    list_fields = ("explanation_methods", "remaining_caveats", "figure_paths")
+    for field in list_fields:
+        value = data.get(field)
+        if not isinstance(value, list) or not value:
+            problems.append(f"{card_path} field '{field}' must be a non-empty list.")
+
+
+def _check_report_semantics(report_path: Path, problems: list[str]) -> None:
+    slug = report_path.parent.name
+    markers = REPORT_MARKERS.get(slug, ("<title>",))
+    _check_html_contains(report_path, markers, problems, f"report {slug}")
+
+
+def _check_html_contains(
+    path: Path,
+    markers: tuple[str, ...],
+    problems: list[str],
+    description: str,
+) -> None:
+    text = path.read_text(encoding="utf-8")
+    lowered_text = text.lower()
+    for marker in markers:
+        if marker.lower() not in lowered_text:
+            problems.append(f"Missing marker '{marker}' in {description}: {path}")
 
 
 def _record_path(

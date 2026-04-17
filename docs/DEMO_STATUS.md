@@ -30,7 +30,8 @@ PatchCore for Demo 03:
   --mvtec-input-size 224
 ```
 
-Verify generated reports, cards, selected figures, and the local index:
+Verify generated reports, cards, selected figures, basic report semantics, and
+the local index:
 
 ```bash
 ./.venv/bin/xai-demo-report verify
@@ -60,6 +61,8 @@ product rather than disconnected HTML pages.
 The notebook layer now mirrors the same structure: each flagship notebook is
 checked in as an output-free `.ipynb` plus a paired percent script under
 `notebooks/`, and reduced notebook smoke runs are part of the local test slice.
+The repository now also has a GitHub Actions CI workflow plus explicit
+integration tests for the public CLI entry points.
 
 ## Known gaps
 
@@ -99,4 +102,6 @@ checked in as an output-free `.ipynb` plus a paired percent script under
   also wired in, and a second local category path is available through capsule.
   Its benchmark panel
   reports local image-level max-patch AUC and top-patch mask diagnostics.
-- The repository has no configured Git remote in this checkout.
+- The suite verifier is now stronger than a pure file-existence check, but it
+  is still a local structural-and-semantic smoke test rather than a guarantee
+  of benchmark validity or explanation quality.

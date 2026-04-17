@@ -11,7 +11,11 @@ import pytest
     (
         ("01_waterbirds_shortcut.py", "waterbirds_shortcut/index.html"),
         ("02_industrial_shortcut_trap.py", "shortcut_industrial/index.html"),
+        ("03_patchcore_mvtec_ad.py", "patchcore_bottle/index.html"),
         ("04_patchcore_wrong_normal.py", "patchcore_wrong_normal/index.html"),
+        ("05_patchcore_count_limit.py", "patchcore_limits/index.html"),
+        ("06_patchcore_severity_limit.py", "patchcore_severity/index.html"),
+        ("07_patchcore_loco_logic_limit.py", "patchcore_logic/index.html"),
         ("08_explanation_drift.py", "explanation_drift/index.html"),
     ),
 )

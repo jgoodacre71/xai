@@ -15,9 +15,20 @@ should remain thin narrative and orchestration layers.
 
 ## Getting started
 
+Preferred `uv` workflow:
+
+```bash
+uv sync --group dev
+uv run ruff check .
+uv run mypy src
+uv run pytest -q
+```
+
+Plain `venv` and `pip` fallback:
+
 ```bash
 python3.12 -m venv .venv
-./.venv/bin/python -m pip install -e . pytest ruff mypy pytest-cov
+./.venv/bin/python -m pip install -e ".[dev]"
 ./.venv/bin/ruff check .
 ./.venv/bin/mypy src
 ./.venv/bin/pytest -q
@@ -162,8 +173,23 @@ manifest.
 The base package and tests do not require Torch. Install the optional ML stack
 when working on the deep PatchCore path:
 
+With `uv`:
+
+```bash
+uv sync --group dev --group ml
+```
+
+With `pip`:
+
 ```bash
 ./.venv/bin/python -m pip install -e ".[ml]"
+```
+
+If you are using the `pip` path from a clean environment and still want the
+lint and test toolchain available, use:
+
+```bash
+./.venv/bin/python -m pip install -e ".[dev,ml]"
 ```
 
 The local PatchCore report defaults to deterministic colour/texture patch

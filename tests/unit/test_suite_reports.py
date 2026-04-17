@@ -101,6 +101,39 @@ def test_verify_demo_suite_outputs_reports_missing_cards(tmp_path: Path) -> None
     assert any("No demo cards found" in problem for problem in result.problems)
 
 
+def test_verify_demo_suite_outputs_reports_missing_semantic_markers(tmp_path: Path) -> None:
+    output_root = tmp_path / "outputs"
+    report_dir = output_root / "waterbirds_shortcut"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    (output_root / "index.html").write_text("XAI Demo Suite Local Reports", encoding="utf-8")
+    (report_dir / "index.html").write_text("<html><body>stub</body></html>", encoding="utf-8")
+    (report_dir / "demo_card.html").write_text("<html><body>stub</body></html>", encoding="utf-8")
+    (report_dir / "figure.png").write_bytes(b"png")
+    (report_dir / "demo_card.json").write_text(
+        """
+{
+  "title": "Demo 01 - Waterbirds Shortcut",
+  "task": "task",
+  "model": "model",
+  "explanation_methods": ["Grad-CAM"],
+  "key_lesson": "lesson",
+  "failure_mode": "failure",
+  "intervention": "intervention",
+  "remaining_caveats": ["caveat"],
+  "report_path": "waterbirds_shortcut/index.html",
+  "figure_paths": ["waterbirds_shortcut/figure.png"]
+}
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = verify_demo_suite_outputs(output_root)
+
+    assert not result.ok
+    assert any("Missing marker" in problem for problem in result.problems)
+
+
 def test_suite_passes_mvtec_model_settings(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
