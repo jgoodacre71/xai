@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PatchCore Logical Anomaly Limits on MVTec LOCO</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 32px;
+      color: #1f2933;
+      background: #f7f8fb;
+    }
+    main { max-width: 1120px; margin: 0 auto; }
+    h1, h2 { margin: 0 0 12px; }
+    section { margin: 28px 0; background: #fff; padding: 20px; border: 1px solid #d8dee4; }
+    .example { border-top: 2px solid #d8dee4; padding-top: 24px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+    figure { margin: 0; border: 1px solid #d8dee4; padding: 10px; background: #fff; }
+    img { max-width: 100%; height: auto; display: block; }
+    figcaption { font-size: 13px; color: #52606d; margin-top: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td {
+      border-bottom: 1px solid #d8dee4;
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+    
+    .hero {
+      background: linear-gradient(180deg, #ffffff 0%, #f2f5fb 100%);
+      border: 1px solid #d8dee4;
+      padding: 24px;
+    }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: #486581;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .lede {
+      max-width: 820px;
+      color: #243b53;
+      font-size: 17px;
+      line-height: 1.55;
+    }
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .action-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      padding: 0 14px;
+      border: 1px solid #bcccdc;
+      color: #102a43;
+      background: #ffffff;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .summary-card {
+      border: 1px solid #d8dee4;
+      background: #ffffff;
+      padding: 16px;
+    }
+    .summary-card h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      color: #102a43;
+    }
+    .summary-card p {
+      margin: 0;
+      color: #334e68;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .related-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .related-link {
+      display: block;
+      border: 1px solid #d8dee4;
+      background: #ffffff;
+      padding: 16px;
+      color: inherit;
+      text-decoration: none;
+    }
+    .related-link strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #102a43;
+      font-size: 15px;
+    }
+    .related-link span {
+      color: #52606d;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .build-meta {
+      margin-top: 16px;
+      padding: 14px;
+      border: 1px solid #d8dee4;
+      background: #ffffff;
+    }
+    .build-meta h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      color: #102a43;
+    }
+    .build-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .build-meta-grid div {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #334e68;
+    }
+    .build-meta-grid strong {
+      display: block;
+      color: #102a43;
+    }
+    
+  </style>
+</head>
+<body>
+<main>
+  
+  <section class="hero">
+    <p class="eyebrow">Demo 07 · Logical anomaly boundary</p>
+    <h1>PatchCore Logical Anomaly Limits on MVTec LOCO</h1>
+    <p class="lede">Real LOCO examples show the exact point where provenance-rich patch novelty stops and rule-level inspection has to begin.</p>
+    <div class="action-row">
+      <a class="action-link" href="../index.html">Open local demo hub</a>
+      <a class="action-link" href="demo_card.html">Open demo card</a>
+    </div>
+    
+    <div class="build-meta">
+      <h3>Build Metadata</h3>
+      <div class="build-meta-grid">
+        <div><strong>Git SHA</strong>03f1d2a</div>
+        <div><strong>Built at</strong>2026-04-17 16:01:52 UTC</div>
+        <div><strong>Data mode</strong>real</div>
+        <div><strong>Cache</strong>enabled</div>
+        <div><strong>Manifest</strong><code>../../data/processed/mvtec_loco_ad/juice_bottle/manifest.jsonl</code></div>
+      </div>
+    </div>
+
+  </section>
+
+  
+  <section>
+    <h2>Demo Brief</h2>
+    <div class="summary-grid">
+      <div class="summary-card"><h3>Core claim</h3><p>PatchCore can expose local novelty on LOCO images, but it does not itself contain the product rule that says a front label must exist.</p></div><div class="summary-card"><h3>Best evidence on this page</h3><p>Compare the logical and structural cases, then use the component-aware benchmark table to show that a narrow rule check can make a claim the patch distance alone cannot.</p></div><div class="summary-card"><h3>How to present it live</h3><p>Show the logical example first, ask what the detector can honestly claim, and then contrast PatchCore provenance with the front-label comparator.</p></div><div class="summary-card"><h3>Boundary to say out loud</h3><p>The comparator is deliberately narrow and category-specific. It proves the reasoning gap in PatchCore, not a general solution to logical anomaly detection.</p></div>
+    </div>
+  </section>
+
+
+  <section>
+    <h2>Run Context</h2>
+    <ul>
+      <li>manifest: <code>data/processed/mvtec_loco_ad/juice_bottle/manifest.jsonl</code></li>
+      <li>memory bank cache: <code>data/artefacts/patchcore/loco/juice_bottle_logic_bank.npz</code></li>
+      <li>nominal training images used: 40</li>
+      <li>patch size: 240, stride: 160,
+      top-k: 3</li>
+      <li>feature extractor: <code>colour_texture</code></li>
+      <li>component-aware comparator: <code>front_label_template</code></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Patch Novelty Versus Rule Statements</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>LOCO case</th>
+          <th>Image</th>
+          <th>Top patch score</th>
+          <th>Mask covered</th>
+          <th>Front-label score</th>
+          <th>Native PatchCore-style output</th>
+          <th>Rule statement the product may need</th>
+        </tr>
+      </thead>
+      <tbody><tr><td>logical_anomalies</td><td>000.png</td><td>0.815187</td><td>43.8%</td><td>0.820747</td><td>Top patch novelty, nearest normal source patch, and mask overlap</td><td>Required front label or packaging element is missing.</td></tr><tr><td>structural_anomalies</td><td>000.png</td><td>0.427569</td><td>0.0%</td><td>0.460945</td><td>Top patch novelty, nearest normal source patch, and mask overlap</td><td>Visible structural damage or foreign material on the bottle.</td></tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Component-aware Packaging-Rule Comparator</h2>
+    <p>
+      The comparator is intentionally narrow: it learns the expected front-label
+      appearance from nominal juice-bottle images and scores the aligned label
+      region directly. It is not a general anomaly detector. It is a category-
+      specific rule check that can emit a packaging statement the PatchCore
+      distance alone does not contain.
+    </p>
+    <div class="grid">
+      <figure>
+        <img src="assets/juice_bottle_front_label_template.png" alt="Front-label template">
+        <figcaption>Learned nominal front-label template from the training split.</figcaption>
+      </figure>
+    </div>
+    <ul>
+      <li>train comparator mean score: 0.517642</li>
+      <li>train comparator std: 0.073849</li>
+      <li>flag threshold: 0.739188</li>
+      <li>good vs logical ROC AUC: 0.747</li>
+      <li>good vs structural ROC AUC: 0.571</li>
+    </ul>
+    <table>
+      <thead>
+        <tr>
+          <th>Split / defect type</th>
+          <th>Count</th>
+          <th>Mean score</th>
+          <th>Median score</th>
+          <th>Flagged by comparator</th>
+        </tr>
+      </thead>
+      <tbody><tr><td>good</td><td>94</td><td>0.566422</td><td>0.566899</td><td>4.3%</td></tr><tr><td>logical_anomalies</td><td>142</td><td>0.686504</td><td>0.680955</td><td>41.5%</td></tr><tr><td>structural_anomalies</td><td>94</td><td>0.598569</td><td>0.577148</td><td>10.6%</td></tr></tbody>
+    </table>
+  </section>
+
+
+  <section class="example">
+    <h2>logical_anomalies: 000.png</h2>
+    <p>The missing label is a logical packaging failure: the local region is visible, but the product-level rule is that this front label must exist.</p>
+    <div class="grid">
+      <figure>
+        <img src="assets/loco_logical_anomalies_000_score_overlay.png" alt="Patch score overlay">
+        <figcaption>Patch-score overlay. Top score: 0.815187</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/loco_logical_anomalies_000_query_box.png" alt="Top patch box">
+        <figcaption>Top novelty patch selected by the detector.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/loco_logical_anomalies_000_mask_overlay.png" alt="Ground-truth mask overlay">
+        <figcaption>MVTec LOCO ground-truth region. Mask covered by top patch:
+        43.8%</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/loco_logical_anomalies_000_nearest_normal_source.png" alt="Nearest normal source">
+        <figcaption>Nearest normal source patch:
+        mvtec_loco_ad/juice_bottle/train/good/019</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/loco_logical_anomalies_000_component_box.png" alt="Component comparator box">
+        <figcaption>Expected front-label region used by the component-aware comparator.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/loco_logical_anomalies_000_component_crop.png" alt="Component crop">
+        <figcaption>
+          Component-aware comparator flags the expected front label as missing.
+          Score: 0.820747
+          (threshold 0.739188)
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+
+  <section class="example">
+    <h2>structural_anomalies: 000.png</h2>
+    <p>The structural case is closer to what PatchCore naturally handles: a local visual defect that differs from nominal source patches.</p>
+    <div class="grid">
+      <figure>
+        <img src="assets/loco_structural_anomalies_000_score_overlay.png" alt="Patch score overlay">
+        <figcaption>Patch-score overlay. Top score: 0.427569</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/loco_structural_anomalies_000_query_box.png" alt="Top patch box">
+        <figcaption>Top novelty patch selected by the detector.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/loco_structural_anomalies_000_mask_overlay.png" alt="Ground-truth mask overlay">
+        <figcaption>MVTec LOCO ground-truth region. Mask covered by top patch:
+        0.0%</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/loco_structural_anomalies_000_nearest_normal_source.png" alt="Nearest normal source">
+        <figcaption>Nearest normal source patch:
+        mvtec_loco_ad/juice_bottle/train/good/035</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/loco_structural_anomalies_000_component_box.png" alt="Component comparator box">
+        <figcaption>Expected front-label region used by the component-aware comparator.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/loco_structural_anomalies_000_component_crop.png" alt="Component crop">
+        <figcaption>
+          Component-aware comparator keeps the expected front label within the nominal range.
+          Score: 0.460945
+          (threshold 0.739188)
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+
+  <section>
+    <h2>Lesson</h2>
+    <p>
+      The real LOCO cases make the boundary sharper than the synthetic proxy:
+      PatchCore-style retrieval can expose where the image differs from normal
+      bottles, but it still does not natively know that a front label is required.
+      A narrow component-aware rule can express that statement directly, which is
+      why PatchCore is stronger as a provenance-rich anomaly layer than as the
+      whole logical-inspection stack.
+    </p>
+  </section>
+  
+  <section>
+    <h2>Where to go next</h2>
+    <div class="related-list">
+      <a class="related-link" href="../patchcore_bottle/index.html"><strong>Demo 03 - PatchCore on MVTec AD bottle</strong><span>Shows the same provenance story on a task that fits PatchCore better.</span></a><a class="related-link" href="../patchcore_limits/index.html"><strong>Demo 05 - PatchCore Limits Lab</strong><span>Extends the limitation story into counting and component identity.</span></a><a class="related-link" href="../explanation_drift/index.html"><strong>Demo 08 - Explanation Drift Under Shift</strong><span>Shows how even local evidence can drift under nuisance changes.</span></a>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

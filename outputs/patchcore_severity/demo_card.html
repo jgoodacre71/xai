@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Demo 06 - PatchCore Severity Mismatch Demo Card</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 32px;
+      color: #1f2933;
+    }
+    main { max-width: 880px; margin: 0 auto; }
+    dt { font-weight: 700; margin-top: 16px; }
+    dd { margin: 6px 0 0; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Demo 06 - PatchCore Severity Mismatch</h1>
+  <dl>
+    <dt>Task</dt><dd>Synthetic severity sweep comparing scratch area with PatchCore-style novelty score.</dd>
+    <dt>Model</dt><dd>PatchCore-style nearest-neighbour memory bank with colour/texture patch features.</dd>
+    <dt>Explanation methods</dt><dd><ul><li>Patch-score anomaly overlay</li><li>Nearest-normal patch provenance</li><li>Synthetic severity-mask comparison</li><li>Severity-rank versus novelty-rank check</li></ul></dd>
+    <dt>Key lesson</dt><dd>A high anomaly score is not automatically a high engineering severity.</dd>
+    <dt>Failure mode</dt><dd>Feature-space novelty can rank a small high-contrast mark above a larger low-contrast defect.</dd>
+    <dt>Intervention</dt><dd>Add a calibrated severity target and validation layer instead of treating PatchCore distance as severity.</dd>
+    <dt>Remaining caveats</dt><dd><ul><li>Synthetic scratch sweep, not a production severity benchmark.</li><li>No human-labelled severity data yet.</li><li>No calibrated regression or ordinal severity model yet.</li></ul></dd>
+    <dt>Build metadata</dt><dd><ul><li>Git SHA: <code>03f1d2a</code></li><li>Built at: 2026-04-17 16:01:29 UTC</li><li>Data mode: synthetic</li><li>Cache: enabled</li><li>Manifest: <code>Not used</code></li></ul></dd>
+    <dt>Report</dt><dd><a href="index.html">Open report</a></dd>
+    <dt>Selected figures</dt><dd><ul><li><code>patchcore_severity/assets/example_1_thin_bright_scratch_score_overlay.png</code></li><li><code>patchcore_severity/assets/example_2_medium_bright_scratch_score_overlay.png</code></li><li><code>patchcore_severity/assets/example_3_wide_low_contrast_scuff_mask_overlay.png</code></li><li><code>patchcore_severity/assets/example_3_wide_low_contrast_scuff_nearest_normal_source.png</code></li></ul></dd>
+  </dl>
+</main>
+</body>
+</html>

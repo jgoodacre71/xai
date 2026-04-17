@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>XAI Demo Suite Review Pack</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 32px;
+      color: #1f2933;
+      background: #f7f8fb;
+    }
+    main { max-width: 1180px; margin: 0 auto; }
+    section { margin: 24px 0; background: #fff; padding: 20px; border: 1px solid #d8dee4; }
+    h1, h2, h3 { margin: 0 0 12px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      border: 1px solid #d8dee4;
+      padding: 16px;
+      background: #fff;
+    }
+    .card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: 12px 0;
+      border: 1px solid #d8dee4;
+    }
+    .report-link {
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+  <section>
+    <h1>XAI Demo Suite Review Pack</h1>
+    <p>
+      This pack is the shortest path for a reviewer to understand what is in the repo,
+      which demos are strongest, which datasets are prepared locally on this machine,
+      and what caveats still matter.
+    </p>
+    <p>
+      Start with <a href="../index.html">the local demo hub</a>, use <a href="../../docs/REVIEW_GUIDE.md">the review guide</a> as the durable written companion,
+      then move through the flagship reports for Demo 03, Demo 01, Demo 07, and Demo 08.
+    </p>
+  </section>
+
+  <section>
+    <h2>What This Repo Demonstrates</h2>
+    <ul>
+      <li>shortcut learning in natural and industrial settings</li>
+      <li>PatchCore anomaly evidence with nearest-normal provenance</li>
+      <li>where PatchCore fails on wrong normality, count, severity, and logic</li>
+      <li>how prediction drift and explanation drift separate under nuisance shifts</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Local Dataset Readiness</h2>
+    <ul><li><strong>Waterbirds</strong>: prepared (<code>data/processed/waterbirds/waterbird_complete95_forest2water2/manifest.jsonl</code>)</li><li><strong>MetaShift</strong>: not prepared (<code>data/processed/metashift/subpopulation_shift_cat_dog_indoor_outdoor/manifest.jsonl</code>)</li><li><strong>NEU-CLS</strong>: prepared (<code>data/processed/neu_cls/shortcut_binary/manifest.jsonl</code>)</li><li><strong>KolektorSDD2</strong>: not prepared (<code>data/processed/ksdd2/shortcut_binary/manifest.jsonl</code>)</li><li><strong>MVTec AD bottle</strong>: prepared (<code>data/processed/mvtec_ad/bottle/manifest.jsonl</code>)</li><li><strong>MVTec LOCO AD</strong>: prepared (<code>data/processed/mvtec_loco_ad/juice_bottle/manifest.jsonl</code>)</li><li><strong>MVTec AD 2</strong>: not prepared (<code>data/processed/mvtec_ad_2</code>)</li><li><strong>VisA</strong>: not prepared (<code>data/processed/visa</code>)</li></ul>
+  </section>
+
+  <section>
+    <h2>Recommended Walkthrough</h2>
+    <ol><li>Start at <a href="../patchcore_bottle/index.html">Demo 03 - PatchCore hero report</a> because it is the strongest single technical asset in the suite.</li><li>Move to <a href="../waterbirds_shortcut/index.html">Demo 01 - Waterbirds shortcut report</a> for the shortcut-learning story in natural images.</li><li>Then open <a href="../patchcore_logic/index.html">Demo 07 - LOCO logic limits</a> to show where local novelty is not enough for logic.</li><li>Finish with <a href="../explanation_drift/index.html">Demo 08 - Explanation drift</a> to separate prediction drift from explanation drift.</li></ol>
+  </section>
+
+  <section>
+    <h2>Best Entry Points</h2>
+    <ul>
+      <li><a href="../patchcore_bottle/index.html">Demo 03 - PatchCore hero report</a></li>
+      <li><a href="../waterbirds_shortcut/index.html">Demo 01 - Waterbirds shortcut report</a></li>
+      <li><a href="../patchcore_logic/index.html">Demo 07 - LOCO logic limits</a></li>
+      <li><a href="../explanation_drift/index.html">Demo 08 - Explanation drift</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Demo Cards</h2>
+    <div class="grid"><article class="card"><h3>Demo 08 - Explanation Drift Under Shift</h3><a class="report-link" href="../explanation_drift/index.html">Open report</a><img src="../explanation_drift/assets/baseline_baseline_grad_cam.png" alt="Demo 08 - Explanation Drift Under Shift preview"><p><strong>Key lesson:</strong> A metric can stay flat or move only slightly while the explanation path drifts into a nuisance region.</p><p><strong>Failure mode:</strong> Shortcut-sensitive models and anomaly detectors can move their attention under lighting, blur, compression, and acquisition shifts.</p><p><strong>Intervention:</strong> Track explanation movement alongside score and accuracy, and compare against a shortcut-reduced classifier.</p></article><article class="card"><h3>Demo 08 - Explanation Drift Under Shift</h3><a class="report-link" href="../explanation_drift_neu_quick/index.html">Open report</a><img src="../explanation_drift_neu_quick/assets/baseline_baseline_grad_cam.png" alt="Demo 08 - Explanation Drift Under Shift preview"><p><strong>Key lesson:</strong> A metric can stay flat or move only slightly while the explanation path drifts into a nuisance region.</p><p><strong>Failure mode:</strong> Shortcut-sensitive models and anomaly detectors can move their attention under lighting, blur, compression, and acquisition shifts.</p><p><strong>Intervention:</strong> Track explanation movement alongside score and accuracy, and compare against a shortcut-reduced classifier.</p></article><article class="card"><h3>Demo 03 - PatchCore on MVTec AD bottle</h3><a class="report-link" href="../patchcore_bottle/index.html">Open report</a><img src="../patchcore_bottle/assets/example_1_score_overlay.png" alt="Demo 03 - PatchCore on MVTec AD bottle preview"><p><strong>Key lesson:</strong> A PatchCore-style detector can make an anomaly score inspectable by showing which nominal patches were nearest to the suspicious region.</p><p><strong>Failure mode:</strong> This is a practical local PatchCore implementation rather than an official benchmark reproduction; the anomaly map is still rendered on a coarse patch grid.</p><p><strong>Intervention:</strong> Replace the top scored query patch with its nearest normal patch and recompute the local score as a didactic counterfactual probe.</p></article><article class="card"><h3>Demo 03 - PatchCore on MVTec AD bottle</h3><a class="report-link" href="../patchcore_bottle_wrn50/index.html">Open report</a><img src="../patchcore_bottle_wrn50/assets/example_1_score_overlay.png" alt="Demo 03 - PatchCore on MVTec AD bottle preview"><p><strong>Key lesson:</strong> A PatchCore-style detector can make an anomaly score inspectable by showing which nominal patches were nearest to the suspicious region.</p><p><strong>Failure mode:</strong> This is a practical local PatchCore implementation rather than an official benchmark reproduction; the anomaly map is still rendered on a coarse patch grid.</p><p><strong>Intervention:</strong> Replace the top scored query patch with its nearest normal patch and recompute the local score as a didactic counterfactual probe.</p></article><article class="card"><h3>Demo 03 - PatchCore on MVTec AD capsule</h3><a class="report-link" href="../patchcore_capsule/index.html">Open report</a><img src="../patchcore_capsule/assets/example_1_score_overlay.png" alt="Demo 03 - PatchCore on MVTec AD capsule preview"><p><strong>Key lesson:</strong> A PatchCore-style detector can make an anomaly score inspectable by showing which nominal patches were nearest to the suspicious region.</p><p><strong>Failure mode:</strong> This is a practical local PatchCore implementation rather than an official benchmark reproduction; the anomaly map is still rendered on a coarse patch grid.</p><p><strong>Intervention:</strong> Replace the top scored query patch with its nearest normal patch and recompute the local score as a didactic counterfactual probe.</p></article><article class="card"><h3>Demo 05 - PatchCore Limits Lab</h3><a class="report-link" href="../patchcore_limits/index.html">Open report</a><img src="../patchcore_limits/assets/example_1_score_overlay.png" alt="Demo 05 - PatchCore Limits Lab preview"><p><strong>Key lesson:</strong> PatchCore can localise novelty and retrieve nearest normal evidence, but it does not natively count anomalies, calibrate severity, or emit symbolic logic statements.</p><p><strong>Failure mode:</strong> The detector reports patch novelty. Count, severity, and semantic meaning require extra modelling layers or domain metadata.</p><p><strong>Intervention:</strong> Add explicit metadata-aware or logic-aware layers on top of patch novelty when the product needs counts, severity, or assembly rules.</p></article><article class="card"><h3>Demo 07 - PatchCore Logical Anomaly Limits</h3><a class="report-link" href="../patchcore_logic/index.html">Open report</a><img src="../patchcore_logic/assets/loco_logical_anomalies_000_score_overlay.png" alt="Demo 07 - PatchCore Logical Anomaly Limits preview"><p><strong>Key lesson:</strong> Real LOCO examples show that local novelty is inspectable, while a narrow component-aware rule can express the missing-label claim directly.</p><p><strong>Failure mode:</strong> The detector emits patch distances and nearest normal patches, not statements such as required front label missing.</p><p><strong>Intervention:</strong> Use PatchCore as a provenance-rich triage layer, then add component, OCR, template, or logic-aware checks for packaging rules.</p></article><article class="card"><h3>Demo 06 - PatchCore Severity Mismatch</h3><a class="report-link" href="../patchcore_severity/index.html">Open report</a><img src="../patchcore_severity/assets/example_1_thin_bright_scratch_score_overlay.png" alt="Demo 06 - PatchCore Severity Mismatch preview"><p><strong>Key lesson:</strong> A high anomaly score is not automatically a high engineering severity.</p><p><strong>Failure mode:</strong> Feature-space novelty can rank a small high-contrast mark above a larger low-contrast defect.</p><p><strong>Intervention:</strong> Add a calibrated severity target and validation layer instead of treating PatchCore distance as severity.</p></article><article class="card"><h3>Demo 04 - PatchCore Learns the Wrong Normal</h3><a class="report-link" href="../patchcore_wrong_normal/index.html">Open report</a><img src="../patchcore_wrong_normal/assets/example_1_clean_bank_overlay.png" alt="Demo 04 - PatchCore Learns the Wrong Normal preview"><p><strong>Key lesson:</strong> If nuisance enters the nominal set, PatchCore can encode it as normality and produce misleading explanations.</p><p><strong>Failure mode:</strong> The contaminated bank treats a corner acquisition tab as normal.</p><p><strong>Intervention:</strong> Clean the nominal pipeline and rebuild the memory bank.</p></article><article class="card"><h3>Demo 02 - Industrial Shortcut Trap</h3><a class="report-link" href="../shortcut_industrial/index.html">Open report</a><img src="../shortcut_industrial/assets/baseline_grad_cam.png" alt="Demo 02 - Industrial Shortcut Trap preview"><p><strong>Key lesson:</strong> A learned industrial model can still take the stamp shortcut if training allows it.</p><p><strong>Failure mode:</strong> The baseline overweights the fixture stamp and degrades on swapped or muted stamp cases.</p><p><strong>Intervention:</strong> Train on stamp-randomised and stamp-masked augmentations of the same parts.</p></article><article class="card"><h3>Demo 01 - Waterbirds Shortcut</h3><a class="report-link" href="../waterbirds_shortcut/index.html">Open report</a><img src="../waterbirds_shortcut/assets/waterbirds_erm_grad_cam.png" alt="Demo 01 - Waterbirds Shortcut preview"><p><strong>Key lesson:</strong> Shortcut behaviour is visible in group metrics, explanation mass, and score sensitivity to context masking.</p><p><strong>Failure mode:</strong> ERM can preserve high average accuracy while relying too heavily on habitat context.</p><p><strong>Intervention:</strong> Reweight the training objective by group and re-check the evidence path, with the expectation that this changes the failure pattern rather than fully solving it.</p></article></div>
+  </section>
+
+  <section>
+    <h2>Known Caveats</h2>
+    <ul><li>the repo is strong locally but still mixes benchmark-grade pieces with didactic report framing</li><li>the industrial shortcut pillar is broader than before, but still not a full industrial benchmark family</li><li>the PatchCore hero is strong and inspectable, but still not an official benchmark reproduction</li><li>dataset licences vary; MVTec family is non-commercial, and local data artefacts are intentionally excluded from git</li></ul>
+  </section>
+
+  <section>
+    <h2>Core Repo Docs</h2>
+    <ul><li><a href="../../docs/REVIEW_GUIDE.md">Review guide</a></li><li><a href="../../README.md">README</a></li><li><a href="../../REPO_SPEC.md">Repo spec</a></li><li><a href="../../AGENTS.md">Agents</a></li><li><a href="../../docs/DEMO_STATUS.md">Demo status</a></li><li><a href="../../docs/DEMO_CATALOGUE.md">Demo catalogue</a></li><li><a href="../../docs/DATASETS.md">Datasets</a></li></ul>
+  </section>
+
+  <section>
+    <h2>ChatGPT Handoff</h2>
+    <p>
+      For ChatGPT review, the best path is the GitHub connector if your plan and
+      experience expose it. The fallback is a ChatGPT Project with the repo docs
+      and flagship report screenshots or PDF exports.
+    </p>
+    <ol>
+      <li>
+        share the GitHub repo if available, or create a Project and upload the
+        repo docs first
+      </li>
+      <li>start with <code>README.md</code>, <code>REPO_SPEC.md</code>, <code>AGENTS.md</code>, <code>docs/DEMO_STATUS.md</code>, <code>docs/DEMO_CATALOGUE.md</code>, and <code>docs/DATASETS.md</code></li>
+      <li>then share screenshots or PDF exports of the flagship reports, because raw HTML is less convenient in normal chat</li>
+      <li>use this review pack plus the local demo hub as the navigation layer</li>
+      <li>
+        ask ChatGPT to assess spec coverage, demo quality, model honesty, and
+        presentation clarity
+      </li>
+    </ol>
+  </section>
+</main>
+</body>
+</html>

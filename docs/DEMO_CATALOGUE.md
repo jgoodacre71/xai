@@ -53,7 +53,9 @@ Current artefacts:
 - demo card: `outputs/patchcore_bottle/demo_card.html`
 - local report index: `outputs/index.html`
 
-The generated `outputs/` files are local artefacts and are ignored by git.
+The generated `outputs/` files are local artefacts and are ignored by git by
+default. Curated HTML snapshots may still be force-added for public review
+releases.
 
 ## Demo 04 — PatchCore learns the wrong normal
 Nominal-set nuisance contamination and false positives.

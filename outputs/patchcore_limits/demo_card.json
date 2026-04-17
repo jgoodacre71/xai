@@ -1,0 +1,33 @@
+{
+  "build_metadata": {
+    "built_at_utc": "2026-04-17 16:01:29 UTC",
+    "cache_status": "enabled",
+    "data_mode": "synthetic",
+    "git_sha": "03f1d2a",
+    "manifest_path": null
+  },
+  "explanation_methods": [
+    "Coarse patch-score anomaly map",
+    "Nearest-normal patch provenance",
+    "Synthetic ground-truth mask check",
+    "Metadata comparison for count, severity, and semantic labels"
+  ],
+  "failure_mode": "The detector reports patch novelty. Count, severity, and semantic meaning require extra modelling layers or domain metadata.",
+  "figure_paths": [
+    "patchcore_limits/assets/example_1_score_overlay.png",
+    "patchcore_limits/assets/example_2_score_overlay.png",
+    "patchcore_limits/assets/example_3_mask_overlay.png",
+    "patchcore_limits/assets/example_4_nearest_normal_source.png"
+  ],
+  "intervention": "Add explicit metadata-aware or logic-aware layers on top of patch novelty when the product needs counts, severity, or assembly rules.",
+  "key_lesson": "PatchCore can localise novelty and retrieve nearest normal evidence, but it does not natively count anomalies, calibrate severity, or emit symbolic logic statements.",
+  "model": "PatchCore-style nearest-neighbour memory bank with deterministic colour/texture features.",
+  "remaining_caveats": [
+    "Synthetic toy boards are didactic, not a production benchmark.",
+    "No MVTec LOCO AD comparison yet.",
+    "No symbolic reasoning model is included yet."
+  ],
+  "report_path": "patchcore_limits/index.html",
+  "task": "Synthetic slot-board anomaly cases for PatchCore counting, severity, and logic limits.",
+  "title": "Demo 05 - PatchCore Limits Lab"
+}

@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PatchCore on MVTec AD capsule</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 32px;
+      color: #1f2933;
+      background: #f7f8fb;
+    }
+    main { max-width: 1120px; margin: 0 auto; }
+    h1, h2, h3 { margin: 0 0 12px; }
+    section { margin: 28px 0; background: #fff; padding: 20px; border: 1px solid #d8dee4; }
+    .example { border-top: 2px solid #d8dee4; padding-top: 24px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+    figure { margin: 0; border: 1px solid #d8dee4; padding: 10px; background: #fff; }
+    img { max-width: 100%; height: auto; display: block; }
+    figcaption { font-size: 13px; color: #52606d; margin-top: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td {
+      border-bottom: 1px solid #d8dee4;
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+    
+    .hero {
+      background: linear-gradient(180deg, #ffffff 0%, #f2f5fb 100%);
+      border: 1px solid #d8dee4;
+      padding: 24px;
+    }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: #486581;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .lede {
+      max-width: 820px;
+      color: #243b53;
+      font-size: 17px;
+      line-height: 1.55;
+    }
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .action-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      padding: 0 14px;
+      border: 1px solid #bcccdc;
+      color: #102a43;
+      background: #ffffff;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .summary-card {
+      border: 1px solid #d8dee4;
+      background: #ffffff;
+      padding: 16px;
+    }
+    .summary-card h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      color: #102a43;
+    }
+    .summary-card p {
+      margin: 0;
+      color: #334e68;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .related-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .related-link {
+      display: block;
+      border: 1px solid #d8dee4;
+      background: #ffffff;
+      padding: 16px;
+      color: inherit;
+      text-decoration: none;
+    }
+    .related-link strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #102a43;
+      font-size: 15px;
+    }
+    .related-link span {
+      color: #52606d;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    
+  </style>
+</head>
+<body>
+<main>
+  
+  <section class="hero">
+    <p class="eyebrow">Demo 03 · PatchCore hero demo</p>
+    <h1>PatchCore on MVTec AD capsule</h1>
+    <p class="lede">Nearest-normal patch provenance, local counterfactual probes, and dataset-level diagnostics for the MVTec AD capsule anomaly demo.</p>
+    <div class="action-row">
+      <a class="action-link" href="../index.html">Open local demo hub</a>
+      <a class="action-link" href="demo_card.html">Open demo card</a>
+    </div>
+  </section>
+
+  
+  <section>
+    <h2>Demo Brief</h2>
+    <div class="summary-grid">
+      <div class="summary-card"><h3>Core claim</h3><p>PatchCore becomes much easier to trust and discuss once the anomaly score is tied to nearest-normal patch provenance and a simple local replacement probe.</p></div><div class="summary-card"><h3>Best evidence on this page</h3><p>The strongest sequence is the selected example view plus the benchmark panel: the report shows the top anomalous patch, the nearest nominal source patch, and the effect of replacing the anomalous region.</p></div><div class="summary-card"><h3>How to present it live</h3><p>Start with one bottle example, show the top patch and nearest-normal exemplar, then use the benchmark panel to show that the same run separates the full test split.</p></div><div class="summary-card"><h3>Boundary to say out loud</h3><p>This report is a strong local PatchCore-style implementation, not a full official benchmark reproduction or a calibrated severity model.</p></div>
+    </div>
+  </section>
+
+
+  <section>
+    <h2>Run Context</h2>
+    <ul>
+      <li>manifest: <code>data/processed/mvtec_ad/capsule/manifest.jsonl</code></li>
+      <li>memory bank cache: <code>data/artefacts/patchcore/capsule/report_bank.npz</code></li>
+      <li>examples: 3 selected from test index 0</li>
+      <li>patch size: 128, stride: 64, top-k: 3</li>
+      <li>feature extractor: <code>feature_map_resnet18_imagenet_layer2_layer3</code></li>
+      <li>feature path: ImageNet-pretrained Torchvision ResNet-18 feature maps sampled from layer2 and layer3 at each patch centre.</li>
+      <li>feature input size: 224</li>
+      <li>memory-bank coreset: 512 requested; 512 retained</li>
+    </ul>
+  </section>
+
+
+  <section>
+    <h2>Selected Example Overview</h2>
+    <ul>
+      <li>Mask-intersection hits: 2 / 3 masked examples</li>
+      <li>Mean mask covered by top patch: 39.4%</li>
+      <li>Mean counterfactual score delta: -0.236203</li>
+    </ul>
+    <table>
+      <thead>
+        <tr>
+          <th>Example</th>
+          <th>Defect type</th>
+          <th>Top patch score</th>
+          <th>Intersects mask</th>
+          <th>Patch overlap</th>
+          <th>Mask covered</th>
+          <th>Counterfactual delta</th>
+        </tr>
+      </thead>
+      <tbody><tr><td>1</td><td>crack</td><td>0.648087</td><td>no</td><td>0.0%</td><td>0.0%</td><td>-0.264616</td></tr><tr><td>2</td><td>crack</td><td>1.084894</td><td>yes</td><td>71.8%</td><td>50.5%</td><td>-0.283775</td></tr><tr><td>3</td><td>crack</td><td>0.646080</td><td>yes</td><td>8.8%</td><td>67.8%</td><td>-0.160219</td></tr></tbody>
+    </table>
+    <p>
+      These are selected-example diagnostics only, not benchmark metrics.
+    </p>
+  </section>
+
+
+
+  <section>
+    <h2>Test-Split Benchmark Diagnostics</h2>
+    <ul>
+      <li>Scored test images: 132</li>
+      <li>Nominal / anomalous: 23 / 109</li>
+      <li>Image-level ROC AUC from max patch score: 0.775</li>
+      <li>Top patch intersects anomaly mask: 61 / 109 masked anomalies</li>
+      <li>Mean mask covered by top patch: 33.9%</li>
+    </ul>
+    <table>
+      <thead>
+        <tr>
+          <th>Defect type</th>
+          <th>Images</th>
+          <th>Anomalous</th>
+          <th>Mean top score</th>
+          <th>Max top score</th>
+          <th>Mask hits</th>
+        </tr>
+      </thead>
+      <tbody><tr><td>crack</td><td>23</td><td>23</td><td>0.779067</td><td>1.084894</td><td>17 / 23</td></tr><tr><td>faulty_imprint</td><td>22</td><td>22</td><td>0.654627</td><td>0.815505</td><td>4 / 22</td></tr><tr><td>good</td><td>23</td><td>0</td><td>0.578824</td><td>0.783721</td><td>not available</td></tr><tr><td>poke</td><td>21</td><td>21</td><td>0.662379</td><td>0.878176</td><td>13 / 21</td></tr><tr><td>scratch</td><td>23</td><td>23</td><td>0.648676</td><td>0.753931</td><td>8 / 23</td></tr><tr><td>squeeze</td><td>20</td><td>20</td><td>0.851850</td><td>0.954323</td><td>19 / 20</td></tr></tbody>
+    </table>
+    <p>
+      These are local report diagnostics from the current patch grid and memory
+      bank, not official PatchCore benchmark numbers or pixel-level AUROC.
+    </p>
+  </section>
+
+
+
+  <section class="example">
+    <h2>Example 1: crack</h2>
+    <p>
+      Sample <code>mvtec_ad/capsule/test/crack/000</code> from
+      <code>data/interim/mvtec_ad/capsule/test/crack/000.png</code>.
+    </p>
+
+    <h3>Top Scored Patch</h3>
+    <div class="grid">
+      <figure>
+        <img src="assets/example_1_score_overlay.png" alt="Coarse anomaly-map overlay">
+        <figcaption>
+          Coarse patch-score anomaly map. Brighter red means higher patch
+          distance to the nominal memory bank.
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_1_query_box.png" alt="Input image with top scored patch box">
+        <figcaption>Input image with the top scored patch highlighted.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_1_query_patch.png" alt="Top scored query patch crop">
+        <figcaption>Top scored query patch. Distance: 0.648087</figcaption>
+      </figure>
+    </div>
+
+
+    <h3>Ground Truth Localisation Check</h3>
+    <div class="grid">
+      <figure>
+        <img src="assets/example_1_mask_overlay.png" alt="Ground-truth anomaly mask overlay">
+        <figcaption>
+          Ground-truth anomaly mask overlay from <code>data/interim/mvtec_ad/capsule/ground_truth/crack/000_mask.png</code>.
+        </figcaption>
+      </figure>
+    </div>
+    <ul>
+      <li>Top patch intersects mask: no</li>
+      <li>Patch pixels overlapping mask: 0 / 16384 (0.0%)</li>
+      <li>Mask covered by top patch: 0 / 2494 (0.0%)</li>
+    </ul>
+
+
+    <h3>Nearest Normal Patch Evidence</h3>
+    <div class="grid">
+      
+      <figure>
+        <img src="assets/example_1_normal_patch_1.png" alt="Nearest normal patch 1">
+        <figcaption>
+          Nearest normal patch 1; distance 0.648087
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_1_normal_source_1.png" alt="Source image for nearest normal patch 1">
+        <figcaption>Full source image with patch box 1.</figcaption>
+      </figure>
+      
+
+      <figure>
+        <img src="assets/example_1_normal_patch_2.png" alt="Nearest normal patch 2">
+        <figcaption>
+          Nearest normal patch 2; distance 0.685694
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_1_normal_source_2.png" alt="Source image for nearest normal patch 2">
+        <figcaption>Full source image with patch box 2.</figcaption>
+      </figure>
+      
+
+      <figure>
+        <img src="assets/example_1_normal_patch_3.png" alt="Nearest normal patch 3">
+        <figcaption>
+          Nearest normal patch 3; distance 0.767966
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_1_normal_source_3.png" alt="Source image for nearest normal patch 3">
+        <figcaption>Full source image with patch box 3.</figcaption>
+      </figure>
+      
+    </div>
+
+    <h3>Counterfactual Patch Replacement</h3>
+    <div class="grid">
+      <figure>
+        <img src="assets/example_1_counterfactual_box.png" alt="Counterfactual replacement preview">
+        <figcaption>
+          Top query patch replaced with the nearest normal source patch. This is
+          a didactic probe, not causal proof.
+        </figcaption>
+      </figure>
+    </div>
+    <ul>
+      <li>Before score: 0.648087</li>
+      <li>After score: 0.383471</li>
+      <li>Delta: -0.264616</li>
+    </ul>
+
+    <h3>Distance Summary</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Source image id</th>
+          <th>Distance</th>
+          <th>Source box</th>
+          <th>Source path</th>
+        </tr>
+      </thead>
+      <tbody><tr><td>1</td><td>mvtec_ad/capsule/train/good/010</td><td>0.648087</td><td>BoundingBox(x=384, y=192, width=128, height=128)</td><td>data/interim/mvtec_ad/capsule/train/good/010.png</td></tr><tr><td>2</td><td>mvtec_ad/capsule/train/good/008</td><td>0.685694</td><td>BoundingBox(x=320, y=192, width=128, height=128)</td><td>data/interim/mvtec_ad/capsule/train/good/008.png</td></tr><tr><td>3</td><td>mvtec_ad/capsule/train/good/017</td><td>0.767966</td><td>BoundingBox(x=768, y=128, width=128, height=128)</td><td>data/interim/mvtec_ad/capsule/train/good/017.png</td></tr></tbody>
+    </table>
+
+    <h3>Top Query Patch Distances</h3>
+    <ol><li>patch 1: distance 0.648087, box BoundingBox(x=320, y=192, width=128, height=128)</li>
+<li>patch 2: distance 0.622383, box BoundingBox(x=704, y=64, width=128, height=128)</li>
+<li>patch 3: distance 0.607955, box BoundingBox(x=704, y=128, width=128, height=128)</li>
+<li>patch 4: distance 0.569336, box BoundingBox(x=640, y=64, width=128, height=128)</li>
+<li>patch 5: distance 0.566133, box BoundingBox(x=256, y=192, width=128, height=128)</li></ol>
+  </section>
+
+
+  <section class="example">
+    <h2>Example 2: crack</h2>
+    <p>
+      Sample <code>mvtec_ad/capsule/test/crack/001</code> from
+      <code>data/interim/mvtec_ad/capsule/test/crack/001.png</code>.
+    </p>
+
+    <h3>Top Scored Patch</h3>
+    <div class="grid">
+      <figure>
+        <img src="assets/example_2_score_overlay.png" alt="Coarse anomaly-map overlay">
+        <figcaption>
+          Coarse patch-score anomaly map. Brighter red means higher patch
+          distance to the nominal memory bank.
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_2_query_box.png" alt="Input image with top scored patch box">
+        <figcaption>Input image with the top scored patch highlighted.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_2_query_patch.png" alt="Top scored query patch crop">
+        <figcaption>Top scored query patch. Distance: 1.084894</figcaption>
+      </figure>
+    </div>
+
+
+    <h3>Ground Truth Localisation Check</h3>
+    <div class="grid">
+      <figure>
+        <img src="assets/example_2_mask_overlay.png" alt="Ground-truth anomaly mask overlay">
+        <figcaption>
+          Ground-truth anomaly mask overlay from <code>data/interim/mvtec_ad/capsule/ground_truth/crack/001_mask.png</code>.
+        </figcaption>
+      </figure>
+    </div>
+    <ul>
+      <li>Top patch intersects mask: yes</li>
+      <li>Patch pixels overlapping mask: 11757 / 16384 (71.8%)</li>
+      <li>Mask covered by top patch: 11757 / 23268 (50.5%)</li>
+    </ul>
+
+
+    <h3>Nearest Normal Patch Evidence</h3>
+    <div class="grid">
+      
+      <figure>
+        <img src="assets/example_2_normal_patch_1.png" alt="Nearest normal patch 1">
+        <figcaption>
+          Nearest normal patch 1; distance 1.084894
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_2_normal_source_1.png" alt="Source image for nearest normal patch 1">
+        <figcaption>Full source image with patch box 1.</figcaption>
+      </figure>
+      
+
+      <figure>
+        <img src="assets/example_2_normal_patch_2.png" alt="Nearest normal patch 2">
+        <figcaption>
+          Nearest normal patch 2; distance 1.087656
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_2_normal_source_2.png" alt="Source image for nearest normal patch 2">
+        <figcaption>Full source image with patch box 2.</figcaption>
+      </figure>
+      
+
+      <figure>
+        <img src="assets/example_2_normal_patch_3.png" alt="Nearest normal patch 3">
+        <figcaption>
+          Nearest normal patch 3; distance 1.090121
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_2_normal_source_3.png" alt="Source image for nearest normal patch 3">
+        <figcaption>Full source image with patch box 3.</figcaption>
+      </figure>
+      
+    </div>
+
+    <h3>Counterfactual Patch Replacement</h3>
+    <div class="grid">
+      <figure>
+        <img src="assets/example_2_counterfactual_box.png" alt="Counterfactual replacement preview">
+        <figcaption>
+          Top query patch replaced with the nearest normal source patch. This is
+          a didactic probe, not causal proof.
+        </figcaption>
+      </figure>
+    </div>
+    <ul>
+      <li>Before score: 1.084894</li>
+      <li>After score: 0.801119</li>
+      <li>Delta: -0.283775</li>
+    </ul>
+
+    <h3>Distance Summary</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Source image id</th>
+          <th>Distance</th>
+          <th>Source box</th>
+          <th>Source path</th>
+        </tr>
+      </thead>
+      <tbody><tr><td>1</td><td>mvtec_ad/capsule/train/good/000</td><td>1.084894</td><td>BoundingBox(x=192, y=384, width=128, height=128)</td><td>data/interim/mvtec_ad/capsule/train/good/000.png</td></tr><tr><td>2</td><td>mvtec_ad/capsule/train/good/018</td><td>1.087656</td><td>BoundingBox(x=192, y=448, width=128, height=128)</td><td>data/interim/mvtec_ad/capsule/train/good/018.png</td></tr><tr><td>3</td><td>mvtec_ad/capsule/train/good/005</td><td>1.090121</td><td>BoundingBox(x=128, y=384, width=128, height=128)</td><td>data/interim/mvtec_ad/capsule/train/good/005.png</td></tr></tbody>
+    </table>
+
+    <h3>Top Query Patch Distances</h3>
+    <ol><li>patch 1: distance 1.084894, box BoundingBox(x=128, y=448, width=128, height=128)</li>
+<li>patch 2: distance 1.040548, box BoundingBox(x=192, y=448, width=128, height=128)</li>
+<li>patch 3: distance 0.972415, box BoundingBox(x=64, y=512, width=128, height=128)</li>
+<li>patch 4: distance 0.966232, box BoundingBox(x=192, y=384, width=128, height=128)</li>
+<li>patch 5: distance 0.959962, box BoundingBox(x=128, y=512, width=128, height=128)</li></ol>
+  </section>
+
+
+  <section class="example">
+    <h2>Example 3: crack</h2>
+    <p>
+      Sample <code>mvtec_ad/capsule/test/crack/002</code> from
+      <code>data/interim/mvtec_ad/capsule/test/crack/002.png</code>.
+    </p>
+
+    <h3>Top Scored Patch</h3>
+    <div class="grid">
+      <figure>
+        <img src="assets/example_3_score_overlay.png" alt="Coarse anomaly-map overlay">
+        <figcaption>
+          Coarse patch-score anomaly map. Brighter red means higher patch
+          distance to the nominal memory bank.
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_3_query_box.png" alt="Input image with top scored patch box">
+        <figcaption>Input image with the top scored patch highlighted.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_3_query_patch.png" alt="Top scored query patch crop">
+        <figcaption>Top scored query patch. Distance: 0.646080</figcaption>
+      </figure>
+    </div>
+
+
+    <h3>Ground Truth Localisation Check</h3>
+    <div class="grid">
+      <figure>
+        <img src="assets/example_3_mask_overlay.png" alt="Ground-truth anomaly mask overlay">
+        <figcaption>
+          Ground-truth anomaly mask overlay from <code>data/interim/mvtec_ad/capsule/ground_truth/crack/002_mask.png</code>.
+        </figcaption>
+      </figure>
+    </div>
+    <ul>
+      <li>Top patch intersects mask: yes</li>
+      <li>Patch pixels overlapping mask: 1435 / 16384 (8.8%)</li>
+      <li>Mask covered by top patch: 1435 / 2118 (67.8%)</li>
+    </ul>
+
+
+    <h3>Nearest Normal Patch Evidence</h3>
+    <div class="grid">
+      
+      <figure>
+        <img src="assets/example_3_normal_patch_1.png" alt="Nearest normal patch 1">
+        <figcaption>
+          Nearest normal patch 1; distance 0.646080
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_3_normal_source_1.png" alt="Source image for nearest normal patch 1">
+        <figcaption>Full source image with patch box 1.</figcaption>
+      </figure>
+      
+
+      <figure>
+        <img src="assets/example_3_normal_patch_2.png" alt="Nearest normal patch 2">
+        <figcaption>
+          Nearest normal patch 2; distance 0.694056
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_3_normal_source_2.png" alt="Source image for nearest normal patch 2">
+        <figcaption>Full source image with patch box 2.</figcaption>
+      </figure>
+      
+
+      <figure>
+        <img src="assets/example_3_normal_patch_3.png" alt="Nearest normal patch 3">
+        <figcaption>
+          Nearest normal patch 3; distance 0.704152
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_3_normal_source_3.png" alt="Source image for nearest normal patch 3">
+        <figcaption>Full source image with patch box 3.</figcaption>
+      </figure>
+      
+    </div>
+
+    <h3>Counterfactual Patch Replacement</h3>
+    <div class="grid">
+      <figure>
+        <img src="assets/example_3_counterfactual_box.png" alt="Counterfactual replacement preview">
+        <figcaption>
+          Top query patch replaced with the nearest normal source patch. This is
+          a didactic probe, not causal proof.
+        </figcaption>
+      </figure>
+    </div>
+    <ul>
+      <li>Before score: 0.646080</li>
+      <li>After score: 0.485861</li>
+      <li>Delta: -0.160219</li>
+    </ul>
+
+    <h3>Distance Summary</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Source image id</th>
+          <th>Distance</th>
+          <th>Source box</th>
+          <th>Source path</th>
+        </tr>
+      </thead>
+      <tbody><tr><td>1</td><td>mvtec_ad/capsule/train/good/013</td><td>0.646080</td><td>BoundingBox(x=128, y=384, width=128, height=128)</td><td>data/interim/mvtec_ad/capsule/train/good/013.png</td></tr><tr><td>2</td><td>mvtec_ad/capsule/train/good/005</td><td>0.694056</td><td>BoundingBox(x=128, y=384, width=128, height=128)</td><td>data/interim/mvtec_ad/capsule/train/good/005.png</td></tr><tr><td>3</td><td>mvtec_ad/capsule/train/good/002</td><td>0.704152</td><td>BoundingBox(x=128, y=384, width=128, height=128)</td><td>data/interim/mvtec_ad/capsule/train/good/002.png</td></tr></tbody>
+    </table>
+
+    <h3>Top Query Patch Distances</h3>
+    <ol><li>patch 1: distance 0.646080, box BoundingBox(x=128, y=384, width=128, height=128)</li>
+<li>patch 2: distance 0.594771, box BoundingBox(x=384, y=192, width=128, height=128)</li>
+<li>patch 3: distance 0.586142, box BoundingBox(x=320, y=448, width=128, height=128)</li>
+<li>patch 4: distance 0.561979, box BoundingBox(x=320, y=192, width=128, height=128)</li>
+<li>patch 5: distance 0.540028, box BoundingBox(x=512, y=320, width=128, height=128)</li></ol>
+  </section>
+
+  
+  <section>
+    <h2>Where to go next</h2>
+    <div class="related-list">
+      <a class="related-link" href="../patchcore_wrong_normal/index.html"><strong>Demo 04 - PatchCore Learns the Wrong Normal</strong><span>Tests how the same provenance machinery behaves when normality itself is contaminated.</span></a><a class="related-link" href="../patchcore_logic/index.html"><strong>Demo 07 - PatchCore Logical Anomaly Limits</strong><span>Shows where local novelty is not enough for rule-level inspection.</span></a><a class="related-link" href="../explanation_drift/index.html"><strong>Demo 08 - Explanation Drift Under Shift</strong><span>Shows how anomaly evidence moves under nuisance perturbations.</span></a>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

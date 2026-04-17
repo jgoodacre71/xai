@@ -1,0 +1,34 @@
+{
+  "build_metadata": {
+    "built_at_utc": "2026-04-17 16:02:21 UTC",
+    "cache_status": "disabled",
+    "data_mode": "mixed real+synthetic",
+    "git_sha": "03f1d2a",
+    "manifest_path": "data/processed/neu_cls/shortcut_binary/manifest.jsonl"
+  },
+  "explanation_methods": [
+    "Grad-CAM",
+    "Integrated Gradients",
+    "Known-region attribution mass",
+    "PatchCore top-patch drift and mask checks"
+  ],
+  "failure_mode": "Shortcut-sensitive models and anomaly detectors can move their attention under lighting, blur, compression, and acquisition shifts.",
+  "figure_paths": [
+    "explanation_drift/assets/baseline_baseline_grad_cam.png",
+    "explanation_drift/assets/baseline_brightness_up_grad_cam.png",
+    "explanation_drift/assets/baseline_lighting_warm_grad_cam.png",
+    "explanation_drift/assets/intervention_baseline_grad_cam.png",
+    "explanation_drift/assets/mvtec_baseline_score_overlay.png"
+  ],
+  "intervention": "Track explanation movement alongside score and accuracy, and compare against a shortcut-reduced classifier.",
+  "key_lesson": "A metric can stay flat or move only slightly while the explanation path drifts into a nuisance region.",
+  "model": "Learned industrial classifier drift path, plus optional local PatchCore anomaly-drift diagnostics on MVTec AD bottle, MVTec AD 2, and VisA.",
+  "remaining_caveats": [
+    "The classifier path uses a local NEU-CLS-derived shortcut split rather than a full industrial benchmark.",
+    "The anomaly sections depend on local MVTec AD / MVTec AD 2 preparation.",
+    "MVTec AD 2 support currently extends Demo 08, not the main PatchCore hero report."
+  ],
+  "report_path": "explanation_drift/index.html",
+  "task": "Corruption and acquisition-style shifts showing that performance drift and explanation drift are different signals.",
+  "title": "Demo 08 - Explanation Drift Under Shift"
+}

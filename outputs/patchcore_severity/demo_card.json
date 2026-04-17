@@ -1,0 +1,33 @@
+{
+  "build_metadata": {
+    "built_at_utc": "2026-04-17 16:01:29 UTC",
+    "cache_status": "enabled",
+    "data_mode": "synthetic",
+    "git_sha": "03f1d2a",
+    "manifest_path": null
+  },
+  "explanation_methods": [
+    "Patch-score anomaly overlay",
+    "Nearest-normal patch provenance",
+    "Synthetic severity-mask comparison",
+    "Severity-rank versus novelty-rank check"
+  ],
+  "failure_mode": "Feature-space novelty can rank a small high-contrast mark above a larger low-contrast defect.",
+  "figure_paths": [
+    "patchcore_severity/assets/example_1_thin_bright_scratch_score_overlay.png",
+    "patchcore_severity/assets/example_2_medium_bright_scratch_score_overlay.png",
+    "patchcore_severity/assets/example_3_wide_low_contrast_scuff_mask_overlay.png",
+    "patchcore_severity/assets/example_3_wide_low_contrast_scuff_nearest_normal_source.png"
+  ],
+  "intervention": "Add a calibrated severity target and validation layer instead of treating PatchCore distance as severity.",
+  "key_lesson": "A high anomaly score is not automatically a high engineering severity.",
+  "model": "PatchCore-style nearest-neighbour memory bank with colour/texture patch features.",
+  "remaining_caveats": [
+    "Synthetic scratch sweep, not a production severity benchmark.",
+    "No human-labelled severity data yet.",
+    "No calibrated regression or ordinal severity model yet."
+  ],
+  "report_path": "patchcore_severity/index.html",
+  "task": "Synthetic severity sweep comparing scratch area with PatchCore-style novelty score.",
+  "title": "Demo 06 - PatchCore Severity Mismatch"
+}

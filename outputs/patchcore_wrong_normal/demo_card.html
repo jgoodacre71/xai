@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Demo 04 - PatchCore Learns the Wrong Normal Demo Card</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 32px;
+      color: #1f2933;
+    }
+    main { max-width: 880px; margin: 0 auto; }
+    dt { font-weight: 700; margin-top: 16px; }
+    dd { margin: 6px 0 0; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Demo 04 - PatchCore Learns the Wrong Normal</h1>
+  <dl>
+    <dt>Task</dt><dd>Synthetic normal-set contamination for PatchCore-style anomaly detection.</dd>
+    <dt>Model</dt><dd>Two PatchCore-style memory banks with deterministic colour/texture features.</dd>
+    <dt>Explanation methods</dt><dd><ul><li>Clean versus contaminated anomaly maps</li><li>Nearest-normal provenance comparison</li><li>Nuisance-region counter-test</li></ul></dd>
+    <dt>Key lesson</dt><dd>If nuisance enters the nominal set, PatchCore can encode it as normality and produce misleading explanations.</dd>
+    <dt>Failure mode</dt><dd>The contaminated bank treats a corner acquisition tab as normal.</dd>
+    <dt>Intervention</dt><dd>Clean the nominal pipeline and rebuild the memory bank.</dd>
+    <dt>Remaining caveats</dt><dd><ul><li>Synthetic didactic board, not a production acquisition-shift benchmark.</li><li>No temporal drift monitoring yet.</li><li>No real nuisance-contaminated industrial dataset yet.</li></ul></dd>
+    <dt>Build metadata</dt><dd><ul><li>Git SHA: <code>03f1d2a</code></li><li>Built at: 2026-04-17 16:01:29 UTC</li><li>Data mode: synthetic</li><li>Cache: enabled</li><li>Manifest: <code>Not used</code></li></ul></dd>
+    <dt>Report</dt><dd><a href="index.html">Open report</a></dd>
+    <dt>Selected figures</dt><dd><ul><li><code>patchcore_wrong_normal/assets/example_1_clean_bank_overlay.png</code></li><li><code>patchcore_wrong_normal/assets/example_1_contaminated_bank_overlay.png</code></li><li><code>patchcore_wrong_normal/assets/example_2_clean_bank_nearest_source.png</code></li><li><code>patchcore_wrong_normal/assets/example_2_contaminated_bank_nearest_source.png</code></li></ul></dd>
+  </dl>
+</main>
+</body>
+</html>

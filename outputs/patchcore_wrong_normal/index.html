@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PatchCore Learns the Wrong Normal</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 32px;
+      color: #1f2933;
+    }
+    main { max-width: 1120px; margin: 0 auto; }
+    h1, h2 { margin: 0 0 12px; }
+    section { margin: 28px 0; }
+    .example { border-top: 2px solid #d8dee4; padding-top: 24px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+    figure { margin: 0; border: 1px solid #d8dee4; padding: 10px; background: #fff; }
+    img { max-width: 100%; height: auto; display: block; }
+    figcaption { font-size: 13px; color: #52606d; margin-top: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border-bottom: 1px solid #d8dee4; padding: 8px; text-align: left; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>PatchCore Learns the Wrong Normal</h1>
+  <p>
+    This report compares a clean PatchCore-style memory bank with a nominal set
+    contaminated by a corner acquisition tab. It shows how the memory bank can
+    encode nuisance as normality and distort explanations.
+  </p>
+
+  
+  <section>
+    <h2>Build Metadata</h2>
+    <ul>
+      <li>Git SHA: <code>03f1d2a</code></li>
+      <li>Built at: 2026-04-17 16:01:29 UTC</li>
+      <li>Data mode: synthetic</li>
+      <li>Cache: enabled</li>
+      <li>Manifest: <code>Not used</code></li>
+    </ul>
+  </section>
+
+
+  <section>
+    <h2>Run Context</h2>
+    <ul>
+      <li>synthetic directory: <code>outputs/patchcore_wrong_normal/synthetic</code></li>
+      <li>clean cache: <code>data/artefacts/patchcore/wrong_normal/clean_bank.npz</code></li>
+      <li>contaminated cache: <code>data/artefacts/patchcore/wrong_normal/contaminated_bank.npz</code></li>
+      <li>patch size: 80, stride: 40, top-k: 3</li>
+      <li>feature extractor: <code>colour_texture</code></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Clean Bank vs Contaminated Bank</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Sample</th>
+          <th>Has tab</th>
+          <th>Clean bank top score</th>
+          <th>Clean nearest source</th>
+          <th>Contaminated bank top score</th>
+          <th>Contaminated nearest source</th>
+          <th>Lesson</th>
+        </tr>
+      </thead>
+      <tbody><tr><td>query_clean_normal</td><td>no</td><td>0.000000</td><td>synthetic/wrong_normal_board/train_clean/normal/clean_normal_000</td><td>0.040735</td><td>synthetic/wrong_normal_board/train_contaminated/normal/tabbed_normal_000</td><td>A clean normal board. The contaminated bank can treat the missing corner tab as anomalous.</td></tr><tr><td>query_tabbed_normal</td><td>yes</td><td>0.858472</td><td>synthetic/wrong_normal_board/train_clean/normal/clean_normal_000</td><td>0.000000</td><td>synthetic/wrong_normal_board/train_contaminated/normal/tabbed_normal_000</td><td>A tabbed normal board. The clean bank flags the tab as acquisition nuisance.</td></tr></tbody>
+    </table>
+    <p>
+      The fix is not a new threshold. The fix is to clean the nominal pipeline,
+      rebuild the memory bank, and then re-check the explanation.
+    </p>
+  </section>
+
+
+  <section class="example">
+    <h2>Example 1: query_clean_normal</h2>
+    <p>A clean normal board. The contaminated bank can treat the missing corner tab as anomalous.</p>
+    <div class="grid">
+      <figure>
+        <img src="assets/example_1_tab_region.png" alt="Expected tab region">
+        <figcaption>Corner-tab region used as the nuisance location.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_1_clean_bank_overlay.png" alt="Clean bank overlay">
+        <figcaption>Clean memory bank overlay. Top score: 0.000000</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_1_contaminated_bank_overlay.png" alt="Contaminated bank overlay">
+        <figcaption>
+          Contaminated memory bank overlay. Top score: 0.040735
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_1_clean_bank_nearest_source.png" alt="Clean nearest source">
+        <figcaption>Nearest normal source from the clean bank.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_1_contaminated_bank_nearest_source.png" alt="Contaminated nearest source">
+        <figcaption>Nearest normal source from the contaminated bank.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+
+  <section class="example">
+    <h2>Example 2: query_tabbed_normal</h2>
+    <p>A tabbed normal board. The clean bank flags the tab as acquisition nuisance.</p>
+    <div class="grid">
+      <figure>
+        <img src="assets/example_2_tab_region.png" alt="Expected tab region">
+        <figcaption>Corner-tab region used as the nuisance location.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_2_clean_bank_overlay.png" alt="Clean bank overlay">
+        <figcaption>Clean memory bank overlay. Top score: 0.858472</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_2_contaminated_bank_overlay.png" alt="Contaminated bank overlay">
+        <figcaption>
+          Contaminated memory bank overlay. Top score: 0.000000
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_2_clean_bank_nearest_source.png" alt="Clean nearest source">
+        <figcaption>Nearest normal source from the clean bank.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_2_contaminated_bank_nearest_source.png" alt="Contaminated nearest source">
+        <figcaption>Nearest normal source from the contaminated bank.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

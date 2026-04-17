@@ -212,7 +212,9 @@ MVTec masks are available, each selected anomaly also includes a ground-truth
 localisation check for the top scored patch. The report also includes local
 test-split diagnostics: image-level ROC AUC from the max patch score, defect
 type score summaries, and top-patch mask-hit checks. Generated reports, demo
-cards, local index files, and cached model artefacts are ignored by git.
+cards, local index files, and cached model artefacts are ignored by git by
+default, although curated HTML snapshots can be force-added for public review
+releases.
 
 After preparing Waterbirds, generate Demo 01 with:
 

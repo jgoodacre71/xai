@@ -15,8 +15,10 @@ flagship pillars:
 4. prediction drift versus explanation drift under nuisance shifts
 
 The design rule has stayed consistent throughout: reusable logic lives in
-`src/xai_demo_suite/`, notebooks stay thin, generated outputs stay local, and
-the repo memory sits in checked-in docs under `docs/`.
+`src/xai_demo_suite/`, notebooks stay thin, generated outputs stay local by
+default, and the repo memory sits in checked-in docs under `docs/`. When
+needed, curated HTML output snapshots can still be force-added for public
+review.
 
 ## What was built throughout
 

@@ -1,0 +1,33 @@
+{
+  "build_metadata": {
+    "built_at_utc": "2026-04-17 16:25:39 UTC",
+    "cache_status": "disabled",
+    "data_mode": "real",
+    "git_sha": "fdfe6b2",
+    "manifest_path": "data/processed/neu_cls/shortcut_binary/manifest.jsonl"
+  },
+  "explanation_methods": [
+    "Grad-CAM",
+    "Integrated Gradients",
+    "Stamp and part perturbation probes",
+    "Known-region attribution mass"
+  ],
+  "failure_mode": "The baseline overweights the fixture stamp and degrades on swapped or muted stamp cases.",
+  "figure_paths": [
+    "shortcut_industrial/assets/baseline_grad_cam.png",
+    "shortcut_industrial/assets/baseline_integrated_gradients.png",
+    "shortcut_industrial/assets/intervention_grad_cam.png",
+    "shortcut_industrial/assets/intervention_integrated_gradients.png"
+  ],
+  "intervention": "Train on stamp-randomised and stamp-masked augmentations of the same parts.",
+  "key_lesson": "A learned industrial model can still take the stamp shortcut if training allows it.",
+  "model": "Compact convolutional probes over shortcut-correlated industrial images, with a baseline versus stamp-augmented intervention.",
+  "remaining_caveats": [
+    "The real-image path depends on a locally prepared NEU-CLS shortcut manifest.",
+    "The real industrial shortcut still uses an injected nuisance stripe to make the shortcut legible and controllable.",
+    "The learned models are local demo baselines, not industrial benchmark systems."
+  ],
+  "report_path": "shortcut_industrial/index.html",
+  "task": "Industrial classification with a spuriously predictive shortcut stripe, using a synthetic fallback or a prepared real-image NEU scratches-versus-inclusion shortcut split.",
+  "title": "Demo 02 - Industrial Shortcut Trap"
+}

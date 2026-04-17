@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PatchCore Severity Mismatch</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 32px;
+      color: #1f2933;
+    }
+    main { max-width: 1120px; margin: 0 auto; }
+    h1, h2 { margin: 0 0 12px; }
+    section { margin: 28px 0; }
+    .example { border-top: 2px solid #d8dee4; padding-top: 24px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+    figure { margin: 0; border: 1px solid #d8dee4; padding: 10px; background: #fff; }
+    img { max-width: 100%; height: auto; display: block; }
+    figcaption { font-size: 13px; color: #52606d; margin-top: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border-bottom: 1px solid #d8dee4; padding: 8px; text-align: left; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>PatchCore Severity Mismatch</h1>
+  <p>
+    Demo 06 isolates a common product mistake: treating a feature-space anomaly
+    score as calibrated engineering severity. The synthetic masks provide a
+    severity-area proxy; PatchCore-style scoring provides patch novelty.
+  </p>
+
+  
+  <section>
+    <h2>Build Metadata</h2>
+    <ul>
+      <li>Git SHA: <code>03f1d2a</code></li>
+      <li>Built at: 2026-04-17 16:01:29 UTC</li>
+      <li>Data mode: synthetic</li>
+      <li>Cache: enabled</li>
+      <li>Manifest: <code>Not used</code></li>
+    </ul>
+  </section>
+
+
+  <section>
+    <h2>Run Context</h2>
+    <ul>
+      <li>synthetic directory: <code>outputs/patchcore_severity/synthetic</code></li>
+      <li>memory bank cache: <code>data/artefacts/patchcore/severity/severity_bank.npz</code></li>
+      <li>patch size: 80, stride: 40, top-k: 3</li>
+      <li>feature extractor: <code>colour_texture</code></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Severity Versus Novelty</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Sample</th>
+          <th>Severity area proxy</th>
+          <th>Top patch novelty score</th>
+          <th>Mask covered</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody><tr><td>thin_bright_scratch</td><td>461</td><td>0.356077</td><td>35.4%</td><td>Small high-contrast scratch: low area proxy, strong local novelty.</td></tr><tr><td>medium_bright_scratch</td><td>1361</td><td>0.759727</td><td>35.5%</td><td>Medium scratch with moderate area and contrast.</td></tr><tr><td>wide_low_contrast_scuff</td><td>3611</td><td>0.048069</td><td>32.5%</td><td>Large low-contrast scuff: high area proxy, not necessarily the highest feature-space novelty.</td></tr></tbody>
+    </table>
+    <p>Severity rank: <code>wide_low_contrast_scuff > medium_bright_scratch > thin_bright_scratch</code></p>
+    <p>Novelty-score rank: <code>medium_bright_scratch > thin_bright_scratch > wide_low_contrast_scuff</code></p>
+    <p>The order differs, so the largest synthetic severity proxy is not the highest PatchCore-style novelty case.</p>
+  </section>
+
+
+  <section class="example">
+    <h2>thin_bright_scratch</h2>
+    <p>Small high-contrast scratch: low area proxy, strong local novelty.</p>
+    <div class="grid">
+      <figure>
+        <img src="assets/example_1_thin_bright_scratch_score_overlay.png" alt="Patch score overlay">
+        <figcaption>Patch-score overlay. Top score: 0.356077</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_1_thin_bright_scratch_query_box.png" alt="Top patch box">
+        <figcaption>Top novelty patch selected by the detector.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_1_thin_bright_scratch_mask_overlay.png" alt="Severity mask overlay">
+        <figcaption>Synthetic severity proxy mask. Area: 461</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_1_thin_bright_scratch_nearest_normal_source.png" alt="Nearest normal source">
+        <figcaption>Nearest nominal source patch used as provenance.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+
+  <section class="example">
+    <h2>medium_bright_scratch</h2>
+    <p>Medium scratch with moderate area and contrast.</p>
+    <div class="grid">
+      <figure>
+        <img src="assets/example_2_medium_bright_scratch_score_overlay.png" alt="Patch score overlay">
+        <figcaption>Patch-score overlay. Top score: 0.759727</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_2_medium_bright_scratch_query_box.png" alt="Top patch box">
+        <figcaption>Top novelty patch selected by the detector.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_2_medium_bright_scratch_mask_overlay.png" alt="Severity mask overlay">
+        <figcaption>Synthetic severity proxy mask. Area: 1361</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_2_medium_bright_scratch_nearest_normal_source.png" alt="Nearest normal source">
+        <figcaption>Nearest nominal source patch used as provenance.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+
+  <section class="example">
+    <h2>wide_low_contrast_scuff</h2>
+    <p>Large low-contrast scuff: high area proxy, not necessarily the highest feature-space novelty.</p>
+    <div class="grid">
+      <figure>
+        <img src="assets/example_3_wide_low_contrast_scuff_score_overlay.png" alt="Patch score overlay">
+        <figcaption>Patch-score overlay. Top score: 0.048069</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_3_wide_low_contrast_scuff_query_box.png" alt="Top patch box">
+        <figcaption>Top novelty patch selected by the detector.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_3_wide_low_contrast_scuff_mask_overlay.png" alt="Severity mask overlay">
+        <figcaption>Synthetic severity proxy mask. Area: 3611</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/example_3_wide_low_contrast_scuff_nearest_normal_source.png" alt="Nearest normal source">
+        <figcaption>Nearest nominal source patch used as provenance.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+
+  <section>
+    <h2>Lesson</h2>
+    <p>
+      PatchCore-style scores are useful triage signals, but they are not a
+      calibrated severity model. Severity needs a separately defined target,
+      measurement protocol, and validation against domain labels or physics.
+    </p>
+  </section>
+</main>
+</body>
+</html>
