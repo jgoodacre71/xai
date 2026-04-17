@@ -17,6 +17,11 @@ from xai_demo_suite.models.patchcore import (
     score_image_with_extractor,
 )
 from xai_demo_suite.models.patchcore.types import PatchCoreMemoryBank, PatchScore
+from xai_demo_suite.reports.build_metadata import (
+    BuildMetadata,
+    make_build_metadata,
+    render_build_metadata_section,
+)
 from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index_for_output_root
 from xai_demo_suite.utils.io import ensure_directory
 from xai_demo_suite.vis.image_panels import (
@@ -206,6 +211,7 @@ def _render_html(
     config: PatchCoreLimitsReportConfig,
     examples: list[PatchCoreLimitExample],
     output_path: Path,
+    build_metadata: BuildMetadata,
 ) -> None:
     rows = _render_summary_rows(examples)
     sections = "\n".join(
@@ -255,6 +261,8 @@ def _render_html(
     logic checker.
   </p>
 
+  {render_build_metadata_section(build_metadata)}
+
   <section>
     <h2>Run Context</h2>
     <ul>
@@ -297,7 +305,12 @@ def _render_html(
     output_path.write_text(html_text, encoding="utf-8")
 
 
-def _build_demo_card(output_path: Path, examples: list[PatchCoreLimitExample]) -> DemoCard:
+def _build_demo_card(
+    output_path: Path,
+    examples: list[PatchCoreLimitExample],
+    *,
+    build_metadata: BuildMetadata,
+) -> DemoCard:
     return DemoCard(
         title="Demo 05 - PatchCore Limits Lab",
         task=(
@@ -339,6 +352,7 @@ def _build_demo_card(output_path: Path, examples: list[PatchCoreLimitExample]) -
             examples[2].assets["mask_overlay"],
             examples[3].assets["normal_source"],
         ),
+        build_metadata=build_metadata,
     )
 
 
@@ -386,8 +400,17 @@ def build_patchcore_limits_report(config: PatchCoreLimitsReportConfig) -> Path:
         )
 
     output_path = config.output_dir / "index.html"
-    _render_html(config=config, examples=examples, output_path=output_path)
-    card = _build_demo_card(output_path, examples)
+    build_metadata = make_build_metadata(
+        data_mode="synthetic",
+        cache_enabled=config.use_cache,
+    )
+    _render_html(
+        config=config,
+        examples=examples,
+        output_path=output_path,
+        build_metadata=build_metadata,
+    )
+    card = _build_demo_card(output_path, examples, build_metadata=build_metadata)
     save_demo_card(card, config.output_dir)
     save_demo_index_for_output_root(config.output_dir.parent)
     return output_path

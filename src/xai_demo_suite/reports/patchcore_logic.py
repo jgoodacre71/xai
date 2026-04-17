@@ -30,6 +30,11 @@ from xai_demo_suite.models.patchcore import (
     score_image_with_extractor,
 )
 from xai_demo_suite.models.patchcore.types import PatchCoreMemoryBank, PatchScore
+from xai_demo_suite.reports.build_metadata import (
+    BuildMetadata,
+    make_build_metadata,
+    render_build_metadata_section,
+)
 from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index_for_output_root
 from xai_demo_suite.reports.patchcore_synthetic_helpers import (
     SyntheticPatchCoreExample,
@@ -302,6 +307,7 @@ def _render_html(
     config: PatchCoreLogicReportConfig,
     examples: list[SyntheticPatchCoreExample],
     output_path: Path,
+    build_metadata: BuildMetadata,
 ) -> None:
     rows = _render_rows(examples)
     sections = "\n".join(_render_example(example, output_path) for example in examples)
@@ -347,6 +353,8 @@ def _render_html(
     board gives PatchCore-style scoring a fair local anomaly signal, then asks
     for statements such as slot occupancy and component identity.
   </p>
+
+  {render_build_metadata_section(build_metadata)}
 
   <section>
     <h2>Run Context</h2>
@@ -402,6 +410,7 @@ def _render_real_html(
     train_count: int,
     benchmark: LogicComparatorBenchmark,
     output_path: Path,
+    build_metadata: BuildMetadata,
 ) -> None:
     rows = _render_real_rows(examples)
     benchmark_rows = _render_benchmark_rows(benchmark)
@@ -493,6 +502,7 @@ def _render_real_html(
           "Real LOCO examples show the exact point where provenance-rich patch novelty "
           "stops and rule-level inspection has to begin."
       ),
+      build_metadata=build_metadata,
   )}
   {render_report_brief(brief)}
 
@@ -585,7 +595,12 @@ def _render_real_html(
     output_path.write_text(html_text, encoding="utf-8")
 
 
-def _build_demo_card(output_path: Path, examples: list[SyntheticPatchCoreExample]) -> DemoCard:
+def _build_demo_card(
+    output_path: Path,
+    examples: list[SyntheticPatchCoreExample],
+    *,
+    build_metadata: BuildMetadata,
+) -> DemoCard:
     return DemoCard(
         title="Demo 07 - PatchCore Logical Anomaly Limits",
         task="Synthetic slot-board comparison of local novelty and logical rule violations.",
@@ -620,12 +635,15 @@ def _build_demo_card(output_path: Path, examples: list[SyntheticPatchCoreExample
             examples[1].assets["score_overlay"],
             examples[1].assets["mask_overlay"],
         ),
+        build_metadata=build_metadata,
     )
 
 
 def _build_real_demo_card(
     output_path: Path,
     examples: list[RealPatchCoreLogicExample],
+    *,
+    build_metadata: BuildMetadata,
 ) -> DemoCard:
     return DemoCard(
         title="Demo 07 - PatchCore Logical Anomaly Limits",
@@ -665,6 +683,7 @@ def _build_real_demo_card(
             examples[0].assets["component_box"],
             examples[1].assets["score_overlay"],
         ),
+        build_metadata=build_metadata,
     )
 
 
@@ -696,8 +715,21 @@ def _build_synthetic_logic_report(config: PatchCoreLogicReportConfig) -> Path:
     if len(examples) != 2:
         raise ValueError("Logic report requires missing_one and logic_swap examples.")
     output_path = config.output_dir / "index.html"
-    _render_html(config=config, examples=examples, output_path=output_path)
-    save_demo_card(_build_demo_card(output_path, examples), config.output_dir)
+    build_metadata = make_build_metadata(
+        data_mode="synthetic fallback",
+        manifest_path=None,
+        cache_enabled=config.use_cache,
+    )
+    _render_html(
+        config=config,
+        examples=examples,
+        output_path=output_path,
+        build_metadata=build_metadata,
+    )
+    save_demo_card(
+        _build_demo_card(output_path, examples, build_metadata=build_metadata),
+        config.output_dir,
+    )
     save_demo_index_for_output_root(config.output_dir.parent)
     return output_path
 
@@ -957,14 +989,23 @@ def _build_real_logic_report(config: PatchCoreLogicReportConfig) -> Path:
         output_dir=config.output_dir,
     )
     output_path = config.output_dir / "index.html"
+    build_metadata = make_build_metadata(
+        data_mode="real",
+        manifest_path=config.manifest_path,
+        cache_enabled=config.use_cache,
+    )
     _render_real_html(
         config=config,
         examples=examples,
         train_count=len(train_records),
         benchmark=benchmark,
         output_path=output_path,
+        build_metadata=build_metadata,
     )
-    save_demo_card(_build_real_demo_card(output_path, examples), config.output_dir)
+    save_demo_card(
+        _build_real_demo_card(output_path, examples, build_metadata=build_metadata),
+        config.output_dir,
+    )
     save_demo_index_for_output_root(config.output_dir.parent)
     return output_path
 

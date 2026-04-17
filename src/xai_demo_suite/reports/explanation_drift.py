@@ -44,6 +44,7 @@ from xai_demo_suite.models.patchcore import (
     score_image_with_extractor,
 )
 from xai_demo_suite.models.patchcore.types import PatchScore
+from xai_demo_suite.reports.build_metadata import BuildMetadata, make_build_metadata
 from xai_demo_suite.reports.cards import (
     DemoCard,
     save_demo_card,
@@ -1111,6 +1112,7 @@ def _render_html(
     config: ExplanationDriftReportConfig,
     data: ExplanationDriftReportData,
     output_path: Path,
+    build_metadata: BuildMetadata,
 ) -> None:
     baseline_rows = _render_classifier_rows(data.baseline_classifier)
     intervention_rows = _render_classifier_rows(data.intervention_classifier)
@@ -1225,6 +1227,7 @@ def _render_html(
           "This report separates metric movement from explanation movement for both "
           "shortcut-sensitive classifiers and optional local anomaly-detector paths."
       ),
+      build_metadata=build_metadata,
   )}
   {render_report_brief(brief)}
 
@@ -1287,7 +1290,12 @@ def _render_html(
     output_path.write_text(html_text, encoding="utf-8")
 
 
-def _build_demo_card(output_path: Path, data: ExplanationDriftReportData) -> DemoCard:
+def _build_demo_card(
+    output_path: Path,
+    data: ExplanationDriftReportData,
+    *,
+    build_metadata: BuildMetadata,
+) -> DemoCard:
     figure_paths = [
         data.baseline_classifier.baseline_overlay_path,
         *(summary.overlay_path for summary in data.baseline_classifier.perturbations[:2]),
@@ -1335,6 +1343,7 @@ def _build_demo_card(output_path: Path, data: ExplanationDriftReportData) -> Dem
         ),
         report_path=output_path,
         figure_paths=tuple(figure_paths),
+        build_metadata=build_metadata,
     )
 
 
@@ -1374,8 +1383,26 @@ def build_explanation_drift_report(config: ExplanationDriftReportConfig) -> Path
         anomaly_notes=anomaly_notes,
     )
     output_path = config.output_dir / "index.html"
-    _render_html(config=config, data=data, output_path=output_path)
-    card = _build_demo_card(output_path, data)
+    build_metadata = make_build_metadata(
+        data_mode=(
+            "mixed real+synthetic"
+            if baseline_classifier.data_source_label.startswith("real") or anomaly_reports
+            else "synthetic"
+        ),
+        manifest_path=(
+            config.industrial_manifest_path
+            if baseline_classifier.data_source_label.startswith("real")
+            else config.mvtec_manifest_path if anomaly_reports else None
+        ),
+        cache_enabled=False,
+    )
+    _render_html(
+        config=config,
+        data=data,
+        output_path=output_path,
+        build_metadata=build_metadata,
+    )
+    card = _build_demo_card(output_path, data, build_metadata=build_metadata)
     save_demo_card(card, config.output_dir)
     save_demo_index_for_output_root(config.output_dir.parent)
     return output_path

@@ -16,6 +16,11 @@ from xai_demo_suite.models.patchcore import (
     score_image_with_extractor,
 )
 from xai_demo_suite.models.patchcore.types import PatchCoreMemoryBank, PatchScore
+from xai_demo_suite.reports.build_metadata import (
+    BuildMetadata,
+    make_build_metadata,
+    render_build_metadata_section,
+)
 from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index_for_output_root
 from xai_demo_suite.utils.io import ensure_directory
 from xai_demo_suite.vis.image_panels import draw_box_on_image, save_patch_crop, save_score_overlay
@@ -228,6 +233,7 @@ def _render_html(
     config: PatchCoreWrongNormalReportConfig,
     comparisons: list[WrongNormalComparison],
     output_path: Path,
+    build_metadata: BuildMetadata,
 ) -> None:
     rows = _render_rows(comparisons)
     contaminated_cache = html.escape(config.contaminated_cache_path.as_posix())
@@ -273,6 +279,8 @@ def _render_html(
     encode nuisance as normality and distort explanations.
   </p>
 
+  {render_build_metadata_section(build_metadata)}
+
   <section>
     <h2>Run Context</h2>
     <ul>
@@ -315,7 +323,12 @@ def _render_html(
     output_path.write_text(html_text, encoding="utf-8")
 
 
-def _build_demo_card(output_path: Path, comparisons: list[WrongNormalComparison]) -> DemoCard:
+def _build_demo_card(
+    output_path: Path,
+    comparisons: list[WrongNormalComparison],
+    *,
+    build_metadata: BuildMetadata,
+) -> DemoCard:
     return DemoCard(
         title="Demo 04 - PatchCore Learns the Wrong Normal",
         task="Synthetic normal-set contamination for PatchCore-style anomaly detection.",
@@ -343,6 +356,7 @@ def _build_demo_card(output_path: Path, comparisons: list[WrongNormalComparison]
             comparisons[1].assets["clean_source"],
             comparisons[1].assets["contaminated_source"],
         ),
+        build_metadata=build_metadata,
     )
 
 
@@ -412,8 +426,18 @@ def build_patchcore_wrong_normal_report(config: PatchCoreWrongNormalReportConfig
         )
 
     output_path = config.output_dir / "index.html"
-    _render_html(config=config, comparisons=enriched, output_path=output_path)
-    card = _build_demo_card(output_path, enriched)
+    build_metadata = make_build_metadata(
+        data_mode="synthetic",
+        manifest_path=None,
+        cache_enabled=config.use_cache,
+    )
+    _render_html(
+        config=config,
+        comparisons=enriched,
+        output_path=output_path,
+        build_metadata=build_metadata,
+    )
+    card = _build_demo_card(output_path, enriched, build_metadata=build_metadata)
     save_demo_card(card, config.output_dir)
     save_demo_index_for_output_root(config.output_dir.parent)
     return output_path

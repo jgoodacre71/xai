@@ -9,6 +9,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+from xai_demo_suite.reports.build_metadata import BuildMetadata
 from xai_demo_suite.utils.io import ensure_directory
 
 
@@ -26,6 +27,7 @@ class DemoCard:
     remaining_caveats: tuple[str, ...]
     report_path: Path
     figure_paths: tuple[Path, ...]
+    build_metadata: BuildMetadata | None = None
 
 
 KNOWN_PREPARED_DATASETS: tuple[tuple[str, str], ...] = (
@@ -55,6 +57,10 @@ def _card_to_json_dict(card: DemoCard, root: Path) -> dict[str, object]:
     data["figure_paths"] = [_relative(path, root) for path in card.figure_paths]
     data["explanation_methods"] = list(card.explanation_methods)
     data["remaining_caveats"] = list(card.remaining_caveats)
+    if card.build_metadata is not None and card.build_metadata.manifest_path is not None:
+        metadata = dict(data["build_metadata"])
+        metadata["manifest_path"] = _relative(card.build_metadata.manifest_path, root)
+        data["build_metadata"] = metadata
     return data
 
 
@@ -75,6 +81,20 @@ def save_demo_card(card: DemoCard, output_dir: Path) -> tuple[Path, Path]:
     figures = "".join(
         f'<li><code>{html.escape(_relative(path, root))}</code></li>' for path in card.figure_paths
     )
+    metadata_html = ""
+    if card.build_metadata is not None:
+        manifest_text = "Not used"
+        if card.build_metadata.manifest_path is not None:
+            manifest_text = _relative(card.build_metadata.manifest_path, root)
+        metadata_html = (
+            "<dt>Build metadata</dt><dd><ul>"
+            f"<li>Git SHA: <code>{html.escape(card.build_metadata.git_sha)}</code></li>"
+            f"<li>Built at: {html.escape(card.build_metadata.built_at_utc)}</li>"
+            f"<li>Data mode: {html.escape(card.build_metadata.data_mode)}</li>"
+            f"<li>Cache: {html.escape(card.build_metadata.cache_status)}</li>"
+            f"<li>Manifest: <code>{html.escape(manifest_text)}</code></li>"
+            "</ul></dd>"
+        )
     report_href = html.escape(_relative(card.report_path, output_dir))
     html_path.write_text(
         f"""<!doctype html>
@@ -105,6 +125,7 @@ def save_demo_card(card: DemoCard, output_dir: Path) -> tuple[Path, Path]:
     <dt>Failure mode</dt><dd>{html.escape(card.failure_mode)}</dd>
     <dt>Intervention</dt><dd>{html.escape(card.intervention)}</dd>
     <dt>Remaining caveats</dt><dd><ul>{caveats}</ul></dd>
+    {metadata_html}
     <dt>Report</dt><dd><a href="{report_href}">Open report</a></dd>
     <dt>Selected figures</dt><dd><ul>{figures}</ul></dd>
   </dl>

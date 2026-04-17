@@ -27,6 +27,11 @@ from xai_demo_suite.models.classification import (
     industrial_accuracy,
     mask_region,
 )
+from xai_demo_suite.reports.build_metadata import (
+    BuildMetadata,
+    make_build_metadata,
+    render_build_metadata_section,
+)
 from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index_for_output_root
 from xai_demo_suite.utils.io import ensure_directory
 from xai_demo_suite.vis.image_panels import save_heatmap_overlay
@@ -259,7 +264,12 @@ def _render_results_rows(
     return "".join(rows)
 
 
-def _render_html(config: IndustrialShortcutReportConfig, data: ShortcutReportData) -> Path:
+def _render_html(
+    config: IndustrialShortcutReportConfig,
+    data: ShortcutReportData,
+    *,
+    build_metadata: BuildMetadata,
+) -> Path:
     output_path = config.output_dir / "index.html"
     test_ids = {sample.sample_id for sample in data.test_samples}
     swapped_ids = {
@@ -343,6 +353,8 @@ def _render_html(config: IndustrialShortcutReportConfig, data: ShortcutReportDat
     intervention keeps the same original images but also sees stamp-randomised
     and stamp-masked variants of the same parts.
   </p>
+
+  {render_build_metadata_section(build_metadata)}
 
     <section>
     <h2>Metric Summary</h2>
@@ -476,7 +488,12 @@ def _render_html(config: IndustrialShortcutReportConfig, data: ShortcutReportDat
     return output_path
 
 
-def _build_demo_card(output_path: Path, data: ShortcutReportData) -> DemoCard:
+def _build_demo_card(
+    output_path: Path,
+    data: ShortcutReportData,
+    *,
+    build_metadata: BuildMetadata,
+) -> DemoCard:
     return DemoCard(
         title="Demo 02 - Industrial Shortcut Trap",
         task=(
@@ -519,6 +536,7 @@ def _build_demo_card(output_path: Path, data: ShortcutReportData) -> DemoCard:
             data.assets["intervention_grad_cam"],
             data.assets["intervention_integrated_gradients"],
         ),
+        build_metadata=build_metadata,
     )
 
 
@@ -527,6 +545,11 @@ def build_industrial_shortcut_report(config: IndustrialShortcutReportConfig) -> 
 
     ensure_directory(config.output_dir)
     if config.use_real_data and config.real_manifest_path.exists():
+        build_metadata = make_build_metadata(
+            data_mode="real",
+            manifest_path=config.real_manifest_path,
+            cache_enabled=False,
+        )
         records = load_industrial_shortcut_manifest(config.real_manifest_path)
         samples = manifest_records_to_samples(records)
         train_samples = [sample for sample in samples if sample.split == "train"]
@@ -535,6 +558,11 @@ def build_industrial_shortcut_report(config: IndustrialShortcutReportConfig) -> 
             "real NEU scratches-versus-inclusion images with a prepared shortcut split"
         )
     else:
+        build_metadata = make_build_metadata(
+            data_mode="synthetic fallback",
+            manifest_path=config.real_manifest_path if config.real_manifest_path.exists() else None,
+            cache_enabled=False,
+        )
         train_samples, test_samples = generate_industrial_shortcut_dataset(config.synthetic_dir)
         data_source_label = "synthetic industrial images"
     train_samples = balanced_label_subset(train_samples, config.max_train_records)
@@ -591,8 +619,8 @@ def build_industrial_shortcut_report(config: IndustrialShortcutReportConfig) -> 
         assets=assets,
         data_source_label=data_source_label,
     )
-    output_path = _render_html(config, data)
-    card = _build_demo_card(output_path, data)
+    output_path = _render_html(config, data, build_metadata=build_metadata)
+    card = _build_demo_card(output_path, data, build_metadata=build_metadata)
     save_demo_card(card, config.output_dir)
     save_demo_index_for_output_root(config.output_dir.parent)
     return output_path

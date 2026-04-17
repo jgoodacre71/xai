@@ -31,6 +31,7 @@ from xai_demo_suite.models.patchcore import (
     score_image_with_extractor,
 )
 from xai_demo_suite.models.patchcore.types import PatchCoreMemoryBank, PatchScore
+from xai_demo_suite.reports.build_metadata import BuildMetadata, make_build_metadata
 from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index_for_output_root
 from xai_demo_suite.reports.report_chrome import (
     ReportBrief,
@@ -861,6 +862,7 @@ def _render_html(
     memory_bank_size: int,
     cache_path: Path,
     output_path: Path,
+    build_metadata: BuildMetadata,
 ) -> None:
     category_label = _report_category_label(config)
     title_text = f"PatchCore on MVTec AD {category_label}"
@@ -963,6 +965,7 @@ def _render_html(
       eyebrow="Demo 03 · PatchCore hero demo",
       title=title_text,
       lede=lede_text,
+      build_metadata=build_metadata,
   )}
   {render_report_brief(brief)}
 
@@ -1000,6 +1003,7 @@ def _build_demo_card(
     feature_name: str,
     coreset_size: int | None,
     category_label: str,
+    build_metadata: BuildMetadata,
 ) -> DemoCard:
     uses_feature_map = feature_name.startswith("feature_map_resnet18") or feature_name.startswith(
         "feature_map_wide_resnet50_2"
@@ -1069,6 +1073,7 @@ def _build_demo_card(
             assets["normal_crop_1"],
             assets["counterfactual"],
         ),
+        build_metadata=build_metadata,
     )
 
 
@@ -1140,6 +1145,11 @@ def build_patchcore_bottle_report(
         )
 
     output_path = config.output_dir / "index.html"
+    build_metadata = make_build_metadata(
+        data_mode="real",
+        manifest_path=config.manifest_path,
+        cache_enabled=config.use_cache,
+    )
     _render_html(
         config=config,
         examples=example_reports,
@@ -1148,6 +1158,7 @@ def build_patchcore_bottle_report(
         memory_bank_size=len(memory_bank.metadata),
         cache_path=_resolve_cache_path(config=config, extractor=extractor),
         output_path=output_path,
+        build_metadata=build_metadata,
     )
     card = _build_demo_card(
         output_path=output_path,
@@ -1155,6 +1166,7 @@ def build_patchcore_bottle_report(
         feature_name=extractor.feature_name,
         coreset_size=config.coreset_size,
         category_label=category_label,
+        build_metadata=build_metadata,
     )
     save_demo_card(card, config.output_dir)
     save_demo_index_for_output_root(config.output_dir.parent)

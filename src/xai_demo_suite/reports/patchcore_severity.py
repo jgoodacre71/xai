@@ -8,6 +8,11 @@ from pathlib import Path
 
 from xai_demo_suite.data.synthetic import generate_severity_sweep_dataset
 from xai_demo_suite.models.patchcore import ColourTexturePatchFeatureExtractor
+from xai_demo_suite.reports.build_metadata import (
+    BuildMetadata,
+    make_build_metadata,
+    render_build_metadata_section,
+)
 from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index_for_output_root
 from xai_demo_suite.reports.patchcore_synthetic_helpers import (
     SyntheticPatchCoreExample,
@@ -100,6 +105,7 @@ def _render_html(
     config: PatchCoreSeverityReportConfig,
     examples: list[SyntheticPatchCoreExample],
     output_path: Path,
+    build_metadata: BuildMetadata,
 ) -> None:
     rows = _render_rows(examples)
     sections = "\n".join(_render_example(example, output_path) for example in examples)
@@ -150,6 +156,8 @@ def _render_html(
     severity-area proxy; PatchCore-style scoring provides patch novelty.
   </p>
 
+  {render_build_metadata_section(build_metadata)}
+
   <section>
     <h2>Run Context</h2>
     <ul>
@@ -197,7 +205,12 @@ def _render_html(
     output_path.write_text(html_text, encoding="utf-8")
 
 
-def _build_demo_card(output_path: Path, examples: list[SyntheticPatchCoreExample]) -> DemoCard:
+def _build_demo_card(
+    output_path: Path,
+    examples: list[SyntheticPatchCoreExample],
+    *,
+    build_metadata: BuildMetadata,
+) -> DemoCard:
     return DemoCard(
         title="Demo 06 - PatchCore Severity Mismatch",
         task="Synthetic severity sweep comparing scratch area with PatchCore-style novelty score.",
@@ -231,6 +244,7 @@ def _build_demo_card(output_path: Path, examples: list[SyntheticPatchCoreExample
             examples[2].assets["mask_overlay"],
             examples[2].assets["normal_source"],
         ),
+        build_metadata=build_metadata,
     )
 
 
@@ -259,7 +273,19 @@ def build_patchcore_severity_report(config: PatchCoreSeverityReportConfig) -> Pa
         top_k=config.top_k,
     )
     output_path = config.output_dir / "index.html"
-    _render_html(config=config, examples=examples, output_path=output_path)
-    save_demo_card(_build_demo_card(output_path, examples), config.output_dir)
+    build_metadata = make_build_metadata(
+        data_mode="synthetic",
+        cache_enabled=config.use_cache,
+    )
+    _render_html(
+        config=config,
+        examples=examples,
+        output_path=output_path,
+        build_metadata=build_metadata,
+    )
+    save_demo_card(
+        _build_demo_card(output_path, examples, build_metadata=build_metadata),
+        config.output_dir,
+    )
     save_demo_index_for_output_root(config.output_dir.parent)
     return output_path

@@ -43,6 +43,11 @@ from xai_demo_suite.models.classification import (
     waterbirds_worst_group_accuracy,
     worst_group_accuracy,
 )
+from xai_demo_suite.reports.build_metadata import (
+    BuildMetadata,
+    make_build_metadata,
+    render_build_metadata_section,
+)
 from xai_demo_suite.reports.cards import DemoCard, save_demo_card, save_demo_index_for_output_root
 from xai_demo_suite.reports.report_chrome import (
     ReportBrief,
@@ -240,6 +245,7 @@ def _render_result_rows(
 def _render_synthetic_html(
     config: WaterbirdsShortcutReportConfig,
     data: WaterbirdsShortcutReportData,
+    build_metadata: BuildMetadata,
 ) -> Path:
     output_path = config.output_dir / "index.html"
     habitat_accuracy = accuracy(data.habitat_results)
@@ -288,6 +294,8 @@ def _render_synthetic_html(
     can learn habitat background instead of bird evidence when training labels
     and habitats are strongly correlated.
   </p>
+
+  {render_build_metadata_section(build_metadata)}
 
   <section>
     <h2>Worst-Group Metric Summary</h2>
@@ -372,7 +380,12 @@ def _render_synthetic_html(
     return output_path
 
 
-def _build_synthetic_demo_card(output_path: Path, data: WaterbirdsShortcutReportData) -> DemoCard:
+def _build_synthetic_demo_card(
+    output_path: Path,
+    data: WaterbirdsShortcutReportData,
+    *,
+    build_metadata: BuildMetadata,
+) -> DemoCard:
     return DemoCard(
         title="Demo 01 - Waterbirds Shortcut Proxy",
         task=(
@@ -407,6 +420,7 @@ def _build_synthetic_demo_card(output_path: Path, data: WaterbirdsShortcutReport
             data.assets["waterbird_background_swap"],
             data.assets["landbird_background_swap"],
         ),
+        build_metadata=build_metadata,
     )
 
 
@@ -1007,6 +1021,7 @@ def _render_real_html(
     primary_data: RealWaterbirdsShortcutReportData,
     *,
     metashift_data: RealWaterbirdsShortcutReportData | None = None,
+    build_metadata: BuildMetadata,
 ) -> Path:
     output_path = config.output_dir / "index.html"
     metashift_section = ""
@@ -1097,6 +1112,7 @@ def _render_real_html(
       eyebrow="Demo 01 · Shortcut learning",
       title="Waterbirds Shortcut",
       lede=lede,
+      build_metadata=build_metadata,
   )}
   {render_report_brief(brief)}
   {_render_real_dataset_section(primary_data, output_path=output_path)}
@@ -1124,7 +1140,12 @@ def _render_real_html(
     return output_path
 
 
-def _build_real_demo_card(output_path: Path, data: RealWaterbirdsShortcutReportData) -> DemoCard:
+def _build_real_demo_card(
+    output_path: Path,
+    data: RealWaterbirdsShortcutReportData,
+    *,
+    build_metadata: BuildMetadata,
+) -> DemoCard:
     return DemoCard(
         title="Demo 01 - Waterbirds Shortcut",
         task=(
@@ -1167,6 +1188,7 @@ def _build_real_demo_card(output_path: Path, data: RealWaterbirdsShortcutReportD
             data.assets[f"{data.dataset_name}_prototype_predicted_0"],
             data.assets[f"{data.dataset_name}_prototype_contrast_0"],
         ),
+        build_metadata=build_metadata,
     )
 
 
@@ -1199,6 +1221,11 @@ def build_waterbirds_shortcut_report(config: WaterbirdsShortcutReportConfig) -> 
 
     ensure_directory(config.output_dir)
     if config.use_real_data and config.manifest_path.exists():
+        build_metadata = make_build_metadata(
+            data_mode="real",
+            manifest_path=config.manifest_path,
+            cache_enabled=False,
+        )
         real_data = _build_real_report_data(
             config,
             manifest_path=config.manifest_path,
@@ -1221,12 +1248,26 @@ def build_waterbirds_shortcut_report(config: WaterbirdsShortcutReportConfig) -> 
                 ),
                 asset_prefix="metashift",
             )
-        output_path = _render_real_html(config, real_data, metashift_data=metashift_data)
-        card = _build_real_demo_card(output_path, real_data)
+        output_path = _render_real_html(
+            config,
+            real_data,
+            metashift_data=metashift_data,
+            build_metadata=build_metadata,
+        )
+        card = _build_real_demo_card(output_path, real_data, build_metadata=build_metadata)
     else:
+        build_metadata = make_build_metadata(
+            data_mode="synthetic fallback",
+            manifest_path=config.manifest_path if config.manifest_path.exists() else None,
+            cache_enabled=False,
+        )
         synthetic_data = _build_synthetic_report_data(config)
-        output_path = _render_synthetic_html(config, synthetic_data)
-        card = _build_synthetic_demo_card(output_path, synthetic_data)
+        output_path = _render_synthetic_html(config, synthetic_data, build_metadata)
+        card = _build_synthetic_demo_card(
+            output_path,
+            synthetic_data,
+            build_metadata=build_metadata,
+        )
     save_demo_card(card, config.output_dir)
     save_demo_index_for_output_root(config.output_dir.parent)
     return output_path
