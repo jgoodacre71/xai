@@ -138,6 +138,8 @@ class RealWaterbirdsShortcutReportData:
     balanced_summary: WaterbirdsExplanationSummary
     prototype_summary: PrototypeComparatorSummary
     selected_record: WaterbirdsManifestRecord
+    selected_erm_prediction: WaterbirdsPrediction
+    selected_balanced_prediction: WaterbirdsPrediction
     selected_prototype_prediction: PrototypePrediction
     nearest_predicted_exemplars: tuple[PrototypeExemplar, ...]
     nearest_contrast_exemplars: tuple[PrototypeExemplar, ...]
@@ -648,12 +650,17 @@ def _select_visual_record(
 ) -> WaterbirdsManifestRecord:
     by_id = {prediction.sample_id: prediction for prediction in predictions}
     crossed = [record for record in records if not record.is_aligned]
-    for record in crossed:
-        prediction = by_id[record.sample_id]
-        if not prediction.correct:
-            return record
+    wrong_crossed = [record for record in crossed if not by_id[record.sample_id].correct]
+    if wrong_crossed:
+        return max(
+            wrong_crossed,
+            key=lambda record: abs(by_id[record.sample_id].probability - 0.5),
+        )
     if crossed:
-        return crossed[0]
+        return max(
+            crossed,
+            key=lambda record: abs(by_id[record.sample_id].probability - 0.5),
+        )
     return records[0]
 
 
@@ -745,6 +752,8 @@ def _build_real_report_data(
         ),
     }
     prototype_by_id = {prediction.sample_id: prediction for prediction in prototype_predictions}
+    erm_by_id = {prediction.sample_id: prediction for prediction in erm_predictions}
+    balanced_by_id = {prediction.sample_id: prediction for prediction in balanced_predictions}
     selected_prototype_prediction = prototype_by_id[selected_record.sample_id]
     nearest_predicted_exemplars = prototype_comparator.nearest_exemplars(
         selected_record,
@@ -815,6 +824,8 @@ def _build_real_report_data(
             prefix=f"{asset_prefix}_prototype",
         ),
         selected_record=selected_record,
+        selected_erm_prediction=erm_by_id[selected_record.sample_id],
+        selected_balanced_prediction=balanced_by_id[selected_record.sample_id],
         selected_prototype_prediction=selected_prototype_prediction,
         nearest_predicted_exemplars=nearest_predicted_exemplars,
         nearest_contrast_exemplars=nearest_contrast_exemplars,
@@ -851,7 +862,7 @@ def _render_real_dataset_section(
             "<figure>"
             f'<img src="{rel(data.assets[f"{data.dataset_name}_prototype_predicted_{index}"])}" '
             'alt="Prototype exemplar">'
-            f"<figcaption>{html.escape(exemplar.sample_id)} | "
+            f"<figcaption>{html.escape(exemplar.label)} | "
             f"{html.escape(exemplar.group)} | d={exemplar.distance:.3f}</figcaption>"
             "</figure>"
         )
@@ -862,11 +873,41 @@ def _render_real_dataset_section(
             "<figure>"
             f'<img src="{rel(data.assets[f"{data.dataset_name}_prototype_contrast_{index}"])}" '
             'alt="Contrast exemplar">'
-            f"<figcaption>{html.escape(exemplar.sample_id)} | "
+            f"<figcaption>{html.escape(exemplar.label)} | "
             f"{html.escape(exemplar.group)} | d={exemplar.distance:.3f}</figcaption>"
             "</figure>"
         )
         for index, exemplar in enumerate(data.nearest_contrast_exemplars)
+    )
+    erm_background_heavier = (
+        data.erm_summary.background_mask_delta > data.erm_summary.centre_mask_delta
+    )
+    balanced_background_heavier = (
+        data.balanced_summary.background_mask_delta > data.balanced_summary.centre_mask_delta
+    )
+    perturbation_verdict = (
+        "For this slice, masking background changes the ERM score more than masking the image "
+        "centre, which is consistent with background reliance."
+        if erm_background_heavier
+        else "For this slice, the ERM masking deltas are not dominated by background masking."
+    )
+    if balanced_background_heavier:
+        perturbation_verdict += (
+            " The reweighted model still shows non-trivial background sensitivity, so the fix "
+            "is incomplete rather than solved."
+        )
+    else:
+        perturbation_verdict += (
+            " The reweighted model shifts the evidence pattern, but the group metrics show "
+            "that the shortcut problem is still not solved."
+        )
+    takeaway_chips = [
+        "Shortcut signal found",
+        "Worst-group failure visible",
+        "Fix still incomplete",
+    ]
+    chip_html = "".join(
+        f'<span class="badge">{html.escape(chip)}</span>' for chip in takeaway_chips
     )
 
     return f"""
@@ -884,11 +925,16 @@ def _render_real_dataset_section(
     <ul>
       <li>ERM accuracy: {erm_accuracy:.1%}</li>
       <li>Group-balanced accuracy: {balanced_accuracy:.1%}</li>
-      <li>Prototype comparator accuracy: {prototype_acc:.1%}</li>
+      <li>Prototype retrieval probe accuracy: {prototype_acc:.1%}</li>
       <li>ERM worst-group accuracy: {erm_worst:.1%}</li>
       <li>Group-balanced worst-group accuracy: {balanced_worst:.1%}</li>
-      <li>Prototype comparator worst-group accuracy: {prototype_worst:.1%}</li>
+      <li>Prototype retrieval probe worst-group accuracy: {prototype_worst:.1%}</li>
     </ul>
+    <div>{chip_html}</div>
+    <p>
+      This page is strongest as a shortcut diagnosis page. Reweighting changes the error pattern
+      and the evidence distribution, but it does not by itself remove shortcut reliance.
+    </p>
     <table>
       <thead>
         <tr>
@@ -896,7 +942,7 @@ def _render_real_dataset_section(
           <th>Count</th>
           <th>ERM accuracy</th>
           <th>Group-balanced accuracy</th>
-          <th>Prototype comparator accuracy</th>
+          <th>Prototype retrieval probe accuracy</th>
         </tr>
       </thead>
       <tbody>{group_rows}</tbody>
@@ -906,8 +952,11 @@ def _render_real_dataset_section(
       <figure>
         <img src="{rel(data.assets["selected_image"])}" alt="Selected sample">
         <figcaption>
-          Original test sample. The report prefers a crossed-group sample, and
-          uses a misclassified ERM example when available.
+          Original test sample. The report prefers the most confident wrong crossed-group ERM
+          sample when available. ERM predicts {html.escape(data.selected_erm_prediction.predicted)}
+          ({data.selected_erm_prediction.probability:.3f}); group-balanced predicts
+          {html.escape(data.selected_balanced_prediction.predicted)}
+          ({data.selected_balanced_prediction.probability:.3f}).
         </figcaption>
       </figure>
       <figure>
@@ -977,8 +1026,9 @@ def _render_real_dataset_section(
         </tr>
       </tbody>
     </table>
+    <p>{html.escape(perturbation_verdict)}</p>
     <p>
-      Prototype comparator selected prediction:
+      Prototype retrieval probe selected prediction:
       <code>{html.escape(data.selected_prototype_prediction.predicted)}</code>
       with margin {data.selected_prototype_prediction.score:.3f}.
     </p>
@@ -998,11 +1048,12 @@ def _render_real_dataset_section(
       </thead>
       <tbody>{prediction_rows}</tbody>
     </table>
-    <h3>Prototype Exemplar Evidence</h3>
+    <h3>Prototype-Space Diagnostic</h3>
     <p>
-      This comparator replaces a linear decision head with class prototypes in
+      This prototype-space diagnostic replaces a linear decision head with class prototypes in
       the current feature space, then shows which training exemplars are nearest
-      to the selected crossed-group sample.
+      to the selected crossed-group sample. Its low worst-group performance is itself informative:
+      even case-based explanations inherit a shortcut-poisoned representation.
     </p>
     <h4>Nearest Exemplars for the Predicted Class</h4>
     <div class="grid">
@@ -1102,6 +1153,17 @@ def _render_real_html(
     }}
     code {{ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }}
     .meta {{ color: #52606d; font-size: 14px; }}
+    .badge {{
+      display: inline-flex;
+      align-items: center;
+      margin: 0 8px 8px 0;
+      padding: 5px 10px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #364152;
+      font-size: 12px;
+      font-weight: 600;
+    }}
     {report_chrome_css()}
   </style>
 </head>
@@ -1123,9 +1185,9 @@ def _render_real_html(
       This is the real shortcut story the spec called for. Average accuracy alone
       is not enough. The failure becomes legible when the report forces group
       metrics, explanation maps, and targeted perturbations into the same view.
-      The intervention here is intentionally modest, but it already shows how a
-      different training objective can move the model away from background-heavy
-      evidence. When the optional MetaShift manifest is prepared locally, the
+      The intervention here is intentionally modest: it changes the error pattern
+      and the evidence distribution, but it does not by itself solve shortcut
+      reliance. When the optional MetaShift manifest is prepared locally, the
       same report extends the story beyond Waterbirds into a second natural-context
       benchmark with the same evaluation and explanation contract.
     </p>
@@ -1161,7 +1223,7 @@ def _build_real_demo_card(
             "Grad-CAM",
             "Integrated Gradients",
             "Background and centre perturbation probes",
-            "Prototype exemplar retrieval",
+            "Prototype-space retrieval probe",
         ),
         key_lesson=(
             "Shortcut behaviour is visible in group metrics, explanation mass, and "
@@ -1171,7 +1233,10 @@ def _build_real_demo_card(
             "ERM can preserve high average accuracy while relying too heavily on "
             "habitat context."
         ),
-        intervention="Reweight the training objective by group and re-check the evidence path.",
+        intervention=(
+            "Reweight the training objective by group and re-check the evidence path, with the "
+            "expectation that this changes the failure pattern rather than fully solving it."
+        ),
         remaining_caveats=(
             "This is a strong local ResNet-18 shortcut benchmark, not a full large-model "
             "Waterbirds reproduction.",

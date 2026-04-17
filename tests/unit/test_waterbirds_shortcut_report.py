@@ -166,8 +166,9 @@ def test_waterbirds_shortcut_report_uses_real_manifest_when_available(tmp_path: 
     assert "Where to go next" in html
     assert "../index.html" in html
     assert "ERM worst-group accuracy" in html
-    assert "Prototype comparator accuracy" in html
-    assert "Prototype Exemplar Evidence" in html
+    assert "Prototype retrieval probe accuracy" in html
+    assert "Prototype-Space Diagnostic" in html
+    assert "Fix still incomplete" in html
     assert "Grad-CAM centre mass" in html
     assert "Group-balanced probability" in html
     assert (config.output_dir / "assets" / "waterbirds_erm_grad_cam.png").exists()
@@ -223,7 +224,7 @@ def test_waterbirds_shortcut_report_adds_metashift_extension_when_available(
     assert "Waterbirds Benchmark Slice" in html
     assert "Natural-Context Extension - MetaShift" in html
     assert "How to present it live" in html
-    assert "Prototype comparator accuracy" in html
+    assert "Prototype retrieval probe accuracy" in html
     assert "cat_indoor" in html
     assert "dog_outdoor" in html
     assert (config.output_dir / "assets" / "metashift_erm_grad_cam.png").exists()

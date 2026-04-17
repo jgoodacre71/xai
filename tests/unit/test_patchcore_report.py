@@ -339,7 +339,10 @@ def test_patchcore_bottle_report_writes_html_and_assets(tmp_path: Path) -> None:
     assert "Image-level ROC AUC from max patch score: 0.500" in html
     assert "Coarse patch-score anomaly map" in html
     assert "Counterfactual Patch Replacement" in html
+    assert "Nominal Control Example" in html
+    assert "witness patch" in html
     assert (config.output_dir / "assets" / "score_overlay.png").exists()
+    assert (config.output_dir / "assets" / "nominal_control_score_overlay.png").exists()
     assert (config.output_dir / "assets" / "counterfactual_replacement.png").exists()
     assert (config.output_dir / "assets" / "counterfactual_box.png").exists()
     assert (config.output_dir / "assets" / "query_patch.png").exists()

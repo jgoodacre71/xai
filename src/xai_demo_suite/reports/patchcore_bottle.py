@@ -84,6 +84,7 @@ class PatchCoreBottleExampleReport:
     all_scores: list[PatchScore]
     assets: dict[str, Path]
     counterfactual: CounterfactualArtefact
+    nominal_score_percentile: float | None
     mask_overlap: PatchMaskOverlap | None = None
 
 
@@ -116,6 +117,16 @@ class PatchCoreBottleBenchmarkReport:
         """Return the number of scored anomalous test images."""
 
         return sum(1 for record in self.records if record.is_anomalous)
+
+
+@dataclass(frozen=True, slots=True)
+class PatchCoreBottleNominalControlReport:
+    """Low-score nominal control example for live comparison."""
+
+    query_record: ImageManifestRecord
+    score: PatchScore
+    all_scores: list[PatchScore]
+    assets: dict[str, Path]
 
 
 def _relative(path: Path, root: Path) -> str:
@@ -479,6 +490,15 @@ def _build_counterfactual_preview(
     )
 
 
+def _nominal_score_percentile(score: float, nominal_scores: list[float]) -> float | None:
+    """Return the percentile position against nominal top scores."""
+
+    if not nominal_scores:
+        return None
+    count_at_or_below = sum(1 for nominal_score in nominal_scores if nominal_score <= score)
+    return count_at_or_below / len(nominal_scores)
+
+
 def _render_example_section(
     *,
     example: PatchCoreBottleExampleReport,
@@ -537,6 +557,15 @@ def _render_example_section(
     image_path = html.escape(example.query_record.image_path.as_posix())
     defect_type = html.escape(example.query_record.defect_type)
     mask_check = _render_mask_check(example=example, output_path=output_path)
+    percentile_text = "Nominal reference percentile not available"
+    if example.nominal_score_percentile is not None:
+        percentile_text = (
+            f"{100.0 * example.nominal_score_percentile:.1f}th percentile of nominal "
+            "top-patch scores"
+        )
+    counterfactual_drop = 0.0
+    if counterfactual.before_score != 0.0:
+        counterfactual_drop = abs(counterfactual.score_delta) / counterfactual.before_score
 
     return f"""
   <section class="example">
@@ -561,7 +590,10 @@ def _render_example_section(
       </figure>
       <figure>
         <img src="{query_crop_src}" alt="Top scored query patch crop">
-        <figcaption>Top scored query patch. Distance: {score.distance:.6f}</figcaption>
+        <figcaption>
+          Top scored query patch. Distance: {score.distance:.6f} |
+          {html.escape(percentile_text)}
+        </figcaption>
       </figure>
     </div>
 
@@ -586,6 +618,7 @@ def _render_example_section(
       <li>Before score: {counterfactual.before_score:.6f}</li>
       <li>After score: {counterfactual.after_score:.6f}</li>
       <li>Delta: {counterfactual.score_delta:.6f}</li>
+      <li>Score reduction: {100.0 * counterfactual_drop:.1f}%</li>
     </ul>
 
     <h3>Distance Summary</h3>
@@ -646,6 +679,10 @@ def _render_mask_check(
       <li>Patch pixels overlapping mask: {patch_overlap_text}</li>
       <li>Mask covered by top patch: {mask_coverage_text}</li>
     </ul>
+    <p>
+      The top patch is a witness patch, not a full defect segmentation. Strong overlap with the
+      anomalous region can still cover only part of the total defect extent.
+    </p>
 """
 
 
@@ -668,6 +705,12 @@ def _render_overview(examples: list[PatchCoreBottleExampleReport]) -> str:
     )
     mean_counterfactual_delta = sum(
         example.counterfactual.score_delta for example in examples
+    ) / len(examples)
+    mean_counterfactual_drop = sum(
+        abs(example.counterfactual.score_delta) / example.counterfactual.before_score
+        if example.counterfactual.before_score != 0.0
+        else 0.0
+        for example in examples
     ) / len(examples)
 
     rows: list[str] = []
@@ -705,6 +748,7 @@ def _render_overview(examples: list[PatchCoreBottleExampleReport]) -> str:
       <li>Mask-intersection hits: {mask_hits} / {len(mask_examples)} masked examples</li>
       <li>Mean mask covered by top patch: {mean_mask_text}</li>
       <li>Mean counterfactual score delta: {mean_counterfactual_delta:.6f}</li>
+      <li>Mean counterfactual score reduction: {100.0 * mean_counterfactual_drop:.1f}%</li>
     </ul>
     <table>
       <thead>
@@ -723,6 +767,42 @@ def _render_overview(examples: list[PatchCoreBottleExampleReport]) -> str:
     <p>
       These are selected-example diagnostics only, not benchmark metrics.
     </p>
+  </section>
+"""
+
+
+def _render_nominal_control_section(
+    *,
+    control: PatchCoreBottleNominalControlReport | None,
+    output_path: Path,
+) -> str:
+    if control is None:
+        return ""
+
+    def rel(path: Path) -> str:
+        return html.escape(_relative(path, output_path.parent))
+
+    return f"""
+  <section>
+    <h2>Nominal Control Example</h2>
+    <p>
+      This low-score good example anchors the scale: the same patch pipeline on a nominal bottle
+      produces a much lower top-patch score and no obvious local witness patch.
+    </p>
+    <div class="grid">
+      <figure>
+        <img src="{rel(control.assets["score_overlay"])}" alt="Nominal control score overlay">
+        <figcaption>Nominal control anomaly map.</figcaption>
+      </figure>
+      <figure>
+        <img src="{rel(control.assets["query_box"])}" alt="Nominal control top patch box">
+        <figcaption>Top patch on the nominal control image.</figcaption>
+      </figure>
+      <figure>
+        <img src="{rel(control.assets["query_crop"])}" alt="Nominal control top patch crop">
+        <figcaption>Top nominal patch. Distance: {control.score.distance:.6f}</figcaption>
+      </figure>
+    </div>
   </section>
 """
 
@@ -815,6 +895,10 @@ def _render_benchmark(benchmark: PatchCoreBottleBenchmarkReport | None) -> str:
       These are local report diagnostics from the current patch grid and memory
       bank, not official PatchCore benchmark numbers or pixel-level AUROC.
     </p>
+    <p>
+      The top-patch overlap check is intentionally local. It tells you whether PatchCore found a
+      useful witness patch, not whether it recovered the full defect extent.
+    </p>
   </section>
 """
 
@@ -858,6 +942,7 @@ def _render_html(
     config: PatchCoreBottleReportConfig,
     examples: list[PatchCoreBottleExampleReport],
     benchmark: PatchCoreBottleBenchmarkReport | None,
+    nominal_control: PatchCoreBottleNominalControlReport | None,
     feature_name: str,
     memory_bank_size: int,
     cache_path: Path,
@@ -876,6 +961,10 @@ def _render_html(
     )
     overview_section = _render_overview(examples)
     benchmark_section = _render_benchmark(benchmark)
+    nominal_control_section = _render_nominal_control_section(
+        control=nominal_control,
+        output_path=output_path,
+    )
     coreset_text = (
         f"{config.coreset_size} requested; {memory_bank_size} retained"
         if config.coreset_size is not None
@@ -987,6 +1076,8 @@ def _render_html(
 
 {benchmark_section}
 
+{nominal_control_section}
+
 {example_sections}
   {render_related_reports(output_path=output_path, heading="Where to go next", links=brief.related)}
 </main>
@@ -1092,6 +1183,9 @@ def build_patchcore_bottle_report(
         memory_bank=memory_bank,
         extractor=extractor,
     )
+    nominal_top_scores = [
+        record.top_score for record in benchmark.records if not record.is_anomalous
+    ] if benchmark is not None else []
     query_records = _select_query_records(config)
     use_asset_prefixes = len(query_records) > 1
     example_reports: list[PatchCoreBottleExampleReport] = []
@@ -1140,9 +1234,51 @@ def build_patchcore_bottle_report(
                 all_scores=scores,
                 assets=assets,
                 counterfactual=counterfactual,
+                nominal_score_percentile=_nominal_score_percentile(
+                    top_score.distance,
+                    nominal_top_scores,
+                ),
                 mask_overlap=mask_overlap,
             )
         )
+    nominal_control = None
+    if benchmark is not None:
+        good_records = [
+            record
+            for record in _select_benchmark_records(config)
+            if not record.is_anomalous
+        ]
+        scored_good_examples: list[tuple[ImageManifestRecord, list[PatchScore]]] = []
+        for record in good_records:
+            scores = score_image_with_extractor(
+                sample_id=record.sample_id,
+                image_path=record.image_path,
+                memory_bank=memory_bank,
+                extractor=extractor,
+                patch_size=config.patch_size,
+                stride=config.stride,
+                top_k=config.top_k,
+            )
+            if scores:
+                scored_good_examples.append((record, scores))
+        if scored_good_examples:
+            control_record, control_scores = min(
+                scored_good_examples,
+                key=lambda item: item[1][0].distance,
+            )
+            nominal_control = PatchCoreBottleNominalControlReport(
+                query_record=control_record,
+                score=control_scores[0],
+                all_scores=control_scores,
+                assets=_write_assets(
+                    score=control_scores[0],
+                    all_scores=control_scores,
+                    counterfactual_path=None,
+                    mask_path=None,
+                    output_dir=config.output_dir,
+                    asset_prefix="nominal_control_",
+                ),
+            )
 
     output_path = config.output_dir / "index.html"
     build_metadata = make_build_metadata(
@@ -1154,6 +1290,7 @@ def build_patchcore_bottle_report(
         config=config,
         examples=example_reports,
         benchmark=benchmark,
+        nominal_control=nominal_control,
         feature_name=extractor.feature_name,
         memory_bank_size=len(memory_bank.metadata),
         cache_path=_resolve_cache_path(config=config, extractor=extractor),
