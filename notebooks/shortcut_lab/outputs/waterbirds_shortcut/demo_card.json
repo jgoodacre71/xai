@@ -1,0 +1,33 @@
+{
+  "build_metadata": {
+    "built_at_utc": "2026-04-22 10:50:54 UTC",
+    "cache_status": "disabled",
+    "data_mode": "synthetic fallback",
+    "git_sha": "0527126",
+    "manifest_path": null
+  },
+  "explanation_methods": [
+    "Worst-group evaluation",
+    "Habitat evidence box",
+    "Bird-region evidence box",
+    "Counterfactual background swap"
+  ],
+  "failure_mode": "The baseline follows the habitat and fails waterbirds on land or landbirds on water.",
+  "figure_paths": [
+    "waterbirds_shortcut/assets/habitat_evidence_box.png",
+    "waterbirds_shortcut/assets/bird_shape_evidence_box.png",
+    "waterbirds_shortcut/assets/counterfactual_waterbird_land_to_water.png",
+    "waterbirds_shortcut/assets/counterfactual_landbird_water_to_land.png"
+  ],
+  "intervention": "Use the bird silhouette and re-test with background swaps.",
+  "key_lesson": "A classifier can look accurate on average while failing crossed label/background groups.",
+  "model": "Deterministic habitat shortcut classifier compared with a bird-shape intervention.",
+  "remaining_caveats": [
+    "Synthetic fallback, not the prepared Waterbirds benchmark path.",
+    "No real Grad-CAM or Integrated Gradients in fallback mode.",
+    "Prepare the local Waterbirds manifest to switch the report into real-data mode."
+  ],
+  "report_path": "waterbirds_shortcut/index.html",
+  "task": "Synthetic Waterbirds-style classification where bird class is spuriously correlated with land or water background.",
+  "title": "Demo 01 - Waterbirds Shortcut Proxy"
+}

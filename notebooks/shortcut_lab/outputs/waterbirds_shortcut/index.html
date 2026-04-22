@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Waterbirds Shortcut Proxy</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 32px;
+      color: #1f2933;
+    }
+    main { max-width: 1120px; margin: 0 auto; }
+    h1, h2 { margin: 0 0 12px; }
+    section { margin: 28px 0; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+    figure { margin: 0; border: 1px solid #d8dee4; padding: 10px; background: #fff; }
+    img { max-width: 100%; height: auto; display: block; }
+    figcaption { font-size: 13px; color: #52606d; margin-top: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { border-bottom: 1px solid #d8dee4; padding: 8px; text-align: left; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Waterbirds Shortcut Proxy</h1>
+  <p>
+    This synthetic fallback mirrors the Waterbirds failure mode: a classifier
+    can learn habitat background instead of bird evidence when training labels
+    and habitats are strongly correlated.
+  </p>
+
+  
+  <section>
+    <h2>Build Metadata</h2>
+    <ul>
+      <li>Git SHA: <code>0527126</code></li>
+      <li>Built at: 2026-04-22 10:50:54 UTC</li>
+      <li>Data mode: synthetic fallback</li>
+      <li>Cache: disabled</li>
+      <li>Manifest: <code>Not used</code></li>
+    </ul>
+  </section>
+
+
+  <section>
+    <h2>Worst-Group Metric Summary</h2>
+    <ul>
+      <li>Habitat shortcut accuracy: 50.0%</li>
+      <li>Bird-shape intervention accuracy: 100.0%</li>
+      <li>Habitat shortcut worst-group accuracy: 0.0%</li>
+      <li>Bird-shape intervention worst-group accuracy: 100.0%</li>
+    </ul>
+    <table>
+      <thead>
+        <tr>
+          <th>Group</th>
+          <th>Count</th>
+          <th>Habitat shortcut accuracy</th>
+          <th>Bird-shape accuracy</th>
+        </tr>
+      </thead>
+      <tbody><tr><td>landbird_on_land</td><td>2</td><td>100.0%</td><td>100.0%</td></tr><tr><td>landbird_on_water</td><td>2</td><td>0.0%</td><td>100.0%</td></tr><tr><td>waterbird_on_land</td><td>2</td><td>0.0%</td><td>100.0%</td></tr><tr><td>waterbird_on_water</td><td>2</td><td>100.0%</td><td>100.0%</td></tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Evidence and Counterfactuals</h2>
+    <div class="grid">
+      <figure>
+        <img src="synthetic/test/test_waterbird_water_000.png" alt="Aligned waterbird example">
+        <figcaption>Aligned training-style examples make the shortcut look plausible.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/habitat_evidence_box.png" alt="Habitat evidence box">
+        <figcaption>The shortcut classifier uses the whole habitat background.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/bird_shape_evidence_box.png" alt="Bird evidence box">
+        <figcaption>The intervention looks at the bird silhouette instead.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/counterfactual_waterbird_land_to_water.png" alt="Waterbird background swap">
+        <figcaption>Swapping only the habitat can flip the shortcut prediction.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/counterfactual_landbird_water_to_land.png" alt="Landbird background swap">
+        <figcaption>The reverse swap exposes the same background dependency.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Per-Sample Results</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Sample</th>
+          <th>Label</th>
+          <th>Habitat</th>
+          <th>Habitat prediction</th>
+          <th>Habitat score</th>
+          <th>Bird-shape prediction</th>
+          <th>Bird-shape score</th>
+        </tr>
+      </thead>
+      <tbody><tr><td>test_waterbird_water_000</td><td>waterbird</td><td>water</td><td>waterbird</td><td>0.160</td><td>waterbird</td><td>0.227</td></tr><tr><td>test_waterbird_water_001</td><td>waterbird</td><td>water</td><td>waterbird</td><td>0.160</td><td>waterbird</td><td>0.227</td></tr><tr><td>test_landbird_land_000</td><td>landbird</td><td>land</td><td>landbird</td><td>-0.245</td><td>landbird</td><td>-0.009</td></tr><tr><td>test_landbird_land_001</td><td>landbird</td><td>land</td><td>landbird</td><td>-0.245</td><td>landbird</td><td>-0.009</td></tr><tr><td>test_waterbird_land_000</td><td>waterbird</td><td>land</td><td>landbird</td><td>-0.253</td><td>waterbird</td><td>0.038</td></tr><tr><td>test_waterbird_land_001</td><td>waterbird</td><td>land</td><td>landbird</td><td>-0.253</td><td>waterbird</td><td>0.038</td></tr><tr><td>test_landbird_water_000</td><td>landbird</td><td>water</td><td>waterbird</td><td>0.155</td><td>landbird</td><td>-0.184</td></tr><tr><td>test_landbird_water_001</td><td>landbird</td><td>water</td><td>waterbird</td><td>0.155</td><td>landbird</td><td>-0.184</td></tr></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Lesson</h2>
+    <p>
+      Overall accuracy hides the shortcut. Worst-group accuracy and habitat-swap
+      counterfactuals make the failure legible: the baseline is right on common
+      groups and wrong on crossed groups. This fallback remains in place so the
+      suite still runs when the real Waterbirds manifest is not prepared locally.
+    </p>
+  </section>
+</main>
+</body>
+</html>

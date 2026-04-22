@@ -10,7 +10,7 @@ def _load_notebook(path: Path) -> dict[str, Any]:
 
 
 def test_notebooks_are_output_free() -> None:
-    notebooks = sorted(Path("notebooks").glob("*.ipynb"))
+    notebooks = sorted(Path("notebooks").rglob("*.ipynb"))
     assert notebooks
 
     for notebook_path in notebooks:
@@ -23,38 +23,26 @@ def test_notebooks_are_output_free() -> None:
 
 
 def test_required_demo_notebooks_exist() -> None:
-    notebooks = {path.name for path in Path("notebooks").glob("*.ipynb")}
+    notebooks = {
+        path.relative_to("notebooks").as_posix()
+        for path in Path("notebooks").rglob("*.ipynb")
+    }
 
     assert {
-        "00_overview.ipynb",
-        "01_waterbirds_shortcut.ipynb",
-        "02_industrial_shortcut_trap.ipynb",
-        "03_patchcore_mvtec_ad.ipynb",
-        "04_patchcore_wrong_normal.ipynb",
-        "05_patchcore_count_limit.ipynb",
-        "06_patchcore_severity_limit.ipynb",
-        "07_patchcore_loco_logic_limit.ipynb",
-        "08_explanation_drift.ipynb",
+        "overview/00_overview.ipynb",
+        "shortcut_lab/01_waterbirds_shortcut.ipynb",
+        "shortcut_lab/02_industrial_shortcut_trap.ipynb",
+        "patchcore_explainability/03_patchcore_mvtec_ad.ipynb",
+        "patchcore_explainability/04_patchcore_wrong_normal.ipynb",
+        "patchcore_limits/05_patchcore_count_limit.ipynb",
+        "patchcore_limits/06_patchcore_severity_limit.ipynb",
+        "patchcore_limits/07_patchcore_loco_logic_limit.ipynb",
+        "robustness_drift/08_explanation_drift.ipynb",
+        "global_local_explainability/09_global_vs_local_explainability_shap.ipynb",
     }.issubset(notebooks)
 
 
-def test_required_demo_notebook_scripts_exist() -> None:
-    notebook_scripts = {path.name for path in Path("notebooks").glob("*.py")}
-
-    assert {
-        "00_overview.py",
-        "01_waterbirds_shortcut.py",
-        "02_industrial_shortcut_trap.py",
-        "03_patchcore_mvtec_ad.py",
-        "04_patchcore_wrong_normal.py",
-        "05_patchcore_count_limit.py",
-        "06_patchcore_severity_limit.py",
-        "07_patchcore_loco_logic_limit.py",
-        "08_explanation_drift.py",
-    }.issubset(notebook_scripts)
-
-
-def test_notebook_scripts_follow_shared_narrative_template() -> None:
+def test_notebooks_follow_shared_narrative_template() -> None:
     required_sections = (
         "## Learning goals",
         "## Why this demo matters",
@@ -68,54 +56,95 @@ def test_notebook_scripts_follow_shared_narrative_template() -> None:
         "## Residual risks and next questions",
     )
 
-    for script_path in sorted(Path("notebooks").glob("0*.py")):
-        text = script_path.read_text(encoding="utf-8")
+    template_notebooks = (
+        Path("notebooks/shortcut_lab/01_waterbirds_shortcut.ipynb"),
+        Path("notebooks/shortcut_lab/02_industrial_shortcut_trap.ipynb"),
+        Path("notebooks/patchcore_explainability/03_patchcore_mvtec_ad.ipynb"),
+        Path("notebooks/patchcore_explainability/04_patchcore_wrong_normal.ipynb"),
+        Path("notebooks/patchcore_limits/05_patchcore_count_limit.ipynb"),
+        Path("notebooks/patchcore_limits/06_patchcore_severity_limit.ipynb"),
+        Path("notebooks/patchcore_limits/07_patchcore_loco_logic_limit.ipynb"),
+        Path("notebooks/robustness_drift/08_explanation_drift.ipynb"),
+    )
+
+    for notebook_path in template_notebooks:
+        notebook = _load_notebook(notebook_path)
+        text = "\n".join(
+            "".join(cell["source"])
+            for cell in notebook["cells"]
+            if cell["cell_type"] == "markdown"
+        )
         for section in required_sections:
-            assert section in text, script_path
+            assert section in text, notebook_path
 
 
-def test_demo_notebooks_use_package_report_builders() -> None:
-    expectations = {
-        "01_waterbirds_shortcut.ipynb": (
-            "from xai_demo_suite.reports.waterbirds_shortcut import",
-            "build_waterbirds_shortcut_report(config)",
-        ),
-        "02_industrial_shortcut_trap.ipynb": (
-            "from xai_demo_suite.reports.shortcut_industrial import",
-            "build_industrial_shortcut_report(config)",
-        ),
-        "03_patchcore_mvtec_ad.ipynb": (
-            "from xai_demo_suite.reports.patchcore_bottle import",
-            "build_patchcore_bottle_report(config)",
-        ),
-        "04_patchcore_wrong_normal.ipynb": (
-            "from xai_demo_suite.reports.patchcore_wrong_normal import",
-            "build_patchcore_wrong_normal_report(config)",
-        ),
-        "05_patchcore_count_limit.ipynb": (
-            "from xai_demo_suite.reports.patchcore_limits import",
-            "build_patchcore_limits_report(config)",
-        ),
-        "06_patchcore_severity_limit.ipynb": (
-            "from xai_demo_suite.reports.patchcore_severity import",
-            "build_patchcore_severity_report(config)",
-        ),
-        "07_patchcore_loco_logic_limit.ipynb": (
-            "from xai_demo_suite.reports.patchcore_logic import",
-            "build_patchcore_logic_report(config)",
-        ),
-        "08_explanation_drift.ipynb": (
-            "from xai_demo_suite.reports.explanation_drift import",
-            "build_explanation_drift_report(config)",
-        ),
-    }
+def test_active_demo_notebooks_are_self_contained() -> None:
+    active_notebooks = (
+        Path("notebooks/shortcut_lab/01_waterbirds_shortcut.ipynb"),
+        Path("notebooks/shortcut_lab/02_industrial_shortcut_trap.ipynb"),
+        Path("notebooks/patchcore_explainability/03_patchcore_mvtec_ad.ipynb"),
+        Path("notebooks/patchcore_explainability/04_patchcore_wrong_normal.ipynb"),
+        Path("notebooks/patchcore_limits/05_patchcore_count_limit.ipynb"),
+        Path("notebooks/patchcore_limits/06_patchcore_severity_limit.ipynb"),
+        Path("notebooks/patchcore_limits/07_patchcore_loco_logic_limit.ipynb"),
+        Path("notebooks/robustness_drift/08_explanation_drift.ipynb"),
+    )
 
-    for notebook_name, expected_strings in expectations.items():
-        notebook = _load_notebook(Path("notebooks") / notebook_name)
+    forbidden_strings = (
+        "xai_demo_suite.reports",
+        "xai_demo_suite.notebooks",
+        "outputs/",
+        "build_waterbirds_shortcut_report",
+        "build_industrial_shortcut_report",
+        "build_patchcore_bottle_report",
+        "build_patchcore_wrong_normal_report",
+        "build_patchcore_limits_report",
+        "build_patchcore_severity_report",
+        "build_patchcore_logic_report",
+        "build_explanation_drift_report",
+    )
+
+    for notebook_path in active_notebooks:
+        notebook = _load_notebook(notebook_path)
         code = "\n".join(
             "".join(cell["source"])
             for cell in notebook["cells"]
             if cell["cell_type"] == "code"
         )
-        for expected in expected_strings:
-            assert expected in code
+        assert "from xai_demo_suite" not in code, notebook_path
+        for forbidden in forbidden_strings:
+            assert forbidden not in code, notebook_path
+
+
+def test_demo01_is_real_data_only_and_has_no_cartoon_shortcut_helpers() -> None:
+    notebook_path = Path("notebooks/shortcut_lab/01_waterbirds_shortcut.ipynb")
+    notebook = _load_notebook(notebook_path)
+    code = "\n".join(
+        "".join(cell["source"])
+        for cell in notebook["cells"]
+        if cell["cell_type"] == "code"
+    )
+
+    assert "DATA_MODE = 'real'" in code
+    assert "MANIFEST_RELATIVE_PATH = Path('data/processed/waterbirds/waterbird_complete95_forest2water2/manifest.jsonl')" in code
+    assert "PROJECT_ROOT = find_project_root()" in code
+    assert "ResNet18_Weights.DEFAULT" in code
+    assert "resnet18(weights=None)" in code
+    assert "StandardScaler()" in code
+    assert "LogisticRegression(max_iter=2000, random_state=SEED)" in code
+    assert "manifest_exists: {MANIFEST_EXISTS}" in code
+
+    forbidden_strings = (
+        "def render_synthetic_record",
+        "def build_synthetic_records",
+        "synthetic_group_specs =",
+        "synthetic_seed =",
+        "TinyWaterbirdsCNN",
+    )
+    full_notebook_text = "\n".join(
+        "".join(cell["source"])
+        for cell in notebook["cells"]
+        if cell["cell_type"] in {"code", "markdown"}
+    )
+    for forbidden in forbidden_strings:
+        assert forbidden not in full_notebook_text, notebook_path

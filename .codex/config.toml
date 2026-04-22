@@ -1,3 +1,27 @@
+[context]
+read_first = [
+  "AGENTS.md",
+  "README.md",
+  "docs/codex/ACTIVE_CONTEXT.md",
+  "docs/codex/PROJECT_MAP.md",
+  "docs/codex/WORKFLOW.md",
+  "docs/codex/USING_CODEX.md",
+  "docs/codex/SAFETY_RULES.md",
+]
+
+[paths]
+project_map = "docs/codex/PROJECT_MAP.md"
+architecture = "docs/codex/ARCHITECTURE.md"
+workflow = "docs/codex/WORKFLOW.md"
+usage = "docs/codex/USING_CODEX.md"
+commands = "docs/codex/COMMANDS.md"
+safety = "docs/codex/SAFETY_RULES.md"
+active_context = "docs/codex/ACTIVE_CONTEXT.md"
+session_log = "docs/codex/SESSION_LOG.md"
+task_template = "docs/codex/TASK_TEMPLATE.md"
+handoff_template = "docs/codex/HANDOFF_TEMPLATE.md"
+xai_contract = "docs/XAI_CONTRACT.md"
+
 [agents]
 max_threads = 6
 max_depth = 1

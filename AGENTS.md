@@ -25,6 +25,11 @@ Before substantial work, read:
 - Keep notebooks for narrative and orchestration only; move reusable logic into `src/`.
 - Add or update tests with every meaningful code change.
 - Update docs when structure, workflow, or behaviour changes.
+- For the active demo surface, notebooks `01` to `08` must be runnable and
+  inspectable on their own: keep the story, visible code, and graphics in the
+  notebook, and do not make them thin wrappers around generated HTML reports.
+- Prefer notebook visuals that work in the base project environment; do not
+  make `matplotlib` a hard dependency for the active non-SHAP demo notebooks.
 
 ## Repo rules
 

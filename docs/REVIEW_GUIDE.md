@@ -63,8 +63,8 @@ The work progressed in four broad phases.
 - Added the local demo hub at `outputs/index.html`.
 - Added presenter-facing chrome to the four flagship reports.
 - Added the review pack at `outputs/review_pack/index.html`.
-- Added the full notebook suite under `notebooks/` with paired percent-script
-  sources and notebook smoke checks.
+- Added the full notebook suite under `notebooks/` as the current demo surface,
+  with notebook smoke checks.
 
 ## The best way to review the repo
 

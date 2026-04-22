@@ -10,8 +10,12 @@ focused on:
 - explanation drift under shift.
 
 The working principle is: package code is the product; notebooks are the
-showroom. Reusable logic belongs in `src/xai_demo_suite/`, while notebooks
-should remain thin narrative and orchestration layers.
+showroom. Reusable logic belongs in `src/xai_demo_suite/`, but the active demo
+surface is now the checked-in notebook set under `notebooks/`.
+
+Each active non-SHAP demo notebook is now self-contained enough to inspect,
+run, and discuss on its own. The code, markdown narrative, and graphics live in
+the notebook rather than being delegated to generated HTML pages.
 
 ## Getting started
 
@@ -34,7 +38,25 @@ python3.12 -m venv .venv
 ./.venv/bin/pytest -q
 ```
 
-## Build and Verify the Demo Suite
+## Active Notebook Demos
+
+Open the notebooks directly. The active storyline notebooks are:
+
+- `notebooks/overview/00_overview.ipynb`
+- `notebooks/shortcut_lab/01_waterbirds_shortcut.ipynb`
+- `notebooks/shortcut_lab/02_industrial_shortcut_trap.ipynb`
+- `notebooks/patchcore_explainability/03_patchcore_mvtec_ad.ipynb`
+- `notebooks/patchcore_explainability/04_patchcore_wrong_normal.ipynb`
+- `notebooks/patchcore_limits/05_patchcore_count_limit.ipynb`
+- `notebooks/patchcore_limits/06_patchcore_severity_limit.ipynb`
+- `notebooks/patchcore_limits/07_patchcore_loco_logic_limit.ipynb`
+- `notebooks/robustness_drift/08_explanation_drift.ipynb`
+- `notebooks/global_local_explainability/09_global_vs_local_explainability_shap.ipynb`
+
+The non-SHAP notebooks are designed to run from the base project environment
+without a separate plotting stack.
+
+## Legacy HTML Suite
 
 The synthetic demos do not require external data:
 
@@ -64,14 +86,23 @@ ImageNet-pretrained ResNet-18 feature-map PatchCore and a 512-patch coreset:
 ./.venv/bin/xai-demo-report verify
 ```
 
-The local presentation index is written to `outputs/index.html`.
-The flagship reports now also share a consistent static presentation chrome:
-each one links back to the local hub, includes a presenter-facing demo brief,
-and links onward to the next relevant demos in the suite.
-It now surfaces the prepared local dataset state as well as the generated demo
-order, so a fresh run is easier to inspect as a coherent suite.
-For external or model-based review, use `outputs/review_pack/index.html` and
-`docs/REVIEW_GUIDE.md` first.
+The HTML report stack is still available as a legacy secondary surface when you
+want to regenerate the old report suite, but it is no longer the main demo
+interface for the repository.
+
+## Notebook Storylines
+
+The notebooks are grouped by storyline:
+
+- `notebooks/overview/`
+- `notebooks/shortcut_lab/`
+- `notebooks/patchcore_explainability/`
+- `notebooks/patchcore_limits/`
+- `notebooks/robustness_drift/`
+- `notebooks/global_local_explainability/`
+
+Use the `.ipynb` notebooks directly as the active demo surface. They are meant
+to stand on their own as portable demo artefacts.
 
 ## Data
 
@@ -263,10 +294,10 @@ Use `--benchmark-limit` for quick smoke runs; omit it to score the full local
 MVTec AD bottle test split in the report diagnostics.
 
 The narrative notebooks are checked in under `notebooks/` as output-free
-`.ipynb` files paired with Jupytext-style percent scripts. The Demo 03 pair is
-`notebooks/03_patchcore_mvtec_ad.ipynb` and `notebooks/03_patchcore_mvtec_ad.py`.
-All notebook sources delegate the implementation to package code, and the test
-suite now includes notebook smoke execution over reduced local configs.
+`.ipynb` files organised by storyline. Demo 03 now lives at
+`notebooks/patchcore_explainability/03_patchcore_mvtec_ad.ipynb`. The notebooks
+delegate the implementation to package code, and the test suite includes
+notebook smoke execution over reduced local configs.
 
 ## PatchCore Limits Report
 
@@ -366,7 +397,7 @@ for repo docs and flagship screenshots.
 - `docs/` — source-of-truth documentation skeleton
 - `data_registry.yaml` — dataset metadata placeholders
 - `src/xai_demo_suite/` — reusable package code
-- `notebooks/` — output-free notebook showroom plus paired percent scripts
+- `notebooks/` — output-free notebook showroom and active demo surface
 - `tests/` — unit and integration tests
 
 Use `docs/tasks/active/` for substantial work so another engineer or Codex

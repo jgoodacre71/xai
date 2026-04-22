@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Demo 01 - Waterbirds Shortcut Proxy Demo Card</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 32px;
+      color: #1f2933;
+    }
+    main { max-width: 880px; margin: 0 auto; }
+    dt { font-weight: 700; margin-top: 16px; }
+    dd { margin: 6px 0 0; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Demo 01 - Waterbirds Shortcut Proxy</h1>
+  <dl>
+    <dt>Task</dt><dd>Synthetic Waterbirds-style classification where bird class is spuriously correlated with land or water background.</dd>
+    <dt>Model</dt><dd>Deterministic habitat shortcut classifier compared with a bird-shape intervention.</dd>
+    <dt>Explanation methods</dt><dd><ul><li>Worst-group evaluation</li><li>Habitat evidence box</li><li>Bird-region evidence box</li><li>Counterfactual background swap</li></ul></dd>
+    <dt>Key lesson</dt><dd>A classifier can look accurate on average while failing crossed label/background groups.</dd>
+    <dt>Failure mode</dt><dd>The baseline follows the habitat and fails waterbirds on land or landbirds on water.</dd>
+    <dt>Intervention</dt><dd>Use the bird silhouette and re-test with background swaps.</dd>
+    <dt>Remaining caveats</dt><dd><ul><li>Synthetic fallback, not the prepared Waterbirds benchmark path.</li><li>No real Grad-CAM or Integrated Gradients in fallback mode.</li><li>Prepare the local Waterbirds manifest to switch the report into real-data mode.</li></ul></dd>
+    <dt>Build metadata</dt><dd><ul><li>Git SHA: <code>0527126</code></li><li>Built at: 2026-04-22 10:50:54 UTC</li><li>Data mode: synthetic fallback</li><li>Cache: disabled</li><li>Manifest: <code>Not used</code></li></ul></dd>
+    <dt>Report</dt><dd><a href="index.html">Open report</a></dd>
+    <dt>Selected figures</dt><dd><ul><li><code>waterbirds_shortcut/assets/habitat_evidence_box.png</code></li><li><code>waterbirds_shortcut/assets/bird_shape_evidence_box.png</code></li><li><code>waterbirds_shortcut/assets/counterfactual_waterbird_land_to_water.png</code></li><li><code>waterbirds_shortcut/assets/counterfactual_landbird_water_to_land.png</code></li></ul></dd>
+  </dl>
+</main>
+</body>
+</html>

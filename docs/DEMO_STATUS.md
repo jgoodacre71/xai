@@ -1,66 +1,38 @@
 # Demo status
 
-This file summarises the current generated demo suite. It is intentionally
+This file summarises the current active demo surface. It is intentionally
 short; detailed task history lives under `docs/tasks/completed/`.
 
-## Runnable commands
+## Runnable notebooks
 
-Generate the synthetic suite:
+Open and run the notebooks directly:
 
-```bash
-./.venv/bin/xai-demo-report suite
-```
-
-Generate the full local suite when MVTec AD bottle has been prepared:
-
-```bash
-./.venv/bin/xai-demo-report suite --include-mvtec
-```
-
-Generate the stronger local presentation suite with pretrained feature-map
-PatchCore for Demo 03:
-
-```bash
-./.venv/bin/xai-demo-report suite \
-  --include-mvtec \
-  --mvtec-feature-extractor feature_map_resnet18_pretrained \
-  --mvtec-max-train 20 \
-  --mvtec-max-examples 3 \
-  --mvtec-coreset-size 512 \
-  --mvtec-input-size 224
-```
-
-Verify generated reports, cards, selected figures, basic report semantics, and
-the local index:
-
-```bash
-./.venv/bin/xai-demo-report verify
-```
+- `notebooks/overview/00_overview.ipynb`
+- `notebooks/shortcut_lab/01_waterbirds_shortcut.ipynb`
+- `notebooks/shortcut_lab/02_industrial_shortcut_trap.ipynb`
+- `notebooks/patchcore_explainability/03_patchcore_mvtec_ad.ipynb`
+- `notebooks/patchcore_explainability/04_patchcore_wrong_normal.ipynb`
+- `notebooks/patchcore_limits/05_patchcore_count_limit.ipynb`
+- `notebooks/patchcore_limits/06_patchcore_severity_limit.ipynb`
+- `notebooks/patchcore_limits/07_patchcore_loco_logic_limit.ipynb`
+- `notebooks/robustness_drift/08_explanation_drift.ipynb`
 
 ## Current demos
 
-| Demo | Status | Default output |
+| Demo | Status | Active notebook |
 | --- | --- | --- |
-| Demo 01 - Waterbirds Shortcut | Working real-data report when Waterbirds is prepared, with synthetic fallback and optional MetaShift extension | `outputs/waterbirds_shortcut/index.html` |
-| Demo 02 - Industrial Shortcut Trap | Working real-data report when the curated NEU shortcut slice is prepared, with synthetic fallback | `outputs/shortcut_industrial/index.html` |
-| Demo 03 - PatchCore on MVTec AD bottle | Working local MVTec report with deterministic, pretrained ResNet-18, and pretrained WideResNet50-2 feature-map paths | `outputs/patchcore_bottle/index.html` |
-| Demo 04 - PatchCore Learns the Wrong Normal | Working synthetic report | `outputs/patchcore_wrong_normal/index.html` |
-| Demo 05 - PatchCore Limits Lab | Working synthetic report | `outputs/patchcore_limits/index.html` |
-| Demo 06 - PatchCore Severity Mismatch | Working synthetic report | `outputs/patchcore_severity/index.html` |
-| Demo 07 - PatchCore Logical Anomaly Limits | Working local MVTec LOCO report when data is prepared, with synthetic fallback | `outputs/patchcore_logic/index.html` |
-| Demo 08 - Explanation Drift Under Shift | Working learned drift report with optional local MVTec anomaly section | `outputs/explanation_drift/index.html` |
+| Demo 01 - Waterbirds Shortcut | Working self-contained notebook demo | `notebooks/shortcut_lab/01_waterbirds_shortcut.ipynb` |
+| Demo 02 - Industrial Shortcut Trap | Working self-contained notebook demo | `notebooks/shortcut_lab/02_industrial_shortcut_trap.ipynb` |
+| Demo 03 - PatchCore on MVTec AD bottle | Working self-contained notebook demo | `notebooks/patchcore_explainability/03_patchcore_mvtec_ad.ipynb` |
+| Demo 04 - PatchCore Learns the Wrong Normal | Working self-contained notebook demo | `notebooks/patchcore_explainability/04_patchcore_wrong_normal.ipynb` |
+| Demo 05 - PatchCore Count Limit | Working self-contained notebook demo | `notebooks/patchcore_limits/05_patchcore_count_limit.ipynb` |
+| Demo 06 - PatchCore Severity Mismatch | Working self-contained notebook demo | `notebooks/patchcore_limits/06_patchcore_severity_limit.ipynb` |
+| Demo 07 - PatchCore Logical Anomaly Limits | Working self-contained notebook demo | `notebooks/patchcore_limits/07_patchcore_loco_logic_limit.ipynb` |
+| Demo 08 - Explanation Drift Under Shift | Working self-contained notebook demo | `notebooks/robustness_drift/08_explanation_drift.ipynb` |
 
-The local `outputs/index.html` is a static presentation index with one tile per
-demo, selected figures, report links, demo-card links, key lessons,
-interventions, caveats, and a prepared-dataset summary for the current machine.
-The local `outputs/review_pack/index.html` is a compact external-review layer
-for sharing the suite with another model or a human reviewer.
-The four flagship reports now also share a presenter-facing header, demo-brief
-section, and related-demo links so the suite reads like one coherent local demo
-product rather than disconnected HTML pages.
-The notebook layer now mirrors the same structure: each flagship notebook is
-checked in as an output-free `.ipynb` plus a paired percent script under
-`notebooks/`, and reduced notebook smoke runs are part of the local test slice.
+The notebooks are grouped by storyline directories under `notebooks/`, checked
+in output-free, and covered by reduced notebook smoke runs in the local test
+slice.
 The repository now also has a GitHub Actions CI workflow plus explicit
 integration tests for the public CLI entry points.
 

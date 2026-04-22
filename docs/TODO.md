@@ -24,8 +24,7 @@ durable todo list for work that should not live only in chat history.
   demo using worst-group metrics
 - [x] Add saliency and perturbation evidence for Demo 01, such as Grad-CAM and
   Integrated Gradients
-- [x] Build the full thin notebook suite with shared narrative structure and
-  paired percent-script sources
+- [x] Build the full thin notebook suite with shared narrative structure
 - [x] Add a stronger real industrial shortcut dataset path for Demo 02 or a
   neural industrial shortcut baseline
 - [x] Add a component-aware or logic-aware comparator for Demo 07

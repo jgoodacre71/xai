@@ -17,8 +17,12 @@ For:
 - report generation
 
 ### Notebook smoke tests
-Notebook smoke runs should execute the paired percent-script sources against
+Notebook smoke runs should execute the checked-in `.ipynb` notebooks against
 tiny fixture settings or synthetic fallbacks.
+
+For the active non-SHAP demos, the smoke target is the notebook itself rather
+than a generated HTML report. The code cells should run without depending on
+`xai_demo_suite.reports` or prebuilt `outputs/` artefacts.
 
 ## Required quality checks
 
@@ -26,7 +30,7 @@ tiny fixture settings or synthetic fallbacks.
 - MyPy
 - Pytest
 - coverage on the package code
-- notebook smoke on representative paired notebook scripts across the main demo pillars
+- notebook smoke on representative storyline notebooks across the main demo pillars
 
 ## Testing principle
 

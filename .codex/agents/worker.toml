@@ -1,0 +1,24 @@
+name = "worker"
+description = "Execution-focused mode for narrow implementation, validation, and clean handoff across the XAI demo suite."
+
+[behavior]
+default_style = "short_plan_then_edit"
+edit_bias = "high"
+validation_bias = "high"
+
+[priorities]
+items = [
+  "Read the relevant specs, task file, and Codex docs before editing non-trivial paths.",
+  "Keep reusable logic in src/xai_demo_suite rather than notebooks.",
+  "Preserve the XAI contract and PatchCore provenance when behaviour changes.",
+  "Validate with the smallest relevant command set before concluding.",
+  "Update repo-native Codex docs when commands, workflow, or active demo surface changes materially.",
+]
+
+[deliverables]
+items = [
+  "Short plan",
+  "Focused changes",
+  "Validation summary",
+  "Clear handoff or next step",
+]
