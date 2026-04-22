@@ -148,3 +148,37 @@ def test_demo01_is_real_data_only_and_has_no_cartoon_shortcut_helpers() -> None:
     )
     for forbidden in forbidden_strings:
         assert forbidden not in full_notebook_text, notebook_path
+
+
+def test_demo02_is_real_data_only_and_has_no_toy_shortcut_helpers() -> None:
+    notebook_path = Path("notebooks/shortcut_lab/02_industrial_shortcut_trap.ipynb")
+    notebook = _load_notebook(notebook_path)
+    code = "\n".join(
+        "".join(cell["source"])
+        for cell in notebook["cells"]
+        if cell["cell_type"] == "code"
+    )
+
+    assert "DATA_MODE = 'real_neu_controlled_shortcut'" in code
+    assert "MANIFEST_RELATIVE_PATH = Path('data/processed/neu_cls/shortcut_binary/manifest.jsonl')" in code
+    assert "PROJECT_ROOT = find_project_root()" in code
+    assert "ResNet18_Weights.DEFAULT" in code
+    assert "resnet18(weights=None)" in code
+    assert "StandardScaler()" in code
+    assert "LogisticRegression(max_iter=2000, random_state=SEED)" in code
+    assert "manifest_exists: {MANIFEST_EXISTS}" in code
+
+    forbidden_strings = (
+        "def render_panel",
+        "def make_samples",
+        "stamp_shortcut_score",
+        "shape_score",
+        "PartSample",
+    )
+    full_notebook_text = "\n".join(
+        "".join(cell["source"])
+        for cell in notebook["cells"]
+        if cell["cell_type"] in {"code", "markdown"}
+    )
+    for forbidden in forbidden_strings:
+        assert forbidden not in full_notebook_text, notebook_path

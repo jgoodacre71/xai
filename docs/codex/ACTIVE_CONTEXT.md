@@ -42,6 +42,19 @@ Demo 01 is now a real-data Waterbirds notebook with:
 - exemplar retrieval
 - a source-level self-check that rejects reintroduced toy-helper phrasing
 
+Demo 02 is now a real-data NEU industrial shortcut notebook with:
+
+- the prepared `data/processed/neu_cls/shortcut_binary/manifest.jsonl` path as
+  the source of truth
+- a controlled coloured side-band marker nuisance on real industrial images
+- frozen pretrained ResNet-18 features
+- logistic-regression ERM baseline
+- marker-randomised logistic-regression mitigation
+- exact same-image marker counterfactuals
+- marker-region ablation, occlusion, and feature-space neighbours
+- a source-level self-check that rejects reintroduced toy-helper phrasing and
+  weak shortcut/mitigation effects
+
 - report CLI:
   - `src/xai_demo_suite/cli/demo.py`
 - data CLI:
@@ -76,6 +89,8 @@ Demo 01 is now a real-data Waterbirds notebook with:
 - keep PatchCore provenance explicit and testable
 - keep notebooks readable enough to hand to external reviewers while still
   avoiding hidden logic
+- keep Demo 01 and Demo 02 on their real-data ResNet plus logistic-regression
+  paths rather than drifting back to toy simulators
 - avoid notebook drift by moving genuinely reusable logic into package code
 - keep local-data assumptions explicit in commands, docs, and final summaries
 - keep old report paths secondary and avoid drifting back into notebook wrappers

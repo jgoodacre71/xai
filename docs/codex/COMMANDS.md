@@ -57,10 +57,22 @@ Focused Demo 01 notebook smoke:
 uv run pytest tests/unit/test_notebook_smoke.py -q -k '01_waterbirds_shortcut'
 ```
 
+Focused Demo 02 notebook smoke:
+
+```bash
+uv run pytest tests/unit/test_notebook_smoke.py -q -k '02_industrial_shortcut_trap'
+```
+
 Direct notebook execution without storing outputs in git:
 
 ```bash
 ./.venv/bin/python -m pytest tests/unit/test_notebook_smoke.py -q -k '01_waterbirds_shortcut'
+```
+
+Direct Demo 02 smoke without storing outputs in git:
+
+```bash
+./.venv/bin/python -m pytest tests/unit/test_notebook_smoke.py -q -k '02_industrial_shortcut_trap'
 ```
 
 Focused CLI smoke:
@@ -168,6 +180,8 @@ uv run xai-demo-data prepare visa --category all
 - Some notebook and report paths require prepared local datasets.
 - Demo 01 and other ML-backed notebook paths require optional Torch and
   Torchvision dependencies and may rely on locally cached pretrained weights.
+- Demo 02 uses the prepared NEU shortcut manifest and the same local cached
+  pretrained-weight assumptions as Demo 01.
 - Direct notebook execution through the project `.venv` is more reliable than a
   separate Jupyter environment unless that environment also has the optional ML
   stack installed.

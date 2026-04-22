@@ -92,9 +92,25 @@ secondary to the notebooks rather than the primary demo interface.
 ## Notebook layer
 
 The notebooks under `notebooks/` are the active narrative and demo layer.
-Recent work deliberately made Demo 01 notebook-native and self-contained around
-real Waterbirds data, while the repo still tries to keep reusable primitives in
-package code where that does not undermine the notebook-as-demo goal.
+Recent work deliberately made Demo 01 and Demo 02 notebook-native and
+self-contained around real Waterbirds and real NEU shortcut data, while the
+repo still tries to keep reusable primitives in package code where that does
+not undermine the notebook-as-demo goal.
+
+### Demo 01
+
+- real-data-only Waterbirds notebook
+- frozen pretrained ResNet-18 features plus logistic-regression heads
+- group metrics, occlusion, perturbation, exemplar retrieval, and mitigation
+
+### Demo 02
+
+- real-data-only NEU shortcut notebook
+- prepared shortcut manifest under `data/processed/neu_cls/shortcut_binary/`
+- controlled coloured side-band marker nuisance on real industrial images
+- frozen pretrained ResNet-18 features plus logistic-regression heads
+- exact same-image marker swaps, marker ablation, occlusion, exemplar
+  retrieval, and mitigation re-test
 
 ## Tests most relevant to the active surface
 

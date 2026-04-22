@@ -109,3 +109,36 @@
   - treat `docs/codex/ACTIVE_CONTEXT.md` and this log as living records of the
     notebook-first surface and update them whenever a demo notebook becomes the
     practical source of truth
+
+## 2026-04-23
+
+- purpose:
+  - finish Demo 02 as a real-data NEU industrial shortcut notebook and update
+    the checked-in Codex memory to reflect the current notebook-first state
+- files updated:
+  - `notebooks/shortcut_lab/02_industrial_shortcut_trap.ipynb`
+  - `tests/unit/test_notebooks.py`
+  - `docs/tasks/active/0053-notebook-native-demos.md`
+  - `docs/codex/ACTIVE_CONTEXT.md`
+  - `docs/codex/PROJECT_MAP.md`
+  - `docs/codex/WORKFLOW.md`
+  - `docs/codex/COMMANDS.md`
+- key findings:
+  - Demo 02 is strongest as a real-data-only NEU notebook built around the
+    prepared shortcut manifest, a controlled coloured side-band marker, frozen
+    pretrained ResNet-18 features, and logistic-regression heads
+  - the prepared NEU `clean` split is still the aligned stamped audit slice,
+    while `no_stamp` is the true marker-free audit slice, so notebook wording
+    and figures need to state that explicitly
+  - exact same-image marker swaps and matched-area ablations carry more of the
+    explanatory weight than the occlusion heatmap, which should remain framed
+    as supporting diagnostic evidence
+  - the repo contract for serious notebook demos now includes smoke execution,
+    direct execution from both the repo root and the notebook folder, and
+    stripping outputs again before commit
+- unresolved uncertainties:
+  - live front-end visual review can still improve spacing or presentation
+    choices, but the notebook contract and validation path are now stable
+- recommended next step:
+  - keep updating `docs/codex/` whenever a notebook becomes a stable
+    real-data demo artefact or when the preferred validation path changes

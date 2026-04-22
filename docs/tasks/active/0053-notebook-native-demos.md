@@ -218,3 +218,36 @@ story, runnable code, and visible graphics directly in the notebook itself.
 - Remaining: visual review inside a live Jupyter front end is still the best
   way to judge whether any figure wants one more spacing tweak, but the notebook
   content and execution contract are now stable again.
+
+### 2026-04-23 00:44
+- Completed: rebuilt Demo 02 into a real-data NEU industrial shortcut notebook
+  using the prepared `shortcut_binary` manifest, frozen pretrained ResNet-18
+  features, a logistic-regression ERM baseline, a stamp-randomised mitigation,
+  exact same-image stamp counterfactuals, stamp-region ablation, occlusion, and
+  exemplar retrieval. Also tightened the notebook contract around robust
+  repo-root discovery, feature caching, real split semantics, and source-level
+  rejection of the old toy-helper phrases.
+- Verification: `./.venv/bin/python -m pytest tests/unit/test_notebooks.py -q`,
+  `./.venv/bin/python -m pytest tests/unit/test_notebook_smoke.py -q -k
+  '02_industrial_shortcut_trap'`, direct top-to-bottom execution of
+  `notebooks/shortcut_lab/02_industrial_shortcut_trap.ipynb` from the repo root
+  and from `notebooks/shortcut_lab/`, and `git diff --check`.
+- Remaining: live front-end visual review is still useful for fine spacing
+  polish, but the notebook now executes cleanly and tells the intended shortcut
+  story on the real NEU data.
+
+### 2026-04-23 02:07
+- Completed: applied the final visual and narrative polish pass to Demo 02
+  without changing its real-data architecture. Renamed the nuisance honestly as
+  a coloured side-band marker, added defect-region boxes and zoom crops to the
+  opening task figure, tightened selected-case choice and caveats, promoted the
+  exact marker swap into the hero figure, integrated ablation scores into the
+  visual panels, clarified the occlusion and exemplar interpretation, and made
+  the mitigation and same-case re-test conclusions more explicit.
+- Verification: `./.venv/bin/python -m pytest tests/unit/test_notebooks.py -q`,
+  `./.venv/bin/python -m pytest tests/unit/test_notebook_smoke.py -q -k
+  '02_industrial_shortcut_trap'`, direct top-to-bottom execution of
+  `notebooks/shortcut_lab/02_industrial_shortcut_trap.ipynb` from the repo root
+  and from `notebooks/shortcut_lab/`, and `git diff --check`.
+- Remaining: the notebook is now stable for repo use; any further changes would
+  be presentation-level curation rather than structural or execution fixes.

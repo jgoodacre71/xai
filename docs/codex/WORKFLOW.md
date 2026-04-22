@@ -43,6 +43,16 @@ Prefer the narrowest useful validation slice:
 If a task needs optional ML dependencies or prepared local data, say so
 explicitly in the task and in the final validation summary.
 
+For notebook-facing real-data demos such as Demo 01 and Demo 02, the preferred
+validation pattern is:
+
+- targeted notebook smoke through `tests/unit/test_notebook_smoke.py`
+- direct top-to-bottom execution from the repo root
+- direct top-to-bottom execution from the notebook's own folder when robust
+  repo-root discovery is part of the contract
+- strip stored outputs again before committing because the repo still enforces
+  output-free notebooks in git
+
 ## Definition of done
 
 A task is done when:
