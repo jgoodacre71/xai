@@ -219,6 +219,46 @@ story, runnable code, and visible graphics directly in the notebook itself.
   way to judge whether any figure wants one more spacing tweak, but the notebook
   content and execution contract are now stable again.
 
+### 2026-04-29
+- Decision: treat the requested Demo 01 update as a presentation-grade polish
+  pass, not a rebuild.
+- Reason: the current notebook already has the required real Waterbirds data
+  path, frozen ResNet-18 feature extractor, logistic-regression baseline,
+  group-balanced mitigation, explanation probes, exemplar retrieval, and
+  self-checks. The remaining gap is clarity, layout, and reader confidence.
+- Follow-up: preserve the existing modelling/data contract while tightening the
+  opening promise, figure captions, metric dashboard, occlusion/probe panels,
+  exemplar readability, same-case mitigation verdict, and final markdown audit
+  verdict.
+
+### 2026-04-29
+- Completed: applied the presentation-grade polish pass to Demo 01 while
+  preserving the real Waterbirds manifest path, frozen ResNet-18 features,
+  StandardScaler plus logistic-regression baseline, group-balanced mitigation,
+  selected crossed-group failure, occlusion and perturbation probes, real-data
+  comparison, exemplar retrieval, same-case re-test, and strict self-checks.
+  Replaced the plotted final audit card with clean markdown verdict boxes.
+- Verification: executed the notebook with `nbconvert` from the repo root and
+  from `notebooks/shortcut_lab` using a temporary kernelspec pointed at the
+  project `.venv`; visually inspected the extracted figure contact sheet;
+  ran `ruff` on Demo 01, targeted notebook contract tests, a direct Demo 01
+  output-free check, the Demo 01 smoke test, and `git diff --check`.
+- Remaining: the base `jupyter nbconvert` command is broken in the global
+  Miniforge environment, and the default `qst` kernel lacks `torchvision`, so
+  notebook execution needs the project `.venv` kernel or the repo smoke runner.
+
+### 2026-04-29
+- Completed: added an advanced model-interrogation section to Demo 01 without
+  changing the data, feature extractor, baseline, mitigation, selected case, or
+  existing probe sections. The new section adds a habitat concept-direction
+  probe, selected-case margin decomposition, decision-boundary view,
+  feature-space background/context path, greedy evidence-removal path, and a
+  shortcut evidence ledger.
+- Verification: executed the notebook from the repo root and from
+  `notebooks/shortcut_lab` using the temporary project `.venv` kernelspec, then
+  visually inspected the extracted advanced figures.
+- Remaining: keep final saved notebooks output-free for repository tests.
+
 ### 2026-04-23 00:44
 - Completed: rebuilt Demo 02 into a real-data NEU industrial shortcut notebook
   using the prepared `shortcut_binary` manifest, frozen pretrained ResNet-18
