@@ -259,6 +259,14 @@ story, runnable code, and visible graphics directly in the notebook itself.
   visually inspected the extracted advanced figures.
 - Remaining: keep final saved notebooks output-free for repository tests.
 
+### 2026-04-29
+- Completed: published the scoped Demo 01 work to GitHub on branch
+  `codex-demo01-advanced-interrogation` with commit `65290c3`.
+- Verification: pushed only `notebooks/shortcut_lab/01_waterbirds_shortcut.ipynb`
+  and this task log; unrelated dirty notebooks were left unstaged.
+- Remaining: GitHub CLI authentication is stale locally, so a PR still needs to
+  be opened manually or after `gh auth login -h github.com`.
+
 ### 2026-04-23 00:44
 - Completed: rebuilt Demo 02 into a real-data NEU industrial shortcut notebook
   using the prepared `shortcut_binary` manifest, frozen pretrained ResNet-18
