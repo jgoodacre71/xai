@@ -7,6 +7,13 @@
 - Licences and usage restrictions must be recorded.
 - Every dataset adapter must define a canonical processed representation.
 
+For work replication and permission tracking, also read:
+
+- `docs/DATA_REQUIREMENTS.md`
+- `docs/DATA_PERMISSION_MATRIX.md`
+- `docs/DATA_REPLICATION_WORKFLOW.md`
+- `docs/IEEE_DATA_SCOUTING.md`
+
 ## Required first-wave datasets
 
 ### MVTec AD
@@ -114,12 +121,10 @@ Storage policy:
   are excluded from git.
 
 Current local status:
-- when the prepared manifest exists, Demo 01 uses a real Waterbirds report path
-  with configurable ResNet-18 tuning, worst-group metrics, Grad-CAM,
-  Integrated Gradients, context-masking perturbation checks, and prototype
-  exemplars;
-- when the manifest is absent, Demo 01 falls back to the generated
-  Waterbirds-style proxy under `outputs/waterbirds_shortcut/synthetic/`.
+- Demo 01 is a real-data-only notebook and expects the prepared Waterbirds
+  manifest to exist;
+- when the manifest is missing, Demo 01 should fail clearly rather than
+  silently falling back to generated data.
 
 ## Strong second-wave datasets
 
@@ -174,8 +179,8 @@ Notes:
 - training images receive a correlated full-height border stripe so the report
   can show the shortcut trap and the intervention on top of real defect
   imagery;
-- when the prepared manifest exists, Demo 02 and the classifier section of Demo
-  08 use this real-image path automatically.
+- Demo 02 is a real-data notebook built on this prepared shortcut manifest and
+  should not revert to synthetic panels.
 
 ### KolektorSDD2
 Use for:
@@ -332,6 +337,11 @@ Notes:
 
 ## Synthetic generators to build in-repo
 
+### Moons/Stars Clever-Hans generator
+Generate a no-permission controlled shortcut demo inside
+`notebooks/shortcut_lab/00_moons_stars_clever_hans.ipynb`. This data mode is
+`generated_controlled_demo` and does not require external files.
+
 ### Nuisance injector
 Inject:
 - border
@@ -350,3 +360,13 @@ Generate controlled defect intensity levels for showing the severity mismatch pr
 
 ### Logic board generator
 Generate slot-based arrangements with valid and invalid configurations.
+
+## IEEE DataPort scouting
+
+IEEE DataPort is a candidate source, not a selected dataset. Candidate metadata
+belongs in `data/ieee_candidates.yaml` and should record access type, licence,
+citation, work-permission status, demo fit, risks, and next action before any
+download or model work starts.
+
+Standard datasets may require subscriber access. Open-access and competition
+datasets still require attribution/citation and terms review.

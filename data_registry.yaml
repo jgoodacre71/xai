@@ -1,4 +1,25 @@
 datasets:
+  generated_moons_stars:
+    name: "Generated Moons/Stars Clever-Hans Demo"
+    status: "supported"
+    purpose:
+      - "no-permission controlled shortcut opener"
+      - "didactic Clever-Hans failure demonstration"
+    raw_data_committed: false
+    licence: "Repo-authored generated data."
+    restrictions:
+      - "No external dataset required."
+      - "Do not present as real-world evidence."
+    source_url: "Generated inside notebooks/shortcut_lab/00_moons_stars_clever_hans.ipynb"
+    download_url: "Not applicable"
+    citation: "Cite this repository if reused."
+    work_use_status: "Allowed as generated demo data; verify project policy before external publication."
+    approximate_size: "Tiny; generated at runtime."
+    local_home_status: "Available by running the notebook."
+    work_status: "Available by running the notebook."
+    expected_layout: {}
+    categories:
+      - "generated_controlled_demo"
   mvtec_ad:
     name: "MVTec AD"
     status: "supported"
@@ -12,6 +33,10 @@ datasets:
     restrictions:
       - "Non-commercial use only."
       - "Raw archives and extracted data must not be committed."
+    work_use_status: "Non-commercial only; work use requires approval."
+    approximate_size: "About 4.9 GB for the full dataset."
+    local_home_status: "Optional prepared categories may exist locally."
+    work_status: "Unknown until approved and prepared."
     source_url: "https://www.mvtec.com/research-teaching/datasets/mvtec-ad"
     download_url: "https://www.mvtec.com/research-teaching/datasets/mvtec-ad/downloads"
     citation: "Bergmann et al., MVTec AD - A Comprehensive Real-World Dataset for Unsupervised Anomaly Detection."
@@ -47,6 +72,10 @@ datasets:
     restrictions:
       - "Non-commercial use only."
       - "Raw archives and extracted data must not be committed."
+    work_use_status: "Non-commercial only; work use requires approval."
+    approximate_size: "About 5.71 GB for the full dataset."
+    local_home_status: "Optional prepared categories may exist locally."
+    work_status: "Unknown until approved and prepared."
     source_url: "https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad"
     download_url: "https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad/downloads"
     citation: "Bergmann et al., The MVTec LOCO AD Dataset for Logical Constraint Anomaly Detection."
@@ -71,6 +100,10 @@ datasets:
     restrictions:
       - "Treat as research-only unless upstream terms clearly allow more."
       - "Raw archives and extracted data must not be committed."
+    work_use_status: "Verify before work use."
+    approximate_size: "Verify from source tarball."
+    local_home_status: "Available when the processed manifest exists."
+    work_status: "Unknown until upstream terms are approved."
     source_url: "https://github.com/kohpangwei/group_DRO"
     download_url: "https://nlp.stanford.edu/data/dro/waterbird_complete95_forest2water2.tar.gz"
     citation: "Sagawa et al., Distributionally Robust Neural Networks for Group Shifts."
@@ -92,6 +125,10 @@ datasets:
     restrictions:
       - "Treat as research-only unless the upstream dataset page clearly allows broader use."
       - "Raw archives, extracted data, prepared copies, and processed manifests must not be committed."
+    work_use_status: "Verify before work use."
+    approximate_size: "Small image dataset; exact archive varies by source mirror."
+    local_home_status: "Available when the processed manifest exists."
+    work_status: "Unknown until official terms are approved."
     source_url: "https://faculty.neu.edu.cn/songkechen/zh_CN/zhym/263269/list/index.htm"
     download_url: "Manual archive URL or local archive placement under data/raw/neu_cls/archives/"
     citation: "Song and Yan, Surface defect classification data from Northeastern University."
@@ -114,6 +151,10 @@ datasets:
     restrictions:
       - "Non-commercial use only."
       - "Raw archives, extracted data, prepared copies, and processed manifests must not be committed."
+    work_use_status: "Non-commercial only; work use requires approval."
+    approximate_size: "Verify from official release."
+    local_home_status: "Optional prepared manifest may exist locally."
+    work_status: "Unknown until approved and prepared."
     source_url: "https://www.vicos.si/resources/kolektorsdd2/"
     download_url: "Manual archive URL or local archive placement under data/raw/ksdd2/archives/"
     citation: "Tabernik et al., Kolektor Surface-Defect Dataset 2."
@@ -137,6 +178,10 @@ datasets:
     restrictions:
       - "Non-commercial use only."
       - "Raw archives and extracted data must not be committed."
+    work_use_status: "Non-commercial only; work use requires approval."
+    approximate_size: "Verify from official release."
+    local_home_status: "Optional prepared scenarios may exist locally."
+    work_status: "Unknown until approved and prepared."
     source_url: "https://www.mvtec.com/research-teaching/datasets/mvtec-ad-2"
     download_url: "https://www.mvtec.com/research-teaching/datasets/mvtec-ad-2"
     citation: "Bergmann et al., MVTec AD 2 - Advanced Scenarios for Unsupervised Anomaly Detection."
@@ -158,6 +203,10 @@ datasets:
     restrictions:
       - "Treat generated image splits as research-only until upstream Visual Genome / GQA terms have been checked."
       - "Generated image splits and processed manifests must not be committed."
+    work_use_status: "Verify upstream Visual Genome / GQA terms before work use."
+    approximate_size: "Depends on generated split and upstream assets."
+    local_home_status: "Optional external generated split may exist locally."
+    work_status: "Unknown until upstream terms are approved."
     source_url: "https://github.com/Weixin-Liang/MetaShift"
     download_url: "https://metashift.readthedocs.io/en/latest/sub_pages/applications.html"
     citation: "Liang and Zou, MetaShift: A Dataset of Datasets for Evaluating Context Sensitivity and Distribution Shifts in Images."
@@ -178,6 +227,10 @@ datasets:
     licence_url: "https://creativecommons.org/licenses/by/4.0/"
     restrictions:
       - "Raw archives, split CSV files, extracted data, and processed manifests must not be committed."
+    work_use_status: "Likely usable with attribution under CC BY 4.0; verify internally before work use."
+    approximate_size: "Listed by AWS Open Data as 10,821 images with image- and pixel-level annotations."
+    local_home_status: "Optional prepared categories may exist locally."
+    work_status: "Unknown until approved and prepared."
     source_url: "https://github.com/amazon-science/spot-diff"
     download_url: "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar"
     citation: "Zou et al., Spot-the-Difference Self-supervised Pre-training for Anomaly Detection and Segmentation."
@@ -189,3 +242,29 @@ datasets:
       processed_manifest: "data/processed/visa/<category>/manifest.jsonl"
     categories:
       - "<category discovered from the published 1-class split>"
+  ieee_candidates:
+    name: "IEEE DataPort Candidate Register"
+    status: "scouting"
+    purpose:
+      - "approved future dataset scouting"
+      - "candidate source for industrial anomaly, drift, and sensor attribution demos"
+    raw_data_committed: false
+    licence: "Dataset-specific; verify each IEEE DataPort entry before use."
+    restrictions:
+      - "Standard datasets may require subscriber access."
+      - "Competition datasets may have competition-specific terms."
+      - "Attribution and citation are required."
+    source_url: "https://ieee-dataport.org/"
+    download_url: "Dataset-specific; no dataset selected yet."
+    citation: "Dataset-specific IEEE DataPort citation required."
+    work_use_status: "Verify before work use."
+    approximate_size: "Dataset-specific."
+    local_home_status: "No selected dataset."
+    work_status: "No selected dataset."
+    expected_layout:
+      candidate_register: "data/ieee_candidates.yaml"
+    categories:
+      - "open_access"
+      - "standard"
+      - "competition"
+      - "unknown"

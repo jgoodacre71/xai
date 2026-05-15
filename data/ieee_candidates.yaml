@@ -1,0 +1,26 @@
+candidates: []
+
+schema:
+  required_fields:
+    - slug
+    - title
+    - ieee_dataport_url
+    - doi
+    - access_type
+    - licence
+    - citation
+    - domain
+    - task
+    - data_type
+    - size
+    - download_status
+    - work_permission_status
+    - suitable_demos
+    - why_interesting
+    - risks
+    - next_action
+  fit_categories:
+    A: "Excellent candidate; improves a core demo."
+    B: "Useful backup."
+    C: "Interesting but not urgent."
+    D: "Poor fit or unclear terms."

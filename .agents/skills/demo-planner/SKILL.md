@@ -17,6 +17,11 @@ Turn a fuzzy demo idea into a clean repository task.
    - PatchCore explainability;
    - PatchCore limits;
    - robustness / explanation drift.
+   For Demo 00 specifically, preserve the absolute-position Clever-Hans
+   invariant: generated moons usually appear lower-left, generated stars usually
+   appear upper-right, and the audit asks whether the model learned shape or
+   location. Do not recast Demo 00 as a colour, background, or scene-cue
+   shortcut.
 3. Propose:
    - title;
    - learning goals;

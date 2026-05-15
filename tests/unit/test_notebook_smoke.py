@@ -28,6 +28,7 @@ def _execute_notebook(path: Path) -> None:
     "notebook_rel_path",
     (
         "overview/00_overview.ipynb",
+        "shortcut_lab/00_moons_stars_clever_hans.ipynb",
         "shortcut_lab/01_waterbirds_shortcut.ipynb",
         "shortcut_lab/02_industrial_shortcut_trap.ipynb",
         "patchcore_explainability/03_patchcore_mvtec_ad.ipynb",
@@ -36,6 +37,7 @@ def _execute_notebook(path: Path) -> None:
         "patchcore_limits/06_patchcore_severity_limit.ipynb",
         "patchcore_limits/07_patchcore_loco_logic_limit.ipynb",
         "robustness_drift/08_explanation_drift.ipynb",
+        "data_scouting/90_ieee_dataset_scouting.ipynb",
     ),
 )
 def test_notebook_smoke_execution(

@@ -1,46 +1,45 @@
+# Compatibility summary
+#
+# The canonical dataset registry is ../data_registry.yaml.
+# Keep this file as a short pointer for older notes that referenced data/data_registry.yaml.
+canonical_registry: "../data_registry.yaml"
+
 datasets:
-  mvtec_ad:
+  generated_moons_stars:
     status: implemented
-    type: anomaly_detection
-    source_url: https://www.mvtec.com/research-teaching/datasets/mvtec-ad
-    downloads_url: https://www.mvtec.com/research-teaching/datasets/mvtec-ad/downloads
-    licence: CC BY-NC-SA 4.0
-    usage_restriction: Non-commercial use only.
-    local_workflow:
-      fetch: "./.venv/bin/xai-demo-data fetch mvtec_ad --category bottle"
-      prepare: "./.venv/bin/xai-demo-data prepare mvtec_ad --category bottle"
-    processed_format: JSONL image manifest
-  mvtec_loco_ad:
-    status: implemented
-    type: anomaly_detection
-    source_url: https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad
-    downloads_url: https://www.mvtec.com/research-teaching/datasets/mvtec-loco-ad/downloads
-    licence: CC BY-NC-SA 4.0
-    usage_restriction: Non-commercial use only.
-    local_workflow:
-      fetch: "./.venv/bin/xai-demo-data fetch mvtec_loco_ad --category juice_bottle"
-      prepare: "./.venv/bin/xai-demo-data prepare mvtec_loco_ad --category juice_bottle"
-    processed_format: JSONL image manifest
+    type: generated_controlled_demo
+    external_data_required: false
   waterbirds:
     status: implemented
     type: shortcut_classification
-    source_url: https://github.com/kohpangwei/group_DRO
-    downloads_url: https://nlp.stanford.edu/data/dro/waterbird_complete95_forest2water2.tar.gz
-    licence: Verify upstream CUB and Places terms before use.
-    usage_restriction: Treat as research-only unless upstream terms clearly allow more.
-    local_workflow:
-      fetch: "./.venv/bin/xai-demo-data fetch waterbirds --category waterbird_complete95_forest2water2"
-      prepare: "./.venv/bin/xai-demo-data prepare waterbirds --category waterbird_complete95_forest2water2"
-    processed_format: JSONL classification manifest
+    processed_manifest: data/processed/waterbirds/waterbird_complete95_forest2water2/manifest.jsonl
+    work_use_status: Verify upstream CUB and Places terms before work use.
+  neu_cls:
+    status: implemented
+    type: shortcut_classification
+    processed_manifest: data/processed/neu_cls/shortcut_binary/manifest.jsonl
+    work_use_status: Verify official NEU-CLS terms before work use.
+  mvtec_ad:
+    status: implemented
+    type: anomaly_detection
+    work_use_status: Non-commercial only; work use requires approval.
+  mvtec_loco_ad:
+    status: implemented
+    type: anomaly_detection
+    work_use_status: Non-commercial only; work use requires approval.
   mvtec_ad_2:
-    status: planned
+    status: supported
     type: anomaly_detection
+    work_use_status: Non-commercial only; work use requires approval.
   visa:
-    status: planned
+    status: supported
     type: anomaly_detection
-  metashift:
-    status: planned
+    work_use_status: Likely usable with attribution under CC BY 4.0; verify internally.
+  ksdd2:
+    status: supported
     type: shortcut_classification
-  spawrious:
-    status: planned
-    type: shortcut_classification
+    work_use_status: Non-commercial only; work use requires approval.
+  ieee_candidates:
+    status: scouting
+    type: candidate_register
+    work_use_status: Verify each candidate before work use.

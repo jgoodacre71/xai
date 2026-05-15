@@ -27,6 +27,7 @@ dev = [
 notebooks = [
   "jupyter>=1.0",
   "jupytext>=1.16",
+  "matplotlib>=3.8",
   "nbmake>=1.5",
 ]
 ml = [
@@ -44,6 +45,7 @@ dev = [
 notebooks = [
   "jupyter>=1.0",
   "jupytext>=1.16",
+  "matplotlib>=3.8",
   "nbmake>=1.5",
 ]
 ml = [

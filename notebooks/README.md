@@ -1,25 +1,44 @@
-# Notebook Storylines
+# Notebook storylines
 
-The notebooks are currently the primary demo surface for this repository.
+The notebooks are the primary demo surface for this repository. They are
+organised by storyline rather than kept in one flat directory.
 
-They are organised by storyline rather than kept in one flat directory:
+## Recommended walkthrough order
 
-- `overview/`
-  - repo-level orientation and walkthrough order
-- `shortcut_lab/`
-  - shortcut learning and spurious-correlation demos
-- `patchcore_explainability/`
-  - provenance-rich PatchCore explanations and normal-set pitfalls
-- `patchcore_limits/`
-  - count, severity, and logic limits
-- `robustness_drift/`
-  - explanation drift and robustness
-- `global_local_explainability/`
-  - focused concept notebooks such as SHAP-based global versus local evidence
+1. `shortcut_lab/00_moons_stars_clever_hans.ipynb` — no-permission controlled absolute-position shortcut opener, with movement, morph, saliency, representation, and evidence-removal probes.
+2. `shortcut_lab/02_industrial_shortcut_trap.ipynb` — real industrial side-band marker shortcut.
+3. `shortcut_lab/01_waterbirds_shortcut.ipynb` — natural benchmark shortcut audit.
+4. `patchcore_explainability/03_patchcore_mvtec_ad.ipynb` — anomaly maps plus nearest-normal provenance.
+5. `patchcore_explainability/04_patchcore_wrong_normal.ipynb` — memory-bank contamination.
+6. `patchcore_limits/05_patchcore_count_limit.ipynb` — count limits.
+7. `patchcore_limits/06_patchcore_severity_limit.ipynb` — severity limits.
+8. `patchcore_limits/07_patchcore_loco_logic_limit.ipynb` — logic and semantic-location limits.
+9. `robustness_drift/08_explanation_drift.ipynb` — explanation drift.
+10. `data_scouting/90_ieee_dataset_scouting.ipynb` — IEEE dataset candidate register.
 
-The `.ipynb` notebooks are the active demo artefacts and remain output-free in
-git.
+The SHAP notebook under `global_local_explainability/` is a focused concept
+notebook rather than part of the main demo arc.
 
-For demos `01` to `08`, the notebook itself is expected to carry the runnable
-demo logic, markdown story, and visible graphics. Those notebooks should not be
-thin wrappers around generated HTML reports.
+## Data-status standard
+
+Each notebook should make its data state visible near the top:
+
+- `DEMO`
+- `DATA_MODE`
+- `EXTERNAL_DATA_REQUIRED`
+- `MANIFEST_PATH`
+- `MANIFEST_EXISTS`
+- `PROJECT_ROOT`
+- `DATASET_SOURCE`
+- `LICENCE_NOTE`
+- `MISSING_FILES`
+- `SEED`
+
+Generated notebooks must declare that no external data are required. Real-data
+notebooks should fail clearly if required manifests are missing.
+
+## Notebook contract
+
+For demos `00` to `08`, the notebook itself is expected to carry the runnable
+story, visible code, and graphics. These notebooks should not be thin wrappers
+around generated HTML reports.

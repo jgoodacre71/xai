@@ -1,21 +1,14 @@
 # XAI Demo Suite
 
-This repository contains a curated suite of explainable AI demos for vision,
-focused on:
+This repository contains a curated suite of vision XAI demos focused on
+model-behaviour observability:
 
-- shortcut learning demos;
-- PatchCore explainability;
-- industrial anomaly detection;
-- model limitations such as count, severity, and logic;
-- explanation drift under shift.
+> What did the model actually learn, what evidence did it use, what would change
+> the decision, and what risk remains after mitigation?
 
-The working principle is: package code is the product; notebooks are the
-showroom. Reusable logic belongs in `src/xai_demo_suite/`, but the active demo
-surface is now the checked-in notebook set under `notebooks/`.
-
-Each active non-SHAP demo notebook is now self-contained enough to inspect,
-run, and discuss on its own. The code, markdown narrative, and graphics live in
-the notebook rather than being delegated to generated HTML pages.
+The project is not a generic heatmap gallery. Each demo should show an apparent
+success, reveal a shortcut or limitation, interrogate the behaviour, apply an
+intervention, and re-test what improved and what did not.
 
 ## Getting started
 
@@ -28,377 +21,93 @@ uv run mypy src
 uv run pytest -q
 ```
 
-Plain `venv` and `pip` fallback:
+For notebook execution and deep-feature demos:
+
+```bash
+uv sync --group dev --group notebooks --group ml
+```
+
+Plain `venv` fallback:
 
 ```bash
 python3.12 -m venv .venv
-./.venv/bin/python -m pip install -e ".[dev]"
-./.venv/bin/ruff check .
-./.venv/bin/mypy src
+./.venv/bin/python -m pip install -e ".[dev,notebooks,ml]"
 ./.venv/bin/pytest -q
 ```
 
-## Active Notebook Demos
+## Conceptual demo order
 
-Open the notebooks directly. The active storyline notebooks are:
+Open the notebooks directly. The conceptual walkthrough order is:
 
-- `notebooks/overview/00_overview.ipynb`
-- `notebooks/shortcut_lab/01_waterbirds_shortcut.ipynb`
-- `notebooks/shortcut_lab/02_industrial_shortcut_trap.ipynb`
-- `notebooks/patchcore_explainability/03_patchcore_mvtec_ad.ipynb`
-- `notebooks/patchcore_explainability/04_patchcore_wrong_normal.ipynb`
-- `notebooks/patchcore_limits/05_patchcore_count_limit.ipynb`
-- `notebooks/patchcore_limits/06_patchcore_severity_limit.ipynb`
-- `notebooks/patchcore_limits/07_patchcore_loco_logic_limit.ipynb`
-- `notebooks/robustness_drift/08_explanation_drift.ipynb`
-- `notebooks/global_local_explainability/09_global_vs_local_explainability_shap.ipynb`
+1. `notebooks/shortcut_lab/00_moons_stars_clever_hans.ipynb` — no-permission controlled Clever-Hans opener: absolute-position shortcut, movement counterfactuals, response maps, morphs, saliency caveats, representation neighbours/probes, and evidence-removal re-test.
+2. `notebooks/shortcut_lab/02_industrial_shortcut_trap.ipynb` — real NEU industrial side-band marker shortcut.
+3. `notebooks/shortcut_lab/01_waterbirds_shortcut.ipynb` — literature-aligned natural Waterbirds shortcut audit.
+4. `notebooks/patchcore_explainability/03_patchcore_mvtec_ad.ipynb` — PatchCore anomaly map plus nearest-normal provenance.
+5. `notebooks/patchcore_explainability/04_patchcore_wrong_normal.ipynb` — memory bank learns the wrong normal.
+6. `notebooks/patchcore_limits/05_patchcore_count_limit.ipynb` — PatchCore cannot natively count.
+7. `notebooks/patchcore_limits/06_patchcore_severity_limit.ipynb` — novelty score is not severity.
+8. `notebooks/patchcore_limits/07_patchcore_loco_logic_limit.ipynb` — PatchCore struggles with logical product rules.
+9. `notebooks/robustness_drift/08_explanation_drift.ipynb` — predictions can remain stable while evidence drifts.
+10. `notebooks/data_scouting/90_ieee_dataset_scouting.ipynb` — IEEE DataPort candidate register, not a modelling demo.
 
-The non-SHAP notebooks are designed to run from the base project environment
-without a separate plotting stack.
-
-## Legacy HTML Suite
-
-The synthetic demos do not require external data:
-
-```bash
-./.venv/bin/xai-demo-report suite
-./.venv/bin/xai-demo-report verify
-```
-
-On this machine, after preparing MVTec AD bottle, include the hero MVTec report:
-
-```bash
-./.venv/bin/xai-demo-report suite --include-mvtec
-./.venv/bin/xai-demo-report verify
-```
-
-For the stronger local presentation run, build Demo 03 with explicit
-ImageNet-pretrained ResNet-18 feature-map PatchCore and a 512-patch coreset:
-
-```bash
-./.venv/bin/xai-demo-report suite \
-  --include-mvtec \
-  --mvtec-feature-extractor feature_map_resnet18_pretrained \
-  --mvtec-max-train 20 \
-  --mvtec-max-examples 3 \
-  --mvtec-coreset-size 512 \
-  --mvtec-input-size 224
-./.venv/bin/xai-demo-report verify
-```
-
-The HTML report stack is still available as a legacy secondary surface when you
-want to regenerate the old report suite, but it is no longer the main demo
-interface for the repository.
-
-## Notebook Storylines
-
-The notebooks are grouped by storyline:
-
-- `notebooks/overview/`
-- `notebooks/shortcut_lab/`
-- `notebooks/patchcore_explainability/`
-- `notebooks/patchcore_limits/`
-- `notebooks/robustness_drift/`
-- `notebooks/global_local_explainability/`
-
-Use the `.ipynb` notebooks directly as the active demo surface. They are meant
-to stand on their own as portable demo artefacts.
+`notebooks/global_local_explainability/09_global_vs_local_explainability_shap.ipynb`
+is an additional concept notebook outside the main numbered demo arc.
 
 ## Data
 
-Raw datasets are not committed. MVTec AD is sourced from the official MVTec
-download page and stored locally under `data/raw/` when explicitly fetched.
+Raw datasets are not committed. Start with:
+
+- `docs/DATA_REQUIREMENTS.md`
+- `docs/DATA_PERMISSION_MATRIX.md`
+- `docs/DATA_REPLICATION_WORKFLOW.md`
+- `data_registry.yaml`
+
+Audit local data state with:
 
 ```bash
-./.venv/bin/xai-demo-data list
-./.venv/bin/xai-demo-data fetch mvtec_ad --category bottle --dry-run
-./.venv/bin/xai-demo-data fetch mvtec_ad --category bottle
-./.venv/bin/xai-demo-data prepare mvtec_ad --category bottle
+uv run python scripts/audit_data_inventory.py --root .
 ```
 
-Waterbirds now has the same explicit local data flow:
-
-```bash
-./.venv/bin/xai-demo-data fetch waterbirds --category waterbird_complete95_forest2water2 --dry-run
-./.venv/bin/xai-demo-data fetch waterbirds --category waterbird_complete95_forest2water2
-./.venv/bin/xai-demo-data prepare waterbirds --category waterbird_complete95_forest2water2
-```
-
-When the prepared Waterbirds manifest exists, Demo 01 switches into a real-data
-path with configurable ResNet-18 tuning, worst-group metrics, Grad-CAM,
-Integrated Gradients, context-masking perturbation checks, and a
-prototype-exemplar comparator. When the prepared MetaShift manifest also
-exists, the same report adds a natural-context extension section with the same
-ERM-versus-group-balanced comparison. The synthetic proxy remains as the
-fallback for fresh clones without local data.
-
-NEU-CLS now provides the real industrial shortcut path for Demo 02 and Demo 08:
-
-```bash
-./.venv/bin/xai-demo-data fetch neu_cls --category shortcut_binary --dry-run
-./.venv/bin/xai-demo-data fetch neu_cls --category shortcut_binary --archive-url <direct-archive-url>
-./.venv/bin/xai-demo-data prepare neu_cls --category shortcut_binary
-```
-
-The fetch path is intentionally conservative. If the upstream page does not
-give you a stable direct archive URL, place one archive under
-`data/raw/neu_cls/archives/`, or point `prepare` at a manual source root with
-`--source-root`.
-
-KolektorSDD2 now provides a second real industrial shortcut path through the
-same shared manifest contract:
-
-```bash
-./.venv/bin/xai-demo-data fetch ksdd2 --category shortcut_binary --dry-run
-./.venv/bin/xai-demo-data fetch ksdd2 --category shortcut_binary --archive-url <direct-archive-url>
-./.venv/bin/xai-demo-data prepare ksdd2 --category shortcut_binary
-```
-
-You can point either industrial report at the KSDD2 manifest explicitly:
-
-```bash
-./.venv/bin/xai-demo-report shortcut-industrial --real-manifest-path data/processed/ksdd2/shortcut_binary/manifest.jsonl
-./.venv/bin/xai-demo-report explanation-drift --industrial-manifest-path data/processed/ksdd2/shortcut_binary/manifest.jsonl
-```
-
-MVTec AD 2 now has a second-wave local adapter:
-
-```bash
-./.venv/bin/xai-demo-data fetch mvtec_ad_2 --category all --dry-run
-./.venv/bin/xai-demo-data fetch mvtec_ad_2 --category all --archive-url <direct-archive-url>
-./.venv/bin/xai-demo-data prepare mvtec_ad_2 --category all
-```
-
-The fetch path is intentionally conservative: the official source page is
-recorded, but the repo does not hard-code a brittle direct dataset link. If you
-already have the archive locally, place it under `data/raw/mvtec_ad_2/archives/`
-or pass `--archive-path` to `prepare`.
-
-VisA now has the same local fetch and prepare path:
-
-```bash
-./.venv/bin/xai-demo-data fetch visa --category all --dry-run
-./.venv/bin/xai-demo-data fetch visa --category all
-./.venv/bin/xai-demo-data prepare visa --category all
-```
-
-The VisA adapter fetches the published archive plus the upstream one-class split
-CSV, then writes one canonical manifest per prepared category under
-`data/processed/visa/`.
-
-MetaShift now has a local adapter for the published cat-vs-dog indoor/outdoor
-subpopulation-shift split:
-
-```bash
-./.venv/bin/xai-demo-data fetch metashift --category subpopulation_shift_cat_dog_indoor_outdoor --dry-run
-./.venv/bin/xai-demo-data prepare metashift --category subpopulation_shift_cat_dog_indoor_outdoor
-```
-
-This path is intentionally manual about upstream dependencies: generate the
-split with the published MetaShift scripts and base assets, place it under
-`data/external/metashift/MetaShift-subpopulation-shift/`, then build the local
-manifest.
-
-## Optional ML Dependencies
-
-The base package and tests do not require Torch. Install the optional ML stack
-when working on the deep PatchCore path:
-
-With `uv`:
-
-```bash
-uv sync --group dev --group ml
-```
-
-With `pip`:
-
-```bash
-./.venv/bin/python -m pip install -e ".[ml]"
-```
-
-If you are using the `pip` path from a clean environment and still want the
-lint and test toolchain available, use:
-
-```bash
-./.venv/bin/python -m pip install -e ".[dev,ml]"
-```
-
-The local PatchCore report defaults to deterministic colour/texture patch
-features, so it does not require Torch. The serious deep-feature path is
-available explicitly through dense ResNet-18 and WideResNet50-2 feature-map
-extractors. It only uses pretrained weights when a pretrained feature-map
-option is requested.
-
-## First Local Report
-
-After preparing MVTec AD bottle, generate the first static PatchCore report
-slice with:
-
-```bash
-./.venv/bin/xai-demo-report patchcore-bottle --max-examples 3
-```
-
-The report is written to `outputs/patchcore_bottle/index.html`. When prepared
-MVTec masks are available, each selected anomaly also includes a ground-truth
-localisation check for the top scored patch. The report also includes local
-test-split diagnostics: image-level ROC AUC from the max patch score, defect
-type score summaries, and top-patch mask-hit checks. Generated reports, demo
-cards, local index files, and cached model artefacts are ignored by git by
-default, although curated HTML snapshots can be force-added for public review
-releases.
-
-After preparing Waterbirds, generate Demo 01 with:
-
-```bash
-./.venv/bin/xai-demo-report waterbirds-shortcut
-```
-
-If the prepared MetaShift manifest exists at the default path, Demo 01 adds the
-natural-context extension automatically. You can override that path explicitly
-with `--metashift-manifest-path`.
-
-You can force the fallback path with `--no-real-data`, or use random backbone
-weights for quick local smoke tests with `--weights none`.
-
-You can switch extractors explicitly:
-
-```bash
-./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor mean_rgb
-./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor resnet18_random
-./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor feature_map_resnet18_random --coreset-size 512
-./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor feature_map_resnet18_pretrained --coreset-size 512
-./.venv/bin/xai-demo-report patchcore-bottle --feature-extractor feature_map_wide_resnet50_2_pretrained --coreset-size 512
-```
-
-The pretrained commands may download Torchvision weights into the local Torch
-cache. That cache, generated reports, and memory-bank artefacts are not tracked
-by git.
-
-The same report path can now be reused for other prepared MVTec AD categories.
-For example, with capsule prepared locally:
-
-```bash
-./.venv/bin/xai-demo-report patchcore-bottle \
-  --manifest-path data/processed/mvtec_ad/capsule/manifest.jsonl \
-  --output-dir outputs/patchcore_capsule \
-  --cache-path data/artefacts/patchcore/capsule/report_bank.npz \
-  --feature-extractor feature_map_resnet18_pretrained \
-  --max-train 20 \
-  --max-examples 3 \
-  --coreset-size 512 \
-  --input-size 224 \
-  --no-cache
-```
-
-Use `--benchmark-limit` for quick smoke runs; omit it to score the full local
-MVTec AD bottle test split in the report diagnostics.
-
-The narrative notebooks are checked in under `notebooks/` as output-free
-`.ipynb` files organised by storyline. Demo 03 now lives at
-`notebooks/patchcore_explainability/03_patchcore_mvtec_ad.ipynb`. The notebooks
-delegate the implementation to package code, and the test suite includes
-notebook smoke execution over reduced local configs.
-
-## PatchCore Limits Report
-
-Generate the synthetic limits demo with:
-
-```bash
-./.venv/bin/xai-demo-report patchcore-limits
-```
-
-The report is written to `outputs/patchcore_limits/index.html`. It shows slot
-board examples where PatchCore-style novelty is useful, but count, severity, and
-semantic logic require extra modelling layers.
-
-Generate the real logical-anomaly report with:
-
-```bash
-./.venv/bin/xai-demo-report patchcore-logic
-```
-
-When the prepared MVTec LOCO AD `juice_bottle` manifest exists, the report at
-`outputs/patchcore_logic/index.html` contrasts PatchCore patch novelty with a
-category-specific front-label template comparator. That comparator is
-deliberately narrow: it is a packaging-rule check for this aligned category,
-not a general anomaly model.
-
-## PatchCore Wrong-Normal Report
-
-Generate the synthetic normal-set contamination demo with:
-
-```bash
-./.venv/bin/xai-demo-report patchcore-wrong-normal
-```
-
-The report is written to `outputs/patchcore_wrong_normal/index.html`. It
-compares a clean memory bank with a memory bank contaminated by a corner
-acquisition tab.
-
-## Industrial Shortcut Report
-
-Generate the shortcut demo with:
-
-```bash
-./.venv/bin/xai-demo-report shortcut-industrial
-```
-
-When the prepared NEU-CLS shortcut manifest exists, the report at
-`outputs/shortcut_industrial/index.html` uses a curated real NEU
-scratches-versus-inclusion shortcut slice with a correlated border stripe.
-Otherwise it falls back to the synthetic shortcut generator. In both modes it
-shows a learned shortcut model, a stamp-invariant intervention model, Grad-CAM
-and Integrated Gradients overlays, and known-region perturbation diagnostics
-over the shortcut region and the part.
-
-When the prepared KSDD2 shortcut manifest exists, the same report can be
-pointed at that second real industrial path with `--real-manifest-path`.
-
-## Explanation Drift Report
-
-Generate the synthetic drift demo with:
-
-```bash
-./.venv/bin/xai-demo-report explanation-drift
-```
-
-The report is written to `outputs/explanation_drift/index.html`. It separates
-performance drift from explanation drift for the learned industrial shortcut
-models under blur, contrast, compression, lighting, and shadow shifts. When the
-prepared NEU-CLS manifest exists, the classifier section uses the same curated
-real NEU scratches-versus-inclusion shortcut slice. When local MVTec bottle
-data is prepared, it adds a PatchCore
-anomaly-drift section with image-level AUC, top-patch movement, and
-mask-coverage checks. When local MVTec AD 2 scenario manifests are prepared,
-the same report now adds second-wave anomaly-drift sections for those
-scenarios as well. When local VisA manifests are prepared, the same report adds
-cross-dataset anomaly-drift sections there too.
-
-## Review Pack
-
-Generate the compact external-review pack with:
-
-```bash
-./.venv/bin/xai-demo-report review-pack
-```
-
-The review pack is written to `outputs/review_pack/index.html`. It gives a
-single entry point for external reviewers or ChatGPT, with dataset-readiness
-checks, best-entry links, demo-card summaries, caveats, and a handoff order
-for repo docs and flagship screenshots.
-
-## Main files
-
-- `REPO_SPEC.md` — the long-form repository specification
-- `AGENTS.md` — short always-on repo guidance for Codex
-- `.agents/PLANS.md` — execution-plan template
-- `.agents/skills/` — reusable workflow skills
-- `.codex/agents/` — optional specialised subagents
-- `docs/` — source-of-truth documentation skeleton
-- `data_registry.yaml` — dataset metadata placeholders
-- `src/xai_demo_suite/` — reusable package code
-- `notebooks/` — output-free notebook showroom and active demo surface
-- `tests/` — unit and integration tests
-
-Use `docs/tasks/active/` for substantial work so another engineer or Codex
-thread can resume from checked-in context.
+Generated demos, such as Demo 00, require no external data. Real-data notebooks
+must fail clearly when their required manifests are missing.
+
+Important permission defaults:
+
+- Waterbirds: verify upstream CUB and Places-derived terms before work use.
+- NEU-CLS: verify the official Northeastern terms before workplace redistribution or external publication.
+- MVTec AD, MVTec LOCO AD, MVTec AD 2, and KolektorSDD2: record non-commercial restrictions and seek work approval.
+- VisA: a more permissive anomaly option to verify internally.
+- IEEE DataPort: use as a controlled candidate register; standard datasets may require subscriber access and all datasets require attribution/citation.
+
+## Notebook data status
+
+Every active notebook should show:
+
+- `DEMO`
+- `DATA_MODE`
+- `EXTERNAL_DATA_REQUIRED`
+- `MANIFEST_PATH`
+- `MANIFEST_EXISTS`
+- `PROJECT_ROOT`
+- `DATASET_SOURCE`
+- `LICENCE_NOTE`
+- `MISSING_FILES`
+- `SEED`
+
+Generated demos should declare `DATA_MODE: generated_controlled_demo` and
+`EXTERNAL_DATA_REQUIRED: false`.
+
+## Legacy HTML reports
+
+The active demo surface is the checked-in notebook set under `notebooks/`.
+The `xai-demo-report` commands and modules under `src/xai_demo_suite/reports/`
+remain available as a secondary legacy surface, but they are no longer the
+primary way to present the project.
+
+## Repository layout
+
+- `notebooks/` — active notebook demo surface.
+- `src/xai_demo_suite/` — reusable package code and legacy report builders.
+- `tests/` — unit, integration, and notebook smoke tests.
+- `docs/` — architecture, XAI contract, data requirements, runbooks, and task memory.
+- `data/` — local raw/interim/processed/generated artefact roots; raw datasets are ignored.
