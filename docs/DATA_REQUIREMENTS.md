@@ -8,7 +8,7 @@ clearly when their required manifests are missing.
 
 | Demo | Role | Data mode | External data required | Expected local manifest |
 | --- | --- | --- | --- | --- |
-| 00 Moons/Stars Clever-Hans warm-up | No-permission controlled shortcut opener | `generated_controlled_demo` | No | Not applicable |
+| 00 Moons/Stars Clever-Hans two-act laboratory | No-permission behavioural XAI opener: Act I position shortcut, Act II near-invisible background/acquisition cue | `generated_controlled_demo` | No | Not applicable |
 | 02 Industrial side-band marker shortcut | Real industrial shortcut with controlled side-band leakage | `real_neu_controlled_shortcut` | Yes | `data/processed/neu_cls/shortcut_binary/manifest.jsonl` |
 | 01 Waterbirds shortcut audit | Literature-aligned natural shortcut benchmark | `real` | Yes | `data/processed/waterbirds/waterbird_complete95_forest2water2/manifest.jsonl` |
 | 03 PatchCore anomaly provenance | Anomaly maps plus nearest-normal provenance | Real data when prepared | Yes for real MVTec path | `data/processed/mvtec_ad/<category>/manifest.jsonl` |

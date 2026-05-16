@@ -342,6 +342,14 @@ Generate a no-permission controlled shortcut demo inside
 `notebooks/shortcut_lab/00_moons_stars_clever_hans.ipynb`. This data mode is
 `generated_controlled_demo` and does not require external files.
 
+Current Demo 00 is a two-act generated laboratory:
+- Act I uses an absolute-position shortcut: moons usually appear lower-left and
+  stars upper-right;
+- Act II uses a calibrated near-invisible background/acquisition cue that is
+  weak per pixel but decisive when aggregated;
+- both acts must use behavioural counterfactuals, intervention, and re-test
+  rather than relying on saliency as the main evidence.
+
 ### Nuisance injector
 Inject:
 - border

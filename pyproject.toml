@@ -25,6 +25,8 @@ dev = [
   "ruff>=0.5",
 ]
 notebooks = [
+  "imageio>=2.37",
+  "imageio-ffmpeg>=0.6",
   "jupyter>=1.0",
   "jupytext>=1.16",
   "matplotlib>=3.8",
@@ -43,6 +45,8 @@ dev = [
   "ruff>=0.5",
 ]
 notebooks = [
+  "imageio>=2.37",
+  "imageio-ffmpeg>=0.6",
   "jupyter>=1.0",
   "jupytext>=1.16",
   "matplotlib>=3.8",

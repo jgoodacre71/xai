@@ -7,7 +7,7 @@ The conceptual order is controlled shortcut → industrial shortcut → natural
 benchmark → anomaly provenance → wrong normal → limits → drift → dataset
 scouting.
 
-## Demo 00 — Moons/Stars Clever-Hans warm-up
+## Demo 00 — Moons/Stars Clever-Hans two-act laboratory
 
 No-permission generated opener.
 
@@ -16,12 +16,15 @@ Current artefacts:
 
 Role:
 - show the smallest version of “the model solved the dataset, not the task”;
-- use generated moons/stars with an absolute-position shortcut: moons near the
-  lower-left and stars near the upper-right;
+- Act I uses generated moons/stars with an absolute-position shortcut: moons
+  near the lower-left and stars near the upper-right;
+- Act II then fools the reader again with a near-invisible background/acquisition
+  cue that a CNN can exploit with decisive confidence;
 - demonstrate group audit, exact movement counterfactuals, position-response
   maps, shape morphing, saliency caveats, minimal evidence removal,
-  representation neighbours/probes, translation-aware mitigation, and
-  same-case re-test.
+  representation neighbours/probes, mitigation, and same-case re-test;
+- make the governing lesson explicit: the shortcut changes, but the XAI
+  discipline stays the same.
 
 ## Demo 02 — Industrial side-band marker shortcut
 
