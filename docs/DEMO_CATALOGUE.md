@@ -18,6 +18,10 @@ Role:
 - show the smallest version of “the model solved the dataset, not the task”;
 - make the central thesis explicit: the training data does not identify the
   human concept, and many different functions can pass the biased exam;
+- organise the presentation around five memorable moments: both models look
+  perfect; the same moon moves and flips the MLP; a position-only rule also
+  passes the biased exam; the same shape with an invisible background shift
+  flips the CNN; and a background-only rule also passes the biased exam;
 - Act I uses generated moons/stars with an absolute-position shortcut: moons
   near the lower-left and stars near the upper-right;
 - Act II then fools the reader again with a near-invisible background/acquisition

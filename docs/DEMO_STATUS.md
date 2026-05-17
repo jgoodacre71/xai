@@ -23,10 +23,12 @@ lives under `docs/tasks/`.
 - Demo 00 is the no-permission didactic opener: a controlled two-act
   Clever-Hans laboratory. Act I exposes an absolute-position shortcut; Act II
   exposes a near-invisible background/acquisition cue. The notebook is now
-  deliberately lean and inline-only: apparent success, data-first shortcut
-  statistics, silly nearest-neighbour baselines, behavioural counterfactuals,
-  confidence/response-map animations, saliency caution, intervention, and
-  re-test.
+  deliberately lean and inline-only. It should read like five presentation
+  moments rather than a diagnostic catalogue: perfect IID results, same-object
+  movement failure, position-only data leak, invisible-background failure, and
+  background-only data leak. Supporting material is limited to behavioural
+  counterfactuals, confidence/response-map animations, saliency caution,
+  intervention, and re-test.
 - Demo 02 is the visually immediate applied industrial shortcut demo.
 - Demo 01 is the literature-aligned natural benchmark.
 - Demos 03 and 04 are the PatchCore anomaly-provenance centrepiece.

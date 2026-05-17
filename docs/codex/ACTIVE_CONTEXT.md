@@ -39,6 +39,9 @@ Demo 00 is now the no-permission generated opener with:
   notebook, not saved as PNG manifests or image walls
 - the central thesis that many functions can pass the same biased exam and XAI
   reveals which function was learned
+- a five-moment presentation shape: perfect IID metrics, same-object movement
+  failure, position-only data leak, invisible-background failure, and
+  background-only data leak
 - Act I: apparent moon/star success, then same-object movement and response-map
   animations expose an absolute-position shortcut
 - Act I data audit: object-address statistics and a position-only nearest

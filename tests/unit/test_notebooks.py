@@ -232,6 +232,14 @@ def test_demo00_is_generated_controlled_demo_with_no_external_data() -> None:
     assert "This model ignored the shape" in text
     assert "The model did not cheat. The data taught the shortcut." in text
     assert "Many functions pass the same exam" in text
+    for moment in (
+        "Both models are perfect",
+        "Same moon. Same pixels. Different place. Different answer.",
+        "A stupid position-only rule also gets 100%",
+        "Same shape. Almost invisible background shift. Different belief.",
+        "A stupid background-only rule also gets 100%",
+    ):
+        assert moment in text
     assert "100% IID accuracy does not tell us which rule was learned" in text
     assert "The training data does not identify the human concept" in text
     assert "data_first_position_results" in text

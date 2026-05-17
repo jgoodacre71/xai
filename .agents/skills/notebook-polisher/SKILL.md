@@ -25,6 +25,8 @@ Make notebooks teach, not merely execute.
 For Clever-Hans or shortcut notebooks, make the core evidence behavioural:
 
 - stage apparent success before revealing the shortcut;
+- centre the presentation on a small number of unforgettable moments rather
+  than a catalogue of diagnostics;
 - add a data-first audit when the generator exposes shortcut factors: show
   simple statistics and silly non-neural baselines before treating the neural
   model as mysterious;

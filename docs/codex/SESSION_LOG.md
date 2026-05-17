@@ -160,6 +160,10 @@
 - key findings:
   - Demo 00 is strongest as a lean, self-contained, inline-only notebook rather
     than a saved static-figure presentation export
+  - the latest presentation pass makes the notebook revolve around five
+    memorable moments, not a long sequence of diagnostics: perfect IID
+    accuracy, same-object movement failure, position-only data leak,
+    invisible-background failure, and background-only data leak
   - the central lesson is now: the training data does not identify the human
     concept; many functions can pass the biased exam; XAI reveals which
     function the model actually learned

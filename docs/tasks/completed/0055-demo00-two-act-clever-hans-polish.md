@@ -36,6 +36,10 @@ correct generated shortcut notebook.
 - Reworked the notebook into a lean inline-only presentation path: no saved
   static PNG workflow, no final image wall, and clean in-notebook animation
   display.
+- Rebuilt the presentation around five core moments instead of many diagnostic
+  outputs: perfect IID metrics, same-object movement failure, a position-only
+  rule passing the exam, invisible-background counterfactual failure, and a
+  background-only rule passing the exam.
 - Added the “many functions pass the same exam” centrepiece and split the data
   audits into readable statistical and silly-model panels.
 - Kept the strongest animations: Act I confidence movement, response-map path,
