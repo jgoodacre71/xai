@@ -142,3 +142,44 @@
 - recommended next step:
   - keep updating `docs/codex/` whenever a notebook becomes a stable
     real-data demo artefact or when the preferred validation path changes
+
+## 2026-05-17
+
+- purpose:
+  - final presentation-quality polish for Demo 00 and refresh the Codex memory
+    layer around the current notebook contract
+- files updated:
+  - `notebooks/shortcut_lab/00_moons_stars_clever_hans.ipynb`
+  - `tests/unit/test_notebooks.py`
+  - `docs/DEMO_CATALOGUE.md`
+  - `docs/DEMO_STATUS.md`
+  - `docs/DATASETS.md`
+  - `docs/tasks/completed/0055-demo00-two-act-clever-hans-polish.md`
+  - `docs/codex/ACTIVE_CONTEXT.md`
+  - `docs/codex/SESSION_LOG.md`
+- key findings:
+  - Demo 00 is strongest as a lean, self-contained, inline-only notebook rather
+    than a saved static-figure presentation export
+  - the central lesson is now: the training data does not identify the human
+    concept; many functions can pass the biased exam; XAI reveals which
+    function the model actually learned
+  - data-first audits are critical: object-address statistics and background
+    statistics make the shortcuts visible before model interrogation
+  - silly nearest-neighbour baselines that ignore shape help show the model did
+    not cheat; it exploited structure the data made predictive
+  - animation cells must display HTML animations without returning raw GIF
+    bytes or object reprs
+- validation:
+  - `./.venv/bin/pytest tests/unit/test_notebooks.py -q`
+  - `./.venv/bin/ruff check tests/unit/test_notebooks.py`
+  - `git diff --check`
+  - notebook output-free check via `nbformat`
+- unresolved uncertainties:
+  - full Demo 00 `nbconvert` execution and the direct smoke path were attempted
+    during the final polish but stopped after unusually long runs with no
+    reported cell failure; future work should investigate runtime separately
+    from presentation polish
+- recommended next step:
+  - keep Demo 00 focused on controlled factors, statistical audits,
+    behavioural counterfactuals, and intervention/re-test; avoid adding broad
+    XAI method galleries or saved static asset walls

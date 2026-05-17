@@ -7,7 +7,7 @@ lives under `docs/tasks/`.
 
 | Conceptual order | Demo | Status | Active notebook |
 | --- | --- | --- | --- |
-| 1 | Demo 00 - Moons/Stars Clever-Hans Warm-up | Generated no-permission position-shortcut audit | `notebooks/shortcut_lab/00_moons_stars_clever_hans.ipynb` |
+| 1 | Demo 00 - Moons/Stars Clever-Hans Warm-up | Generated no-permission two-act shortcut laboratory | `notebooks/shortcut_lab/00_moons_stars_clever_hans.ipynb` |
 | 2 | Demo 02 - Industrial Side-band Shortcut | Working real NEU controlled-shortcut notebook | `notebooks/shortcut_lab/02_industrial_shortcut_trap.ipynb` |
 | 3 | Demo 01 - Waterbirds Shortcut Audit | Working real Waterbirds notebook with advanced interrogation | `notebooks/shortcut_lab/01_waterbirds_shortcut.ipynb` |
 | 4 | Demo 03 - PatchCore Anomaly Provenance | Working PatchCore notebook | `notebooks/patchcore_explainability/03_patchcore_mvtec_ad.ipynb` |
@@ -20,9 +20,12 @@ lives under `docs/tasks/`.
 
 ## Current positioning
 
-- Demo 00 is the no-permission didactic opener: a controlled absolute-position
-  Clever-Hans audit with movement counterfactuals, response maps, shape morphs,
-  saliency caveats, representation neighbours/probes, and evidence-removal
+- Demo 00 is the no-permission didactic opener: a controlled two-act
+  Clever-Hans laboratory. Act I exposes an absolute-position shortcut; Act II
+  exposes a near-invisible background/acquisition cue. The notebook is now
+  deliberately lean and inline-only: apparent success, data-first shortcut
+  statistics, silly nearest-neighbour baselines, behavioural counterfactuals,
+  confidence/response-map animations, saliency caution, intervention, and
   re-test.
 - Demo 02 is the visually immediate applied industrial shortcut demo.
 - Demo 01 is the literature-aligned natural benchmark.

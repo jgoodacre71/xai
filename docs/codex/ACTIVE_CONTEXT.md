@@ -5,6 +5,7 @@
 The active working surface is the curated notebook-first demo suite built
 around:
 
+- Demo 00: Moons/Stars Clever-Hans two-act laboratory
 - Demo 01: Waterbirds shortcut
 - Demo 02: industrial shortcut trap
 - Demo 03: PatchCore on MVTec AD bottle
@@ -31,6 +32,23 @@ The primary repo-native interfaces are:
 - `notebooks/patchcore_limits/`
 - `notebooks/robustness_drift/`
 - `notebooks/global_local_explainability/`
+
+Demo 00 is now the no-permission generated opener with:
+
+- a lean inline-only notebook contract: static plots are displayed in the
+  notebook, not saved as PNG manifests or image walls
+- the central thesis that many functions can pass the same biased exam and XAI
+  reveals which function was learned
+- Act I: apparent moon/star success, then same-object movement and response-map
+  animations expose an absolute-position shortcut
+- Act I data audit: object-address statistics and a position-only nearest
+  neighbour solve the biased exam without shape
+- Act II: a CNN appears to work again, then an almost invisible
+  background/acquisition cue flips the prediction with decisive confidence
+- Act II data audit: background-only statistics and a nearest-neighbour rule
+  solve the biased exam without object shape
+- saliency kept as a cautionary supporting interlude, not the main evidence
+- intervention and same-case re-test as the maturity point
 
 Demo 01 is now a real-data Waterbirds notebook with:
 
@@ -91,6 +109,9 @@ Demo 02 is now a real-data NEU industrial shortcut notebook with:
   avoiding hidden logic
 - keep Demo 01 and Demo 02 on their real-data ResNet plus logistic-regression
   paths rather than drifting back to toy simulators
+- keep Demo 00 as a self-contained generated factor laboratory; do not
+  reintroduce saved static assets, broad method galleries, or scene/colour-cue
+  Act I variants
 - avoid notebook drift by moving genuinely reusable logic into package code
 - keep local-data assumptions explicit in commands, docs, and final summaries
 - keep old report paths secondary and avoid drifting back into notebook wrappers

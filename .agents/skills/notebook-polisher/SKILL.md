@@ -25,6 +25,9 @@ Make notebooks teach, not merely execute.
 For Clever-Hans or shortcut notebooks, make the core evidence behavioural:
 
 - stage apparent success before revealing the shortcut;
+- add a data-first audit when the generator exposes shortcut factors: show
+  simple statistics and silly non-neural baselines before treating the neural
+  model as mysterious;
 - show same-object counterfactuals with predicted label, model score, and a
   visible "what changed / what stayed fixed" strip;
 - keep saliency as supporting evidence, not the main claim;
@@ -32,3 +35,6 @@ For Clever-Hans or shortcut notebooks, make the core evidence behavioural:
 - fail the notebook if the intended behavioural story is weak or uncertain;
 - when scoring generated diagnostic frames, score the image tensor directly
   rather than routing temporary sample objects through identity-based caches.
+- for presentation notebooks, avoid saved static PNG manifests unless they are
+  explicitly requested. Inline static figures and embedded animations are
+  easier to review and keep output-free in source control.

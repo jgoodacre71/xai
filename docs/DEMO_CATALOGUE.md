@@ -16,13 +16,18 @@ Current artefacts:
 
 Role:
 - show the smallest version of “the model solved the dataset, not the task”;
+- make the central thesis explicit: the training data does not identify the
+  human concept, and many different functions can pass the biased exam;
 - Act I uses generated moons/stars with an absolute-position shortcut: moons
   near the lower-left and stars near the upper-right;
 - Act II then fools the reader again with a near-invisible background/acquisition
   cue that a CNN can exploit with decisive confidence;
-- demonstrate group audit, exact movement counterfactuals, position-response
-  maps, shape morphing, saliency caveats, minimal evidence removal,
-  representation neighbours/probes, mitigation, and same-case re-test;
+- demonstrate data-first shortcut discovery, silly shortcut baselines,
+  nearest-neighbour rules that ignore shape, exact behavioural
+  counterfactuals, confidence animations, response-map animations, saliency
+  caveats, mitigation, and same-case re-test;
+- keep static plots inline only in the notebook; do not reintroduce static PNG
+  export walls for Demo 00;
 - make the governing lesson explicit: the shortcut changes, but the XAI
   discipline stays the same.
 

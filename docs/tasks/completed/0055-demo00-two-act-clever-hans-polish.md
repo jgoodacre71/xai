@@ -19,6 +19,9 @@ correct generated shortcut notebook.
   background/acquisition cue.
 - Make the central evidence behavioural counterfactuals, confidence paths,
   response maps, morphs, intervention, and re-test.
+- Add data-first shortcut discovery so the reader sees that the biased exam is
+  already solvable by trivial statistics and nearest-neighbour rules that
+  ignore shape.
 - Keep saliency as a cautionary interlude only.
 
 ## Completion notes
@@ -30,11 +33,16 @@ correct generated shortcut notebook.
   cue-aware CNN, and mitigation/re-test with hard swap-score assertions.
 - Fixed the shape-morph diagnostic so generated diagnostic frames are scored
   directly from image tensors rather than through temporary cached sample ids.
-- Added slide-ready reveal panels, animations, a presentation mode, an XAI loop
-  figure, real-world bridge cards, and a manifest with suggested slide use.
+- Reworked the notebook into a lean inline-only presentation path: no saved
+  static PNG workflow, no final image wall, and clean in-notebook animation
+  display.
+- Added the “many functions pass the same exam” centrepiece and split the data
+  audits into readable statistical and silly-model panels.
+- Kept the strongest animations: Act I confidence movement, response-map path,
+  morph/heatmap caution animations, and Act II invisible-background morphs.
 - Updated tests to protect the Demo 00 contract, including forbidden old
-  scene-cue language, decisive confidence gates, Act II artefacts, and final
-  presentation assets.
+  scene-cue language, decisive confidence gates, inline-only presentation,
+  data-first shortcut audits, and clean animation display.
 
 ## Out of scope
 - Rebuilding Demo 01 or Demo 02.
@@ -44,12 +52,14 @@ correct generated shortcut notebook.
 - Treating saliency as proof of the shortcut.
 
 ## Validation
-- `/Users/johngoodacre/miniforge3/envs/qst/bin/jupyter-nbconvert --execute notebooks/shortcut_lab/00_moons_stars_clever_hans.ipynb --to notebook --inplace`
-- `/Users/johngoodacre/miniforge3/envs/qst/bin/jupyter-nbconvert --clear-output --inplace notebooks/shortcut_lab/00_moons_stars_clever_hans.ipynb`
 - `./.venv/bin/pytest tests/unit/test_notebooks.py -q`
-- `./.venv/bin/pytest tests/unit/test_notebook_smoke.py -q`
 - `./.venv/bin/ruff check tests/unit/test_notebooks.py`
 - `git diff --check`
+
+During the final presentation-only polish, full `nbconvert` execution and the
+Demo 00 smoke path were attempted but stopped after unusually long runs with no
+reported cell failure. The committed notebook remains output-free and the
+source-level contract tests pass.
 
 ## Durable guidance added
 - `.agents/skills/notebook-polisher/SKILL.md` now records behavioural-XAI
@@ -57,6 +67,9 @@ correct generated shortcut notebook.
   counterfactuals, show scores and what changed, keep saliency secondary,
   re-test after intervention, and avoid identity-cache paths for generated
   diagnostic frames.
+- Demo 00 should stay self-contained and inline-only for static figures. Do not
+  reintroduce static figure export manifests unless the presentation surface is
+  deliberately changed again.
 
 ## Risks
 - The notebook is intentionally presentation-rich and can take several minutes

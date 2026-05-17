@@ -347,8 +347,12 @@ Current Demo 00 is a two-act generated laboratory:
   stars upper-right;
 - Act II uses a calibrated near-invisible background/acquisition cue that is
   weak per pixel but decisive when aggregated;
+- both acts first show that a trivial data statistic or nearest-neighbour rule
+  can pass the biased exam without learning the human concept;
 - both acts must use behavioural counterfactuals, intervention, and re-test
-  rather than relying on saliency as the main evidence.
+  rather than relying on saliency as the main evidence;
+- static plots should remain inline in the notebook. Demo 00 should not grow a
+  saved static-figure manifest or image wall.
 
 ### Nuisance injector
 Inject:
