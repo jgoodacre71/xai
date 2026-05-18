@@ -1,0 +1,173 @@
+slides:
+  - number: 1
+    title: "Accuracy is not understanding"
+    claim: "A model can pass the exam while learning the wrong function."
+    layout: "claim"
+    equation_assets: []
+    image_assets:
+      - "assets/images/slide_plates/plate_12_final_synthesis.png"
+    video_assets: []
+    fallback_assets: []
+    playback: "none"
+    speaker_note: "Open with the thesis: IID accuracy does not identify the human concept."
+  - number: 2
+    title: "What supervised learning optimises"
+    claim: "Training minimises an empirical risk functional."
+    layout: "claim_equation"
+    equation_assets:
+      - "assets/equations/svg/erm_functional.svg"
+      - "assets/equations/svg/training_objective.svg"
+    image_assets:
+      - "assets/images/slide_plates/plate_01_supervised_problem.png"
+    video_assets: []
+    fallback_assets: []
+    playback: "none"
+    speaker_note: "Define the ordinary supervised-learning setup before any XAI."
+  - number: 3
+    title: "Many functions can pass the same finite exam"
+    claim: "Low empirical risk does not uniquely identify the semantic rule."
+    layout: "claim_equation"
+    equation_assets:
+      - "assets/equations/svg/many_functions_same_exam.svg"
+    image_assets:
+      - "assets/images/slide_plates/plate_02_erm_many_functions.png"
+    video_assets: []
+    fallback_assets: []
+    playback: "none"
+    speaker_note: "This is the non-identifiability pivot."
+  - number: 4
+    title: "Same object. Different position. Different answer."
+    claim: "Changing only position changes the MLP belief."
+    layout: "counterfactual_reveal"
+    equation_assets:
+      - "assets/equations/svg/position_counterfactual.svg"
+    image_assets:
+      - "assets/images/slide_plates/plate_04_position_counterfactual.png"
+    video_assets:
+      - "assets/video/mp4/anim_moon_moves_confidence.mp4"
+    fallback_assets:
+      - "assets/video/first_frames/anim_moon_moves_confidence_first_frame.png"
+    playback: "play_on_click"
+    speaker_note: "Let the counterfactual surprise land before explaining the data bias."
+  - number: 5
+    title: "The score lives on a factor space"
+    claim: "XAI asks which factor changes the score."
+    layout: "factor_space"
+    equation_assets:
+      - "assets/equations/svg/factorised_generator.svg"
+      - "assets/equations/svg/nuisance_orbit.svg"
+    image_assets:
+      - "assets/images/slide_plates/plate_05_response_map_geometry.png"
+    video_assets: []
+    fallback_assets: []
+    playback: "none"
+    speaker_note: "Introduce factor-control language."
+  - number: 6
+    title: "Response maps reveal learned geometry"
+    claim: "The MLP learned a position boundary; the CNN is stable under this probe."
+    layout: "response_geometry"
+    equation_assets:
+      - "assets/equations/svg/response_map.svg"
+      - "assets/equations/svg/decision_contour.svg"
+    image_assets:
+      - "assets/images/slide_plates/plate_05_response_map_geometry.png"
+    video_assets: []
+    fallback_assets: []
+    playback: "none"
+    speaker_note: "Frame maps as score geometry, not just heatmaps."
+  - number: 7
+    title: "The shortcut was already in the data"
+    claim: "A rule that ignores shape can pass the biased exam."
+    layout: "data_audit"
+    equation_assets: []
+    image_assets:
+      - "assets/images/slide_plates/plate_06_position_data_audit.png"
+    video_assets: []
+    fallback_assets: []
+    playback: "none"
+    speaker_note: "The model did not cheat. The dataset rewarded the shortcut."
+  - number: 8
+    title: "The convolutional model appears to work again"
+    claim: "A stronger-looking model can still pass IID validation while relying on another cue."
+    layout: "false_comfort"
+    equation_assets: []
+    image_assets:
+      - "assets/images/slide_plates/plate_07_cnn_second_comfort.png"
+    video_assets: []
+    fallback_assets: []
+    playback: "none"
+    speaker_note: "This is the second false comfort."
+  - number: 9
+    title: "Same object. Invisible background shift. Different belief."
+    claim: "Changing only a tiny background statistic flips the CNN."
+    layout: "counterfactual_reveal"
+    equation_assets: []
+    image_assets:
+      - "assets/images/slide_plates/plate_08_background_counterfactual.png"
+    video_assets:
+      - "assets/video/mp4/anim_invisible_background_morph_moon.mp4"
+    fallback_assets:
+      - "assets/video/first_frames/anim_invisible_background_morph_moon_first_frame.png"
+    playback: "play_on_click"
+    speaker_note: "The object is fixed. The background statistic changes."
+  - number: 10
+    title: "Human invisibility is not statistical irrelevance"
+    claim: "A tiny per-pixel cue can become decisive after aggregation."
+    layout: "data_audit"
+    equation_assets:
+      - "assets/equations/svg/background_snr.svg"
+    image_assets:
+      - "assets/images/slide_plates/plate_10_background_data_audit.png"
+    video_assets: []
+    fallback_assets: []
+    playback: "none"
+    speaker_note: "This explains why a visually subtle cue can dominate."
+  - number: 11
+    title: "Heatmaps are supporting evidence, not the explanation"
+    claim: "A plausible heatmap does not identify the controlling factor."
+    layout: "heatmap_caution"
+    equation_assets:
+      - "assets/equations/svg/smoothgrad.svg"
+    image_assets:
+      - "assets/images/slide_plates/plate_09_xai_heatmap_caution.png"
+    video_assets: []
+    fallback_assets: []
+    playback: "none"
+    speaker_note: "The counterfactual identifies control; the heatmap is supporting evidence."
+  - number: 12
+    title: "Explanation must lead to intervention and re-test"
+    claim: "The fix is process change plus the same behavioural probe again."
+    layout: "intervention"
+    equation_assets:
+      - "assets/equations/svg/intervention_loop.svg"
+      - "assets/equations/svg/orbit_averaged_risk.svg"
+    image_assets:
+      - "assets/images/slide_plates/plate_11_mitigation_retest.png"
+    video_assets: []
+    fallback_assets: []
+    playback: "none"
+    speaker_note: "Do not trust architecture alone; change the data process and re-test."
+  - number: 13
+    title: "What the data taught the model"
+    claim: "Both failures were available in the data distribution."
+    layout: "synthesis"
+    equation_assets: []
+    image_assets:
+      - "assets/images/slide_plates/plate_06_position_data_audit.png"
+      - "assets/images/slide_plates/plate_10_background_data_audit.png"
+    video_assets: []
+    fallback_assets: []
+    playback: "none"
+    speaker_note: "This consolidates both shortcuts."
+  - number: 14
+    title: "XAI as experimental model science"
+    claim: "XAI makes learned structure visible, testable, and correctable."
+    layout: "closing"
+    equation_assets:
+      - "assets/equations/svg/intervention_loop.svg"
+    image_assets:
+      - "assets/images/slide_plates/plate_12_final_synthesis.png"
+    video_assets: []
+    fallback_assets: []
+    playback: "none"
+    speaker_note: "Close by tying the demo to broader research: anomaly detection, scientific ML, monitoring, failure discovery."

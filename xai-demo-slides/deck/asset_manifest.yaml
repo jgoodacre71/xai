@@ -1,0 +1,640 @@
+assets:
+- asset_id: notebook_polished_01_train_and_iid_validation_examples
+  filename: assets/images/notebook_polished/01_train_and_iid_validation_examples.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/01_train_and_iid_validation_examples.png
+  suggested_use: Supervised learning setup
+- asset_id: notebook_polished_02_both_models_pass_iid_evaluation_clean
+  filename: assets/images/notebook_polished/02_both_models_pass_iid_evaluation_clean.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/02_both_models_pass_iid_evaluation_clean.png
+  suggested_use: IID success before reveal
+- asset_id: notebook_polished_04_counterfactual_probe_static
+  filename: assets/images/notebook_polished/04_counterfactual_probe_static.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/04_counterfactual_probe_static.png
+  suggested_use: Same object, different position
+- asset_id: notebook_polished_05_counterfactual_movement_paths
+  filename: assets/images/notebook_polished/05_counterfactual_movement_paths.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/05_counterfactual_movement_paths.png
+  suggested_use: Notebook polished figure
+- asset_id: notebook_polished_06_shape_morph_diagnostic
+  filename: assets/images/notebook_polished/06_shape_morph_diagnostic.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/06_shape_morph_diagnostic.png
+  suggested_use: Notebook polished figure
+- asset_id: notebook_polished_07_static_heatmap_comparison_professional
+  filename: assets/images/notebook_polished/07_static_heatmap_comparison_professional.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/07_static_heatmap_comparison_professional.png
+  suggested_use: Notebook polished figure
+- asset_id: notebook_polished_08_response_map_geometry_professional
+  filename: assets/images/notebook_polished/08_response_map_geometry_professional.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/08_response_map_geometry_professional.png
+  suggested_use: Response maps
+- asset_id: notebook_polished_12_act2_cnn_appears_to_work_clean
+  filename: assets/images/notebook_polished/12_act2_cnn_appears_to_work_clean.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/12_act2_cnn_appears_to_work_clean.png
+  suggested_use: Notebook polished figure
+- asset_id: notebook_polished_13_act2_xai_caution_counterfactual_clean
+  filename: assets/images/notebook_polished/13_act2_xai_caution_counterfactual_clean.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/13_act2_xai_caution_counterfactual_clean.png
+  suggested_use: Heatmaps are not enough
+- asset_id: notebook_polished_14_act2_background_swap_reveal_clean
+  filename: assets/images/notebook_polished/14_act2_background_swap_reveal_clean.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/14_act2_background_swap_reveal_clean.png
+  suggested_use: Same object, background shift
+- asset_id: notebook_polished_15_act2_background_confidence_sweep_clean
+  filename: assets/images/notebook_polished/15_act2_background_confidence_sweep_clean.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/15_act2_background_confidence_sweep_clean.png
+  suggested_use: Notebook polished figure
+- asset_id: notebook_polished_21_act2_mitigation_retest_clean
+  filename: assets/images/notebook_polished/21_act2_mitigation_retest_clean.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/21_act2_mitigation_retest_clean.png
+  suggested_use: Mitigation and re-test
+- asset_id: notebook_polished_24_data_story_act1_position_shortcut_professional
+  filename: assets/images/notebook_polished/24_data_story_act1_position_shortcut_professional.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/24_data_story_act1_position_shortcut_professional.png
+  suggested_use: Position data audit
+- asset_id: notebook_polished_25_data_story_act2_background_shortcut_professional
+  filename: assets/images/notebook_polished/25_data_story_act2_background_shortcut_professional.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/25_data_story_act2_background_shortcut_professional.png
+  suggested_use: Background data audit
+- asset_id: notebook_polished_26_final_demo_synthesis_professional
+  filename: assets/images/notebook_polished/26_final_demo_synthesis_professional.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/26_final_demo_synthesis_professional.png
+  suggested_use: XAI as experimental model science
+- asset_id: gif_anim_01_moon_moves_confidence
+  filename: assets/video/gif/anim_01_moon_moves_confidence.gif
+  type: gif
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/anim_01_moon_moves_confidence.gif
+  suggested_use: Notebook animation
+- asset_id: gif_anim_02_star_moves_confidence
+  filename: assets/video/gif/anim_02_star_moves_confidence.gif
+  type: gif
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/anim_02_star_moves_confidence.gif
+  suggested_use: Notebook animation
+- asset_id: gif_anim_11_invisible_background_morph_moon
+  filename: assets/video/gif/anim_11_invisible_background_morph_moon.gif
+  type: gif
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/anim_11_invisible_background_morph_moon.gif
+  suggested_use: Notebook animation
+- asset_id: gif_anim_12_invisible_background_morph_star
+  filename: assets/video/gif/anim_12_invisible_background_morph_star.gif
+  type: gif
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/anim_12_invisible_background_morph_star.gif
+  suggested_use: Notebook animation
+- asset_id: gif_anim_13_shape_morph_moon_to_star
+  filename: assets/video/gif/anim_13_shape_morph_moon_to_star.gif
+  type: gif
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/anim_13_shape_morph_moon_to_star.gif
+  suggested_use: Notebook animation
+- asset_id: gif_anim_14_shape_morph_star_to_moon
+  filename: assets/video/gif/anim_14_shape_morph_star_to_moon.gif
+  type: gif
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/anim_14_shape_morph_star_to_moon.gif
+  suggested_use: Notebook animation
+- asset_id: gif_anim_15_moon_movement_heatmaps
+  filename: assets/video/gif/anim_15_moon_movement_heatmaps.gif
+  type: gif
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/anim_15_moon_movement_heatmaps.gif
+  suggested_use: Notebook animation
+- asset_id: gif_anim_16_star_movement_heatmaps
+  filename: assets/video/gif/anim_16_star_movement_heatmaps.gif
+  type: gif
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/outputs/demo00_story_assets/anim_16_star_movement_heatmaps.gif
+  suggested_use: Notebook animation
+- asset_id: notebook_raw_cell_004_output_01
+  filename: assets/images/notebook_raw/cell_004_output_01.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Raw notebook output for review
+  notebook_cell_index: 4
+- asset_id: notebook_raw_cell_008_output_01
+  filename: assets/images/notebook_raw/cell_008_output_01.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Raw notebook output for review
+  notebook_cell_index: 8
+- asset_id: notebook_raw_cell_011_output_01
+  filename: assets/images/notebook_raw/cell_011_output_01.jpg
+  type: jpg
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Raw notebook output for review
+  notebook_cell_index: 11
+- asset_id: embedded_gif_embedded_cell_011_output_04
+  filename: assets/video/gif/embedded_cell_011_output_04.gif
+  type: gif
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Embedded notebook animation
+  notebook_cell_index: 11
+- asset_id: notebook_raw_cell_012_output_01
+  filename: assets/images/notebook_raw/cell_012_output_01.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Raw notebook output for review
+  notebook_cell_index: 12
+- asset_id: notebook_raw_cell_016_output_01
+  filename: assets/images/notebook_raw/cell_016_output_01.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Raw notebook output for review
+  notebook_cell_index: 16
+- asset_id: embedded_gif_embedded_cell_016_output_04
+  filename: assets/video/gif/embedded_cell_016_output_04.gif
+  type: gif
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Embedded notebook animation
+  notebook_cell_index: 16
+- asset_id: notebook_raw_cell_018_output_01
+  filename: assets/images/notebook_raw/cell_018_output_01.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Raw notebook output for review
+  notebook_cell_index: 18
+- asset_id: embedded_gif_embedded_cell_018_output_04
+  filename: assets/video/gif/embedded_cell_018_output_04.gif
+  type: gif
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Embedded notebook animation
+  notebook_cell_index: 18
+- asset_id: notebook_raw_cell_020_output_01
+  filename: assets/images/notebook_raw/cell_020_output_01.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Raw notebook output for review
+  notebook_cell_index: 20
+- asset_id: notebook_raw_cell_024_output_01
+  filename: assets/images/notebook_raw/cell_024_output_01.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Raw notebook output for review
+  notebook_cell_index: 24
+- asset_id: notebook_raw_cell_026_output_01
+  filename: assets/images/notebook_raw/cell_026_output_01.jpg
+  type: jpg
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Raw notebook output for review
+  notebook_cell_index: 26
+- asset_id: embedded_gif_embedded_cell_026_output_04
+  filename: assets/video/gif/embedded_cell_026_output_04.gif
+  type: gif
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Embedded notebook animation
+  notebook_cell_index: 26
+- asset_id: notebook_raw_cell_026_output_06
+  filename: assets/images/notebook_raw/cell_026_output_06.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Raw notebook output for review
+  notebook_cell_index: 26
+- asset_id: notebook_raw_cell_028_output_01
+  filename: assets/images/notebook_raw/cell_028_output_01.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Raw notebook output for review
+  notebook_cell_index: 28
+- asset_id: notebook_raw_cell_031_output_01
+  filename: assets/images/notebook_raw/cell_031_output_01.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Raw notebook output for review
+  notebook_cell_index: 31
+- asset_id: notebook_raw_cell_035_output_01
+  filename: assets/images/notebook_raw/cell_035_output_01.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Raw notebook output for review
+  notebook_cell_index: 35
+- asset_id: notebook_raw_cell_036_output_01
+  filename: assets/images/notebook_raw/cell_036_output_01.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Raw notebook output for review
+  notebook_cell_index: 36
+- asset_id: notebook_raw_cell_039_output_01
+  filename: assets/images/notebook_raw/cell_039_output_01.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/xai_demo_executed.ipynb
+  suggested_use: Raw notebook output for review
+  notebook_cell_index: 39
+- asset_id: equation_erm_functional_svg
+  filename: assets/equations/svg/erm_functional.svg
+  type: svg
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_erm_functional_png
+  filename: assets/equations/png/erm_functional.png
+  type: png
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_training_objective_svg
+  filename: assets/equations/svg/training_objective.svg
+  type: svg
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_training_objective_png
+  filename: assets/equations/png/training_objective.png
+  type: png
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_many_functions_same_exam_svg
+  filename: assets/equations/svg/many_functions_same_exam.svg
+  type: svg
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_many_functions_same_exam_png
+  filename: assets/equations/png/many_functions_same_exam.png
+  type: png
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_factorised_generator_svg
+  filename: assets/equations/svg/factorised_generator.svg
+  type: svg
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_factorised_generator_png
+  filename: assets/equations/png/factorised_generator.png
+  type: png
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_star_score_svg
+  filename: assets/equations/svg/star_score.svg
+  type: svg
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_star_score_png
+  filename: assets/equations/png/star_score.png
+  type: png
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_position_counterfactual_svg
+  filename: assets/equations/svg/position_counterfactual.svg
+  type: svg
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_position_counterfactual_png
+  filename: assets/equations/png/position_counterfactual.png
+  type: png
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_nuisance_orbit_svg
+  filename: assets/equations/svg/nuisance_orbit.svg
+  type: svg
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_nuisance_orbit_png
+  filename: assets/equations/png/nuisance_orbit.png
+  type: png
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_response_map_svg
+  filename: assets/equations/svg/response_map.svg
+  type: svg
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_response_map_png
+  filename: assets/equations/png/response_map.png
+  type: png
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_decision_contour_svg
+  filename: assets/equations/svg/decision_contour.svg
+  type: svg
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_decision_contour_png
+  filename: assets/equations/png/decision_contour.png
+  type: png
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_position_sensitivity_svg
+  filename: assets/equations/svg/position_sensitivity.svg
+  type: svg
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_position_sensitivity_png
+  filename: assets/equations/png/position_sensitivity.png
+  type: png
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_consistency_svg
+  filename: assets/equations/svg/consistency.svg
+  type: svg
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_consistency_png
+  filename: assets/equations/png/consistency.png
+  type: png
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_smoothgrad_svg
+  filename: assets/equations/svg/smoothgrad.svg
+  type: svg
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_smoothgrad_png
+  filename: assets/equations/png/smoothgrad.png
+  type: png
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_background_snr_svg
+  filename: assets/equations/svg/background_snr.svg
+  type: svg
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_background_snr_png
+  filename: assets/equations/png/background_snr.png
+  type: png
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_intervention_loop_svg
+  filename: assets/equations/svg/intervention_loop.svg
+  type: svg
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_intervention_loop_png
+  filename: assets/equations/png/intervention_loop.png
+  type: png
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_orbit_averaged_risk_svg
+  filename: assets/equations/svg/orbit_averaged_risk.svg
+  type: svg
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: equation_orbit_averaged_risk_png
+  filename: assets/equations/png/orbit_averaged_risk.png
+  type: png
+  source: scripts/02_render_equations.py
+  suggested_use: Equation asset
+- asset_id: mp4_anim_01_moon_moves_confidence
+  filename: assets/video/mp4/anim_01_moon_moves_confidence.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_01_moon_moves_confidence.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_01_moon_moves_confidence
+  filename: assets/video/first_frames/anim_01_moon_moves_confidence_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_01_moon_moves_confidence.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_anim_moon_moves_confidence
+  filename: assets/video/mp4/anim_moon_moves_confidence.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_01_moon_moves_confidence.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_moon_moves_confidence
+  filename: assets/video/first_frames/anim_moon_moves_confidence_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_01_moon_moves_confidence.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_anim_02_star_moves_confidence
+  filename: assets/video/mp4/anim_02_star_moves_confidence.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_02_star_moves_confidence.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_02_star_moves_confidence
+  filename: assets/video/first_frames/anim_02_star_moves_confidence_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_02_star_moves_confidence.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_anim_star_moves_confidence
+  filename: assets/video/mp4/anim_star_moves_confidence.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_02_star_moves_confidence.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_star_moves_confidence
+  filename: assets/video/first_frames/anim_star_moves_confidence_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_02_star_moves_confidence.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_anim_11_invisible_background_morph_moon
+  filename: assets/video/mp4/anim_11_invisible_background_morph_moon.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_11_invisible_background_morph_moon.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_11_invisible_background_morph_moon
+  filename: assets/video/first_frames/anim_11_invisible_background_morph_moon_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_11_invisible_background_morph_moon.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_anim_invisible_background_morph_moon
+  filename: assets/video/mp4/anim_invisible_background_morph_moon.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_11_invisible_background_morph_moon.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_invisible_background_morph_moon
+  filename: assets/video/first_frames/anim_invisible_background_morph_moon_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_11_invisible_background_morph_moon.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_anim_12_invisible_background_morph_star
+  filename: assets/video/mp4/anim_12_invisible_background_morph_star.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_12_invisible_background_morph_star.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_12_invisible_background_morph_star
+  filename: assets/video/first_frames/anim_12_invisible_background_morph_star_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_12_invisible_background_morph_star.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_anim_invisible_background_morph_star
+  filename: assets/video/mp4/anim_invisible_background_morph_star.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_12_invisible_background_morph_star.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_invisible_background_morph_star
+  filename: assets/video/first_frames/anim_invisible_background_morph_star_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_12_invisible_background_morph_star.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_anim_13_shape_morph_moon_to_star
+  filename: assets/video/mp4/anim_13_shape_morph_moon_to_star.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_13_shape_morph_moon_to_star.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_13_shape_morph_moon_to_star
+  filename: assets/video/first_frames/anim_13_shape_morph_moon_to_star_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_13_shape_morph_moon_to_star.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_anim_shape_morph_moon_to_star
+  filename: assets/video/mp4/anim_shape_morph_moon_to_star.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_13_shape_morph_moon_to_star.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_shape_morph_moon_to_star
+  filename: assets/video/first_frames/anim_shape_morph_moon_to_star_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_13_shape_morph_moon_to_star.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_anim_14_shape_morph_star_to_moon
+  filename: assets/video/mp4/anim_14_shape_morph_star_to_moon.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_14_shape_morph_star_to_moon.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_14_shape_morph_star_to_moon
+  filename: assets/video/first_frames/anim_14_shape_morph_star_to_moon_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_14_shape_morph_star_to_moon.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_anim_shape_morph_star_to_moon
+  filename: assets/video/mp4/anim_shape_morph_star_to_moon.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_14_shape_morph_star_to_moon.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_shape_morph_star_to_moon
+  filename: assets/video/first_frames/anim_shape_morph_star_to_moon_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_14_shape_morph_star_to_moon.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_anim_15_moon_movement_heatmaps
+  filename: assets/video/mp4/anim_15_moon_movement_heatmaps.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_15_moon_movement_heatmaps.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_15_moon_movement_heatmaps
+  filename: assets/video/first_frames/anim_15_moon_movement_heatmaps_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_15_moon_movement_heatmaps.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_anim_moon_movement_heatmaps
+  filename: assets/video/mp4/anim_moon_movement_heatmaps.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_15_moon_movement_heatmaps.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_moon_movement_heatmaps
+  filename: assets/video/first_frames/anim_moon_movement_heatmaps_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_15_moon_movement_heatmaps.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_anim_16_star_movement_heatmaps
+  filename: assets/video/mp4/anim_16_star_movement_heatmaps.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_16_star_movement_heatmaps.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_16_star_movement_heatmaps
+  filename: assets/video/first_frames/anim_16_star_movement_heatmaps_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_16_star_movement_heatmaps.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_anim_star_movement_heatmaps
+  filename: assets/video/mp4/anim_star_movement_heatmaps.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_16_star_movement_heatmaps.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_anim_star_movement_heatmaps
+  filename: assets/video/first_frames/anim_star_movement_heatmaps_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/anim_16_star_movement_heatmaps.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_embedded_cell_011_output_04
+  filename: assets/video/mp4/embedded_cell_011_output_04.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/embedded_cell_011_output_04.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_embedded_cell_011_output_04
+  filename: assets/video/first_frames/embedded_cell_011_output_04_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/embedded_cell_011_output_04.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_embedded_cell_016_output_04
+  filename: assets/video/mp4/embedded_cell_016_output_04.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/embedded_cell_016_output_04.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_embedded_cell_016_output_04
+  filename: assets/video/first_frames/embedded_cell_016_output_04_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/embedded_cell_016_output_04.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_embedded_cell_018_output_04
+  filename: assets/video/mp4/embedded_cell_018_output_04.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/embedded_cell_018_output_04.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_embedded_cell_018_output_04
+  filename: assets/video/first_frames/embedded_cell_018_output_04_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/embedded_cell_018_output_04.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: mp4_embedded_cell_026_output_04
+  filename: assets/video/mp4/embedded_cell_026_output_04.mp4
+  type: mp4
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/embedded_cell_026_output_04.gif
+  suggested_use: PowerPoint animation asset
+- asset_id: first_frame_embedded_cell_026_output_04
+  filename: assets/video/first_frames/embedded_cell_026_output_04_first_frame.png
+  type: png
+  source: /Users/johngoodacre/work/xai/xai-demo-slides/assets/video/gif/embedded_cell_026_output_04.gif
+  suggested_use: Animation first-frame fallback
+- asset_id: slide_plate_plate_01_supervised_problem
+  filename: assets/images/slide_plates/plate_01_supervised_problem.png
+  type: png
+  source: scripts/04_build_slide_plates.py
+  suggested_use: PowerPoint slide plate
+- asset_id: slide_plate_plate_02_erm_many_functions
+  filename: assets/images/slide_plates/plate_02_erm_many_functions.png
+  type: png
+  source: scripts/04_build_slide_plates.py
+  suggested_use: PowerPoint slide plate
+- asset_id: slide_plate_plate_03_iid_success
+  filename: assets/images/slide_plates/plate_03_iid_success.png
+  type: png
+  source: scripts/04_build_slide_plates.py
+  suggested_use: PowerPoint slide plate
+- asset_id: slide_plate_plate_04_position_counterfactual
+  filename: assets/images/slide_plates/plate_04_position_counterfactual.png
+  type: png
+  source: scripts/04_build_slide_plates.py
+  suggested_use: PowerPoint slide plate
+- asset_id: slide_plate_plate_05_response_map_geometry
+  filename: assets/images/slide_plates/plate_05_response_map_geometry.png
+  type: png
+  source: scripts/04_build_slide_plates.py
+  suggested_use: PowerPoint slide plate
+- asset_id: slide_plate_plate_06_position_data_audit
+  filename: assets/images/slide_plates/plate_06_position_data_audit.png
+  type: png
+  source: scripts/04_build_slide_plates.py
+  suggested_use: PowerPoint slide plate
+- asset_id: slide_plate_plate_07_cnn_second_comfort
+  filename: assets/images/slide_plates/plate_07_cnn_second_comfort.png
+  type: png
+  source: scripts/04_build_slide_plates.py
+  suggested_use: PowerPoint slide plate
+- asset_id: slide_plate_plate_08_background_counterfactual
+  filename: assets/images/slide_plates/plate_08_background_counterfactual.png
+  type: png
+  source: scripts/04_build_slide_plates.py
+  suggested_use: PowerPoint slide plate
+- asset_id: slide_plate_plate_09_xai_heatmap_caution
+  filename: assets/images/slide_plates/plate_09_xai_heatmap_caution.png
+  type: png
+  source: scripts/04_build_slide_plates.py
+  suggested_use: PowerPoint slide plate
+- asset_id: slide_plate_plate_10_background_data_audit
+  filename: assets/images/slide_plates/plate_10_background_data_audit.png
+  type: png
+  source: scripts/04_build_slide_plates.py
+  suggested_use: PowerPoint slide plate
+- asset_id: slide_plate_plate_11_mitigation_retest
+  filename: assets/images/slide_plates/plate_11_mitigation_retest.png
+  type: png
+  source: scripts/04_build_slide_plates.py
+  suggested_use: PowerPoint slide plate
+- asset_id: slide_plate_plate_12_final_synthesis
+  filename: assets/images/slide_plates/plate_12_final_synthesis.png
+  type: png
+  source: scripts/04_build_slide_plates.py
+  suggested_use: PowerPoint slide plate

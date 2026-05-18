@@ -1,0 +1,14 @@
+numpy
+matplotlib
+pillow
+pyyaml
+nbformat
+nbclient
+jupyter
+ipykernel
+imageio
+imageio-ffmpeg
+moviepy
+opencv-python
+python-pptx
+torch
