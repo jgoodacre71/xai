@@ -1,0 +1,1 @@
+draft_deck.pptx was not generated because python-pptx is not installed in the available execution environments. Use SLIDE_MANIFEST.md and the selected MP4/PNG files to assemble the Google Slides deck.

@@ -1,0 +1,17 @@
+{
+  "png_count": 23,
+  "gif_count": 12,
+  "mp4_count": 12,
+  "conversion_errors": [],
+  "google_pack_count": 30,
+  "paths": {
+    "contact_sheet_pngs": "outputs/presentation_assets/00_moons_stars_clever_hans/contact_sheet_pngs.jpg",
+    "contact_sheet_gifs_first_frames": "outputs/presentation_assets/00_moons_stars_clever_hans/contact_sheet_gifs_first_frames.jpg",
+    "contact_sheet_gifs_motion_strip": "outputs/presentation_assets/00_moons_stars_clever_hans/contact_sheet_gifs_motion_strip.jpg",
+    "mp4_folder": "outputs/presentation_assets/00_moons_stars_clever_hans/mp4",
+    "google_slides_pack": "outputs/presentation_assets/00_moons_stars_clever_hans/google_slides_pack",
+    "slide_manifest": "outputs/presentation_assets/00_moons_stars_clever_hans/SLIDE_MANIFEST.md",
+    "asset_quality_report": "outputs/presentation_assets/00_moons_stars_clever_hans/ASSET_QUALITY_REPORT.md",
+    "asset_audit": "outputs/presentation_assets/00_moons_stars_clever_hans/ASSET_AUDIT.md"
+  }
+}
