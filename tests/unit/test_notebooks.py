@@ -41,6 +41,7 @@ def test_required_demo_notebooks_exist() -> None:
         "robustness_drift/08_explanation_drift.ipynb",
         "data_scouting/90_ieee_dataset_scouting.ipynb",
         "global_local_explainability/09_global_vs_local_explainability_shap.ipynb",
+        "xai_demo.ipynb",
     }.issubset(notebooks)
 
 
@@ -338,6 +339,41 @@ def test_demo00_is_generated_controlled_demo_with_no_external_data() -> None:
     )
     for phrase in forbidden_old_shortcut_phrases:
         assert phrase not in text, phrase
+
+
+def test_xai_demo_presentation_notebook_contract() -> None:
+    notebook_path = Path("notebooks/xai_demo.ipynb")
+    notebook = _load_notebook(notebook_path)
+    text = "\n".join(
+        "".join(cell["source"])
+        for cell in notebook["cells"]
+        if cell["cell_type"] in {"code", "markdown"}
+    )
+
+    assert "# Demo 00 — supervised image classification" in text
+    assert "Counterfactual model interrogation" in text
+    assert "Act II — the CNN appears to work again" in text
+    assert "Data story: many functions can pass the same finite exam" in text
+    assert "Closing thesis" in text
+    assert "X = R" in text
+    assert "nuisance orbits" in text
+    assert '"outputs" / "demo00_story_assets"' in text
+    assert "anim_01_moon_moves_confidence.gif" in text
+    assert "anim_11_invisible_background_morph_moon.gif" in text
+    assert "from xai_demo_suite" not in text
+
+    for cell_index, cell in enumerate(notebook["cells"]):
+        if cell["cell_type"] != "code":
+            continue
+        for output in cell.get("outputs", []):
+            assert output.get("output_type") != "error", (notebook_path, cell_index)
+
+    asset_dir = Path("notebooks/outputs/demo00_story_assets")
+    assert (asset_dir / "01_supervised_learning_examples.png").exists()
+    assert (asset_dir / "24_data_story_act1_position_shortcut_professional.png").exists()
+    assert (asset_dir / "25_data_story_act2_background_shortcut_professional.png").exists()
+    assert (asset_dir / "anim_01_moon_moves_confidence.gif").exists()
+    assert (asset_dir / "anim_11_invisible_background_morph_moon.gif").exists()
 
 
 def test_demo01_is_real_data_only_and_has_no_cartoon_shortcut_helpers() -> None:

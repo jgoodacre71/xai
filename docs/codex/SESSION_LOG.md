@@ -187,3 +187,34 @@
   - keep Demo 00 focused on controlled factors, statistical audits,
     behavioural counterfactuals, and intervention/re-test; avoid adding broad
     XAI method galleries or saved static asset walls
+
+## 2026-05-18
+
+- purpose:
+  - add the executed `notebooks/xai_demo.ipynb` presentation companion and its
+    generated story assets to the checked-in Demo 00 surface
+- files added:
+  - `notebooks/xai_demo.ipynb`
+  - `notebooks/outputs/demo00_story_assets/`
+- files updated:
+  - `docs/DEMO_CATALOGUE.md`
+  - `docs/DEMO_STATUS.md`
+  - `notebooks/README.md`
+  - `docs/codex/ACTIVE_CONTEXT.md`
+  - `docs/codex/SESSION_LOG.md`
+- key findings:
+  - `xai_demo.ipynb` is a self-contained supervised-learning/XAI presentation
+    notebook for Demo 00, with executed outputs and saved story assets
+  - the notebook is complementary to the canonical
+    `shortcut_lab/00_moons_stars_clever_hans.ipynb` lab notebook rather than a
+    replacement
+  - raw rich-display fallback reprs were removed while preserving the actual
+    notebook figures and animations
+- validation:
+  - notebook structure and saved outputs checked with `nbformat`
+  - no saved exception outputs found in `notebooks/xai_demo.ipynb`
+  - focused pytest coverage added for the presentation notebook contract
+- unresolved uncertainties:
+  - repo-wide output-free notebook tests now intentionally conflict with the
+    committed executed presentation notebooks and should be revisited if the
+    policy changes again

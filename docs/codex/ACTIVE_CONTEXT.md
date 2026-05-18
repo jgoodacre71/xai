@@ -53,6 +53,12 @@ Demo 00 is now the no-permission generated opener with:
 - saliency kept as a cautionary supporting interlude, not the main evidence
 - intervention and same-case re-test as the maturity point
 
+`notebooks/xai_demo.ipynb` is the executed presentation companion for Demo 00.
+It is intentionally self-contained and stores curated story assets in
+`notebooks/outputs/demo00_story_assets/` for slide assembly. Treat it as a
+presentation artefact, while `notebooks/shortcut_lab/00_moons_stars_clever_hans.ipynb`
+remains the canonical Demo 00 lab notebook.
+
 Demo 01 is now a real-data Waterbirds notebook with:
 
 - robust repo-root discovery from nested notebook folders

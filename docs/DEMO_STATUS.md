@@ -29,6 +29,10 @@ lives under `docs/tasks/`.
   background-only data leak. Supporting material is limited to behavioural
   counterfactuals, confidence/response-map animations, saliency caution,
   intervention, and re-test.
+- `notebooks/xai_demo.ipynb` is the executed presentation companion for Demo 00.
+  It keeps the same core lesson but reads as a self-contained supervised
+  learning/XAI story and writes curated story assets under
+  `notebooks/outputs/demo00_story_assets/`.
 - Demo 02 is the visually immediate applied industrial shortcut demo.
 - Demo 01 is the literature-aligned natural benchmark.
 - Demos 03 and 04 are the PatchCore anomaly-provenance centrepiece.

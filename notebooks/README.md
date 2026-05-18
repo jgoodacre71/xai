@@ -5,6 +5,8 @@ organised by storyline rather than kept in one flat directory.
 
 ## Recommended walkthrough order
 
+0. `xai_demo.ipynb` — presentation-oriented Demo 00 companion notebook, with
+   saved story assets under `notebooks/outputs/demo00_story_assets/`.
 1. `shortcut_lab/00_moons_stars_clever_hans.ipynb` — no-permission controlled absolute-position shortcut opener, with movement, morph, saliency, representation, and evidence-removal probes.
 2. `shortcut_lab/02_industrial_shortcut_trap.ipynb` — real industrial side-band marker shortcut.
 3. `shortcut_lab/01_waterbirds_shortcut.ipynb` — natural benchmark shortcut audit.

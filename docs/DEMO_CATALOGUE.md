@@ -13,6 +13,8 @@ No-permission generated opener.
 
 Current artefacts:
 - notebook: `notebooks/shortcut_lab/00_moons_stars_clever_hans.ipynb`
+- presentation notebook: `notebooks/xai_demo.ipynb`
+- presentation assets: `notebooks/outputs/demo00_story_assets/`
 
 Role:
 - show the smallest version of “the model solved the dataset, not the task”;
@@ -34,6 +36,13 @@ Role:
   export walls for Demo 00;
 - make the governing lesson explicit: the shortcut changes, but the XAI
   discipline stays the same.
+
+The root-level `notebooks/xai_demo.ipynb` is the presentation-oriented companion
+notebook for Demo 00. It keeps the same scientific story but is written as a
+more linear supervised-learning/XAI narrative with saved story assets for slide
+assembly: apparent IID success, same-object movement, response geometry,
+shape/background counterfactuals, data-first shortcut audits, mitigation, and
+final synthesis.
 
 ## Demo 02 — Industrial side-band marker shortcut
 
